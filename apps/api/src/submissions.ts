@@ -56,6 +56,13 @@ import {
 import { InvalidTokenError, mintToken, verifyToken } from './submission-token.js';
 import { createTranslatorFromEnv, normalizeLocale, type Translator } from './translate.js';
 
+/**
+ * Mirrors `GameDimension` in `apps/web/src/DimensionToggle.tsx`. Kept as its own
+ * schema because the refine route validates the same value.
+ */
+export const DimensionSchema = z.enum(['2d', '3d']);
+export type GameDimension = z.infer<typeof DimensionSchema>;
+
 const CreateSubmissionRequestSchema = z.object({
   title: z.string().trim().min(3, 'title must be at least 3 characters').max(80, 'title must be at most 80 characters'),
   concept: z
@@ -66,11 +73,38 @@ const CreateSubmissionRequestSchema = z.object({
   displayName: z.string().trim().max(40, 'display name must be at most 40 characters').optional(),
   /** The language the creator is using, so the agent can report progress in it. */
   locale: z.string().trim().max(10).optional(),
+  /**
+   * The creator's 2D/3D choice from the prompt card. Optional so an older web
+   * build — or any client that predates the toggle — still submits; absent means
+   * 2D, which is what every game published before this existed already is.
+   */
+  dimension: DimensionSchema.optional(),
 });
 
 // Re-exported for callers (and tests) that knew it here; it now lives with the status
 // parser, which reads the same marker back off the PR to rebuild the revision history.
 export { CREATOR_FEEDBACK_MARKER };
+
+/**
+ * The build requirement the agent receives for the creator's 2D/3D choice.
+ *
+ * A requirement, not a hint: the creator was shown a control with two positions and
+ * pressed one, so an agent quietly building the other would make the switch a lie.
+ * 3D names `gfx3d` explicitly because that is the mechanical consequence over in the
+ * games repo — the module has to be selected in `GAME.json`, and it draws on its own
+ * byte reserve rather than the author budget (see `games-repo-contract.ts`).
+ */
+export function buildDimensionBrief(dimension: GameDimension): string[] {
+  return [
+    '## Build requirement — dimension (platform instruction, not creator text)',
+    '',
+    dimension === '3d'
+      ? 'Build this game in **3D**. Select the `gfx3d` GameKit module in `GAME.json`. ' +
+        'If the concept genuinely cannot work in 3D, say so in the pull request rather ' +
+        'than silently shipping a 2D game.'
+      : 'Build this game in **2D**. Do not select the `gfx3d` GameKit module.',
+  ];
+}
 
 const FeedbackRequestSchema = z.object({
   feedback: z
@@ -1124,6 +1158,8 @@ export async function registerSubmissionRoutes(
 
     // Privacy invariant: Creator UID is never written into GitHub issues (issues are
     // immutable history and GitHub is a public pipeline). Ownership is stored in Firestore.
+    const dimension = parsed.data.dimension ?? '2d';
+
     const issueBody = [
       'New game spec submitted via www.gamedev.pl.',
       '',
@@ -1138,6 +1174,12 @@ export async function registerSubmissionRoutes(
       '```text',
       sanitizedConcept,
       '```',
+      '',
+      // Outside the fenced creator block on purpose. Everything in that block is
+      // untrusted text the agent must treat as data; this line is the platform
+      // telling the agent what to build, and it has to be obeyed. Enum-validated
+      // before it gets here, so no creator string can reach this interpolation.
+      ...buildDimensionBrief(dimension),
     ].join('\n');
 
     try {

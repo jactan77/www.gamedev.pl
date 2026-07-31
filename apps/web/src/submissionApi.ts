@@ -1,3 +1,5 @@
+import type { GameDimension } from './DimensionToggle.js';
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
 export type SubmissionState =
@@ -170,6 +172,8 @@ export async function submitSpec(input: {
   displayName?: string;
   /** Told to the agent, so it writes its progress updates in this language. */
   locale?: string;
+  /** '3d' asks the agent for the `gfx3d` GameKit module; omitted means 2D. */
+  dimension?: GameDimension;
 }): Promise<{ token: string; statusUrl: string }> {
   const response = await fetch(`${API_BASE}/api/submissions`, {
     method: 'POST',
@@ -299,7 +303,13 @@ export async function submitFeedback(
   return (await response.json()) as { ok: boolean; target: string; shotId?: string };
 }
 
-export async function refineSpec(input: { title: string; concept: string; locale?: string }): Promise<{
+export async function refineSpec(input: {
+  title: string;
+  concept: string;
+  locale?: string;
+  /** Already decided on the card, so the refiner must not ask about it again. */
+  dimension?: GameDimension;
+}): Promise<{
   questions: Array<{
     id: string;
     question: string;

@@ -5,6 +5,7 @@ import type { CatalogEntry } from './catalog.js';
 import { SketchModal } from './SketchModal.js';
 import { PixelIcon } from './PixelIcon.js';
 import { getQuota } from './submissionApi.js';
+import { DimensionToggle, DEFAULT_DIMENSION, type GameDimension } from './DimensionToggle.js';
 
 type HeroPromptSectionProps = {
   initialPrompt?: string;
@@ -13,7 +14,7 @@ type HeroPromptSectionProps = {
   /** 'refining' is the pre-submission spec-refiner call; nothing has been sent yet. */
   submissionStatus: 'idle' | 'refining' | 'loading';
   submissionError: string | null;
-  onSubmitSpec: (title: string, concept: string) => void;
+  onSubmitSpec: (title: string, concept: string, dimension: GameDimension) => void;
   mockStatus: 'idle' | 'loading' | 'error';
   mockError: string | null;
   // Kept for the demo generator; the primary Build action no longer auto-fires a
@@ -114,6 +115,7 @@ export function HeroPromptSection({
 }: HeroPromptSectionProps) {
   const { t } = useTranslation();
   const [promptText, setPromptText] = useState(initialPrompt);
+  const [dimension, setDimension] = useState<GameDimension>(DEFAULT_DIMENSION);
   const [attachments, setAttachments] = useState<VisualAttachment[]>([]);
   const [isSketchOpen, setIsSketchOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -282,7 +284,7 @@ export function HeroPromptSection({
     // Recorded here rather than in the handler: this is the visitor asking for a game,
     // which happens whether or not they turn out to be signed in.
     recordCreateStep('spec_submitted');
-    onSubmitSpec(autoTitle, finalPrompt);
+    onSubmitSpec(autoTitle, finalPrompt, dimension);
   };
 
   return (
@@ -300,6 +302,23 @@ export function HeroPromptSection({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
+        {/* Above the box, not down in the action bar: this is a setting on what gets
+            built, and every other row of the card is already something else — the
+            chips are throwaway suggestions, the action bar is the submit itself. */}
+        <div className="card-toolbar">
+          <span className="card-toolbar-label">{t('hero.dimensionLabel')}</span>
+          <DimensionToggle
+            value={dimension}
+            onChange={(next) => {
+              // Only the opt-in is worth a funnel row; 2D is the default every
+              // visit already starts on, so recording it would count everyone.
+              if (next === '3d') recordCreateStep('dimension_3d_selected');
+              setDimension(next);
+            }}
+            disabled={submissionStatus !== 'idle'}
+          />
+        </div>
+
         <form onSubmit={handlePrimarySubmit} className="prompt-box-form">
           <div className="prompt-textarea-wrapper">
             <textarea

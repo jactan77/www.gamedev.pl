@@ -63,7 +63,14 @@ export type CreateStep =
   /** The QA gate returned clarifying questions instead of building immediately. */
   | 'qa_shown'
   /** A submission actually reached the games repo. */
-  | 'submission_created';
+  | 'submission_created'
+  /**
+   * Opted into 3D on the prompt card. Not a funnel rung — a side branch off
+   * `prompt_started`, answering "how many creators want the heavier path" without
+   * changing the event shape. 2D is deliberately not recorded: it is the default
+   * every visit starts on, so a row for it would just restate the starter count.
+   */
+  | 'dimension_3d_selected';
 
 const FLUSH_AT = 5;
 const MAX_BATCH = 25;

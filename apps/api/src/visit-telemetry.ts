@@ -51,6 +51,7 @@ const CreateStepSchema = z.enum([
   'signin_required',
   'qa_shown',
   'submission_created',
+  'dimension_3d_selected',
 ]);
 /**
  * Acquisition strings are re-validated here rather than trusted from the client. The

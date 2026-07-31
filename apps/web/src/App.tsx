@@ -42,6 +42,7 @@ import { submitSpec, refineSpec, type SubmissionApiError } from './submissionApi
 import { useActiveBuildCount } from './activeBuilds.js';
 import { getSavedSpecs, saveSpec, type SavedSpec } from './mySpecs.js';
 import { clearPendingQa, loadPendingQa, savePendingQa, type PendingQaAnswers } from './pendingQa.js';
+import { DEFAULT_DIMENSION, type GameDimension } from './DimensionToggle.js';
 import { useAuth } from './AuthContext.js';
 import { AuthModal } from './AuthModal.js';
 import { recordCreateStep } from './visitTelemetry.js';
@@ -102,8 +103,15 @@ export function App() {
   // questions away and charging another refine to ask them again.
   const restoredQa = useRef(loadPendingQa());
   const [qaQuestions, setQaQuestions] = useState<QAQuestion[]>(restoredQa.current?.questions ?? []);
-  const [pendingSpec, setPendingSpec] = useState<{ title: string; concept: string; displayName: string } | null>(
-    restoredQa.current?.spec ?? null,
+  const [pendingSpec, setPendingSpec] = useState<{
+    title: string;
+    concept: string;
+    displayName: string;
+    dimension: GameDimension;
+  } | null>(
+    restoredQa.current?.spec
+      ? { ...restoredQa.current.spec, dimension: restoredQa.current.spec.dimension ?? DEFAULT_DIMENSION }
+      : null,
   );
   const qaRef = useRef<HTMLDivElement | null>(null);
 
@@ -380,7 +388,12 @@ export function App() {
   // The generation gate: before spending a submission we run the spec refiner. If it
   // returns clarifying questions, generation pauses on the QA panel until they're
   // answered; a clean spec (or a refiner error — fail-open) submits straight through.
-  async function handleSubmitSpec(title: string, concept: string, displayName: string = '') {
+  async function handleSubmitSpec(
+    title: string,
+    concept: string,
+    dimension: GameDimension = DEFAULT_DIMENSION,
+    displayName: string = '',
+  ) {
     if (!user) {
       // The wall between "wrote an idea" and "made an account". Everything before this
       // is anonymous, so this is the only place that drop-off is visible at all.
@@ -401,10 +414,13 @@ export function App() {
         title: trimmedTitle,
         concept: trimmedConcept,
         locale: i18n.language,
+        // Told to the refiner so it stops asking "2D or 3D?" — a question the
+        // creator answered on the card before ever pressing the button.
+        dimension,
       });
       if (questions.length > 0) {
         recordCreateStep('qa_shown');
-        const spec = { title: trimmedTitle, concept: trimmedConcept, displayName: displayName.trim() };
+        const spec = { title: trimmedTitle, concept: trimmedConcept, displayName: displayName.trim(), dimension };
         setPendingSpec(spec);
         setQaQuestions(questions);
         savePendingQa({ spec, questions, answers: { selected: {}, custom: {} } });
@@ -415,11 +431,11 @@ export function App() {
       // Fail-open: a refiner outage must never block creation — submit as-is.
     }
 
-    await submitRefinedSpec(trimmedTitle, trimmedConcept, displayName.trim());
+    await submitRefinedSpec(trimmedTitle, trimmedConcept, displayName.trim(), dimension);
   }
 
   // Actually creates the submission (after the QA gate) and jumps to its status page.
-  async function submitRefinedSpec(title: string, concept: string, displayName: string) {
+  async function submitRefinedSpec(title: string, concept: string, displayName: string, dimension: GameDimension) {
     setSubmissionStatus('loading');
     setSubmissionError(null);
 
@@ -428,6 +444,9 @@ export function App() {
         title,
         concept,
         displayName: displayName || undefined,
+        // Reaches the agent as a build requirement in the brief, which is the only
+        // reason this control is not decoration.
+        dimension,
         // The agent is told this, so its progress updates arrive already written in
         // the creator's language rather than machine-translated afterwards.
         locale: i18n.language,
@@ -483,7 +502,7 @@ export function App() {
   const handleQaComplete = async (finalConcept: string) => {
     const spec = pendingSpec;
     if (!spec) return;
-    await submitRefinedSpec(spec.title, finalConcept, spec.displayName);
+    await submitRefinedSpec(spec.title, finalConcept, spec.displayName, spec.dimension);
   };
 
   const handleQaCancel = () => {
@@ -657,7 +676,7 @@ export function App() {
                 onPlayGame={handlePlayGame}
                 submissionStatus={submissionStatus}
                 submissionError={submissionError}
-                onSubmitSpec={(title, concept) => void handleSubmitSpec(title, concept)}
+                onSubmitSpec={(title, concept, dimension) => void handleSubmitSpec(title, concept, dimension)}
                 mockStatus={mockStatus}
                 mockError={mockError}
                 onGenerateMock={(prompt) => void handleGenerateMock(prompt)}

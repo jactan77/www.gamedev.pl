@@ -6,6 +6,7 @@ import { checkUserAccess } from './auth.js';
 import { createVertexClient, type VertexGenerationConfig } from './genai.js';
 import type { ContentChecker } from './moderation.js';
 import type { Store } from './store.js';
+import { DimensionSchema, type GameDimension } from './submissions.js';
 
 export interface RefineOption {
   label: string;
@@ -29,6 +30,8 @@ export interface RefineParams {
   title: string;
   concept: string;
   locale?: string;
+  /** Already answered on the prompt card; the prompt tells the model not to re-ask. */
+  dimension?: GameDimension;
 }
 
 export interface SpecRefiner {
@@ -124,6 +127,8 @@ Identify up to 4 underspecified or missing gameplay/design dimensions (such as v
 
 Language requirement: Formulate questions and options in the language specified (${params.locale ?? 'en'}).
 
+The creator has already chosen the graphics dimension: ${params.dimension === '3d' ? '3D' : '2D'}. Do NOT ask about 2D vs 3D, dimensionality, perspective or camera projection — that question is answered. Ask about anything else that is underspecified.
+
 Respond STRICTLY with a JSON object following this schema:
 {
   "questions": [
@@ -194,6 +199,8 @@ const RefineRequestSchema = z.object({
     .min(30, 'concept must be at least 30 characters')
     .max(4000, 'concept must be at most 4000 characters'),
   locale: z.string().trim().optional(),
+  /** Chosen on the prompt card before the refiner runs — so it must not re-ask. */
+  dimension: DimensionSchema.optional(),
 });
 
 export interface RefineRouteOptions {
@@ -243,9 +250,12 @@ export async function registerRefineRoute(app: FastifyInstance, options: RefineR
    */
   const refineCache = new Map<string, { expiresAt: number; result: RefineResponse }>();
 
-  const cacheKey = (data: { title: string; concept: string; locale?: string }) =>
+  // `dimension` is in the key because it is in the prompt: the same concept asked
+  // in 2D and in 3D can legitimately need different questions, and sharing one
+  // cached answer between them would serve the wrong set to whoever arrived second.
+  const cacheKey = (data: { title: string; concept: string; locale?: string; dimension?: string }) =>
     createHash('sha256')
-      .update(`${data.locale ?? 'en'}\x00${data.title}\x00${data.concept}`)
+      .update(`${data.locale ?? 'en'}\x00${data.title}\x00${data.concept}\x00${data.dimension ?? '2d'}`)
       .digest('hex');
 
   const readCache = (key: string, now: number): RefineResponse | null => {
@@ -319,6 +329,7 @@ export async function registerRefineRoute(app: FastifyInstance, options: RefineR
         title: parseResult.data.title,
         concept: parseResult.data.concept,
         locale: parseResult.data.locale,
+        dimension: parseResult.data.dimension,
       });
       // Fail-open makes an outage look exactly like a fully-specified concept: both
       // are zero questions and a 200. Without this line there is no way to tell them
