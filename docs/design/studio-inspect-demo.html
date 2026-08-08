@@ -998,554 +998,141 @@
     font-size: 12px;
   }
 
-  /* ---------- okno edytora assetu ---------- */
-  .win {
-    position: fixed;
-    z-index: 40;
-    width: min(760px, calc(100vw - 32px));
-    background: var(--panel);
-    border: 1px solid #2c3945;
-    border-radius: 8px;
-    box-shadow:
-      0 40px 90px rgba(0, 0, 0, 0.62),
-      0 0 0 1px rgba(0, 0, 0, 0.4);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    font-size: 13px;
+  /* ---------- tryb assetu: scena | asset | rozmowa ---------- */
+  .console--asset {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 400px) 350px;
   }
 
-  .win[hidden] {
+  .console--asset .rail--thread,
+  .console--asset .rail--inspector,
+  .console--asset .stage .composer {
     display: none;
   }
 
-  .win--max {
-    inset: 74px 16px 16px !important;
-    width: auto !important;
-    height: auto !important;
-  }
-
-  .win-title {
+  .console--asset .rail--asset,
+  .console--asset .rail--chat {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 7px 7px 11px;
-    background: linear-gradient(180deg, #26313d, #1d252e);
-    border-bottom: 1px solid #2c3945;
-    cursor: grab;
-    user-select: none;
-    flex: none;
   }
 
-  .win-title:active {
-    cursor: grabbing;
+  .rail--asset,
+  .rail--chat {
+    display: none;
   }
 
-  .win-icon {
-    width: 15px;
-    height: 15px;
-    border-radius: 3px;
-    background: var(--blue);
-    color: #04202e;
-    display: grid;
-    place-items: center;
-    font-size: 9px;
-    font-weight: 700;
-    flex: none;
-  }
-
-  .win-name {
-    font-weight: 600;
-    font-size: 12.5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .win-name span {
+  .panel-head .head-file {
     font-family: var(--mono);
-    font-weight: 400;
-    color: var(--muted-dim);
+    font-size: 10.5px;
+    color: var(--blue);
+    text-transform: none;
+    letter-spacing: 0;
   }
 
-  .win-btns {
+  .head-close {
     margin-left: auto;
-    display: flex;
-    gap: 2px;
-  }
-
-  .wb {
-    width: 26px;
-    height: 22px;
-    border-radius: 4px;
     color: var(--muted);
-    font-size: 11px;
-    display: grid;
-    place-items: center;
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 6px;
   }
 
-  .wb:hover {
-    background: #33404e;
+  .head-close:hover {
+    background: var(--card-2);
     color: var(--text);
   }
 
-  .wb--x:hover {
-    background: var(--error);
-    color: #2a0b0b;
-  }
-
-  .win-menu {
-    display: flex;
-    align-items: center;
-    gap: 1px;
-    padding: 3px 6px;
-    border-bottom: 1px solid var(--panel-border);
-    background: #1a2129;
-    flex: none;
-    position: relative;
-  }
-
-  .win-menu > button {
-    font-size: 12px;
-    padding: 3px 9px;
-    border-radius: 4px;
-    color: #c6d2de;
-  }
-
-  .win-menu > button:hover,
-  .win-menu > button.is-open {
-    background: #2a3542;
-  }
-
-  .win-menu-right {
-    margin-left: auto;
-    font-family: var(--mono);
-    font-size: 10.5px;
-    color: var(--muted-dim);
-    padding-right: 4px;
-  }
-
-  .menu-pop {
-    position: absolute;
-    top: 100%;
-    z-index: 3;
-    min-width: 190px;
-    background: #202932;
-    border: 1px solid #313e4c;
-    border-radius: 6px;
-    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.55);
-    padding: 4px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .menu-pop button {
-    text-align: left;
-    padding: 6px 9px;
-    border-radius: 4px;
-    font-size: 12.5px;
-    color: #d6e0ea;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .menu-pop button:hover {
-    background: var(--blue);
-    color: #04202e;
-  }
-
-  .menu-pop button i {
-    font-style: normal;
-    width: 12px;
-    color: var(--turquoise);
-  }
-
-  .menu-pop button:hover i {
-    color: #04202e;
-  }
-
-  .menu-sep {
-    height: 1px;
-    background: #313e4c;
-    margin: 4px 2px;
-  }
-
-  .win-body {
-    display: grid;
-    grid-template-columns: 172px minmax(0, 1fr) 232px;
-    min-height: 0;
+  .asset-body {
     flex: 1;
-  }
-
-  .win--min .win-body,
-  .win--min .win-status,
-  .win--min .win-menu {
-    display: none;
-  }
-
-  .win-nav {
-    border-right: 1px solid var(--panel-border);
-    background: #131920;
+    min-height: 0;
     overflow-y: auto;
-    padding: 8px 6px;
-    max-height: 420px;
-  }
-
-  .win--max .win-nav,
-  .win--max .win-stage,
-  .win--max .win-props {
-    max-height: none;
-  }
-
-  .nav-group {
-    font-size: 10.5px;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--muted-dim);
-    font-weight: 600;
-    padding: 8px 8px 4px;
-  }
-
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    width: 100%;
-    text-align: left;
-    padding: 5px 8px;
-    border-radius: 5px;
-    color: #c6d2de;
-    font-size: 12.5px;
-  }
-
-  .nav-item:hover {
-    background: #1e2833;
-  }
-
-  .nav-item.is-on {
-    background: var(--blue);
-    color: #04202e;
-    font-weight: 600;
-  }
-
-  .nav-item .sw-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 2px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    flex: none;
-  }
-
-  .nav-item .mono {
-    font-family: var(--mono);
-    font-size: 11.5px;
-  }
-
-  .nav-item .off {
-    margin-left: auto;
-    font-size: 10px;
-    opacity: 0.55;
-  }
-
-  .win-stage {
-    padding: 12px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    overflow-y: auto;
-    max-height: 420px;
-    background:
-      radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.06), transparent 62%), #10161c;
+    gap: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--panel-border) transparent;
   }
 
-  .stage-canvas {
-    border: 1px solid var(--panel-border);
-    border-radius: 6px;
-    min-height: 148px;
-    display: grid;
-    place-items: center;
-    padding: 10px;
+  .asset-figure {
+    position: relative;
+    align-self: center;
+    max-width: 100%;
+    line-height: 0;
+    border-radius: 8px;
+    overflow: hidden;
     background-color: #0b1018;
-  }
-
-  .stage-canvas.is-checker {
     background-image:
       linear-gradient(45deg, #182029 25%, transparent 25%),
       linear-gradient(-45deg, #182029 25%, transparent 25%),
       linear-gradient(45deg, transparent 75%, #182029 75%),
       linear-gradient(-45deg, transparent 75%, #182029 75%);
-    background-size: 12px 12px;
+    background-size: 14px 14px;
     background-position:
       0 0,
-      0 6px,
-      6px -6px,
-      -6px 0;
+      0 7px,
+      7px -7px,
+      -7px 0;
+    border: 1px solid var(--panel-border);
   }
 
-  .stage-canvas.is-grid {
-    background-image:
-      linear-gradient(rgba(56, 189, 248, 0.16) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(56, 189, 248, 0.16) 1px, transparent 1px);
-    background-size: 16px 16px;
-  }
-
-  .stage-canvas img {
+  .asset-figure img {
+    display: block;
     max-width: 100%;
     image-rendering: pixelated;
-    display: block;
   }
 
-  .stage-cap {
-    font-family: var(--mono);
-    font-size: 10.5px;
-    color: var(--muted-dim);
-    text-align: center;
-  }
-
-  .frames {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .frame {
-    width: 54px;
-    border: 1px solid var(--panel-border);
-    border-radius: 5px;
-    padding: 3px;
-    background: #0b1018;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    align-items: center;
-  }
-
-  .frame.is-on {
-    border-color: var(--blue);
-    box-shadow: 0 0 0 1px var(--blue);
-  }
-
-  .frame img {
-    width: 100%;
-    image-rendering: pixelated;
-    display: block;
-  }
-
-  .frame span {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted-dim);
-  }
-
-  .code {
-    font-family: var(--mono);
-    font-size: 11.5px;
-    line-height: 1.65;
-    background: #0d131a;
-    border: 1px solid var(--panel-border);
-    border-radius: 6px;
-    padding: 9px 11px;
-    overflow-x: auto;
-    color: #b9c7d6;
-  }
-
-  .code .ln {
-    color: #46566a;
-    display: inline-block;
-    width: 18px;
-    user-select: none;
-  }
-
-  .code .kw {
-    color: #c084fc;
-  }
-
-  .code .fn {
-    color: var(--blue);
-  }
-
-  .code .num {
-    color: var(--amber);
-  }
-
-  .code .str {
-    color: var(--turquoise);
-  }
-
-  .wave {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    height: 44px;
-    padding: 0 2px;
-  }
-
-  .wave i {
-    flex: 1;
-    background: var(--turquoise);
-    border-radius: 1px;
-    opacity: 0.75;
-  }
-
-  .win-props {
-    border-left: 1px solid var(--panel-border);
-    background: #151b22;
-    overflow-y: auto;
-    max-height: 420px;
-    padding-bottom: 10px;
-  }
-
-  .props-head {
-    font-size: 10.5px;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--muted-dim);
-    font-weight: 600;
-    padding: 10px 12px 6px;
-    position: sticky;
-    top: 0;
-    background: #151b22;
-  }
-
-  .prow {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 2px 8px;
-    padding: 6px 12px;
-    border-top: 1px solid #1e262f;
-  }
-
-  .prow > label {
-    font-size: 12px;
-    color: #c6d2de;
-  }
-
-  .prow output {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--turquoise);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .prow input[type='range'] {
-    grid-column: 1 / -1;
-    width: 100%;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 3px;
-    border-radius: 2px;
-    background: #2b3642;
-    margin: 3px 0 0;
-  }
-
-  .prow input[type='range']::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--blue);
-    border: 2px solid #0f1418;
-  }
-
-  .prow input[type='range']::-moz-range-thumb {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--blue);
-    border: 2px solid #0f1418;
-  }
-
-  .prow-swatches {
-    grid-column: 1 / -1;
-    display: flex;
-    gap: 5px;
-    margin-top: 4px;
-    flex-wrap: wrap;
-  }
-
-  .psw {
-    width: 20px;
-    height: 20px;
-    border-radius: 5px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-  }
-
-  .psw.is-on {
-    box-shadow:
-      0 0 0 2px #151b22,
-      0 0 0 3.5px var(--text);
-  }
-
-  .toggle {
-    width: 34px;
-    height: 19px;
-    border-radius: 999px;
-    background: #2b3642;
-    position: relative;
-    transition: 0.15s;
-    flex: none;
-  }
-
-  .toggle::after {
-    content: '';
+  .hot {
     position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 15px;
-    height: 15px;
+    border: 1.5px dashed transparent;
+    border-radius: 3px;
+    transition: border-color 0.1s, background 0.1s;
+    padding: 0;
+  }
+
+  .hot:hover {
+    border-color: var(--blue);
+    background: rgba(56, 189, 248, 0.12);
+    z-index: 3;
+  }
+
+  .hot.is-on {
+    border-style: solid;
+    background: rgba(56, 189, 248, 0.1);
+    z-index: 2;
+  }
+
+  .hot-badge {
+    position: absolute;
+    top: -9px;
+    left: -9px;
+    width: 17px;
+    height: 17px;
     border-radius: 50%;
-    background: var(--muted);
-    transition: 0.15s;
-  }
-
-  .toggle.is-on {
-    background: rgba(0, 228, 172, 0.28);
-  }
-
-  .toggle.is-on::after {
-    left: 17px;
-    background: var(--turquoise);
-  }
-
-  .prow-note {
-    padding: 9px 12px;
-    font-size: 11.5px;
-    color: var(--muted-dim);
-    line-height: 1.5;
-  }
-
-  .win-status {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    border-top: 1px solid var(--panel-border);
-    background: #1a2129;
-    flex: none;
+    display: grid;
+    place-items: center;
     font-family: var(--mono);
-    font-size: 10.5px;
-    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    color: #06211a;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
   }
 
-  .win-status span {
-    padding: 5px 11px;
-    border-right: 1px solid var(--panel-border);
+  .hot-label {
+    position: absolute;
+    top: -21px;
+    left: -1px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: var(--blue);
+    color: #04202e;
+    opacity: 0;
+    pointer-events: none;
   }
 
-  .win-status .dirty {
-    margin-left: auto;
-    border-right: 0;
-    border-left: 1px solid var(--panel-border);
-    color: var(--amber);
-  }
-
-  .win-status .clean {
-    margin-left: auto;
-    border-right: 0;
-    border-left: 1px solid var(--panel-border);
-    color: var(--muted-dim);
+  .hot:hover .hot-label {
+    opacity: 1;
   }
 
   .asset-open {
@@ -1554,43 +1141,235 @@
     margin-top: 11px;
   }
 
-  /* Na wąskim ekranie okno siada na dole jako arkusz, a jego trzy panele
-     stają się jedną przewijaną kolumną — trzy własne paski przewijania
-     obok siebie na telefonie są nie do trafienia. */
-  @media (max-width: 820px) {
-    .win {
-      inset: auto 10px 10px 10px !important;
-      width: auto !important;
-      max-height: 84vh;
+  .asset-hint {
+    font-size: 12px;
+    color: var(--muted-dim);
+    text-align: center;
+    line-height: 1.45;
+  }
+
+  .asset-row-label {
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-dim);
+    font-weight: 600;
+  }
+
+  .asset-tokens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 7px;
+  }
+
+  .token {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-family: var(--mono);
+    padding: 4px 9px;
+    border-radius: 7px;
+    background: var(--card);
+    border: 1px solid var(--panel-border);
+    color: #c6d2de;
+  }
+
+  .token:hover {
+    border-color: var(--blue);
+    color: var(--text);
+  }
+
+  .token.is-on {
+    background: rgba(56, 189, 248, 0.14);
+    border-color: var(--blue);
+    color: #cdeaff;
+  }
+
+  .token .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .notes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .note {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    padding: 9px 10px;
+    border-radius: 9px;
+    background: var(--card);
+    border: 1px solid var(--panel-border);
+    border-left-width: 2px;
+  }
+
+  .note .idx {
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: #06211a;
+    flex: none;
+    margin-top: 2px;
+  }
+
+  .note-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .note-main b {
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  .note-main small {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted-dim);
+  }
+
+  .note-main input {
+    width: 100%;
+    margin-top: 5px;
+    padding: 6px 8px;
+    border-radius: 7px;
+    background: #11171e;
+    border: 1px solid var(--panel-border);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12.5px;
+  }
+
+  .note-main input::placeholder {
+    color: var(--muted-dim);
+  }
+
+  .note .x {
+    color: var(--muted-dim);
+    font-size: 15px;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 5px;
+  }
+
+  .note .x:hover {
+    color: var(--error);
+  }
+
+  .rev {
+    margin-top: 9px;
+    border: 1px solid var(--panel-border);
+    border-radius: 9px;
+    background: var(--card-2);
+    overflow: hidden;
+  }
+
+  .rev-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--panel-border);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .rev-head span {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--muted-dim);
+    font-weight: 400;
+  }
+
+  .rev ul {
+    margin: 0;
+    padding: 9px 10px 9px 26px;
+    font-size: 12.5px;
+    color: #c6d2de;
+  }
+
+  .rev li + li {
+    margin-top: 4px;
+  }
+
+  .rev-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 10px;
+    border-top: 1px solid var(--panel-border);
+  }
+
+  .rev-shots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-right: auto;
+  }
+
+  .rev-shots figure {
+    margin: 0;
+    text-align: center;
+  }
+
+  .rev-shots img {
+    width: 46px;
+    border-radius: 4px;
+    display: block;
+    image-rendering: pixelated;
+    background: #0b1018;
+    border: 1px solid var(--panel-border);
+  }
+
+  .rev-shots figcaption {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted-dim);
+    margin-top: 2px;
+  }
+
+  .rev-arrow {
+    color: var(--muted-dim);
+    font-size: 13px;
+  }
+
+  @media (max-width: 1240px) {
+    .console--asset {
+      grid-template-columns: minmax(0, 1fr) 330px;
     }
 
-    .win-body {
-      grid-template-columns: 1fr;
-      overflow-y: auto;
-    }
-
-    .win-nav,
-    .win-props,
-    .win-stage {
-      max-height: none;
-      overflow: visible;
-      border-left: 0;
-      border-right: 0;
-    }
-
-    .win-nav {
-      border-bottom: 1px solid var(--panel-border);
-    }
-
-    .win-props {
-      border-top: 1px solid var(--panel-border);
-    }
-
-    .props-head {
-      position: static;
+    .console--asset .rail--chat {
+      grid-column: 1 / -1;
+      max-height: 420px;
     }
   }
 
+  @media (max-width: 900px) {
+    .console--asset {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .console--asset .rail--asset,
+    .console--asset .rail--chat {
+      max-height: 460px;
+    }
+  }
+
+/*@ASSETCSS@*/
   /* ---------- explainer ---------- */
   .explain {
     margin-top: 34px;
@@ -1764,6 +1543,38 @@
       </div>
       <div class="inspector-body" id="inspector"></div>
     </aside>
+
+    <!-- ============ ASSET (tryb assetu) ============ -->
+    <aside class="panel rail--asset">
+      <div class="panel-head">
+        <h2>Asset</h2>
+        <span class="head-file" id="asset-file"></span>
+        <button class="head-close" id="asset-close">✕ Wróć do studia</button>
+      </div>
+      <div class="asset-body" id="asset-body"></div>
+    </aside>
+
+    <!-- ============ ROZMOWA (tryb assetu) ============ -->
+    <aside class="panel rail--chat">
+      <div class="panel-head">
+        <h2>Rozmowa</h2>
+        <span class="count" id="chat-count"></span>
+      </div>
+      <div class="thread" id="chat-thread"></div>
+      <div class="composer">
+        <div class="chips" id="chat-chips"></div>
+        <div class="composer-row">
+          <textarea
+            id="chat-prompt"
+            rows="1"
+            placeholder="Napisz, co ma się zmienić w tym assecie…"
+          ></textarea>
+          <div class="composer-tools">
+            <button class="btn btn--primary" id="chat-send">Wyślij ⏎</button>
+          </div>
+        </div>
+      </div>
+    </aside>
   </div>
 
   <section class="explain">
@@ -1788,7 +1599,7 @@
         Pauza sama otwiera wskazywanie — zatrzymanej gry nie trzeba przełączać w żaden tryb, żeby w
         nią kliknąć. Wybrany element pokazuje metryczkę assetu: typ, plik i funkcję rysującą,
         warstwę, kolider, animację, dźwięk, liczbę instancji i koszt klatki. Miniatura to wycinek
-        żywej sceny, nie ikonka.
+        żywej sceny, nie ikonka — dlatego widać na niej także to, co akurat obok przelatuje.
       </p>
     </div>
 
@@ -1808,18 +1619,17 @@
     </div>
 
     <div class="card">
-      <h3>Edytor assetu to osobne okno</h3>
+      <h3>Asset otwiera rozmowę, nie panel pokręteł</h3>
       <p>
-        Klik w kartę assetu otwiera okno, które rozkłada element na warstwy rysowania i funkcje.
-        Korpus, wirniki, sensor i poświata drona mają własne kolory, krycie i przełącznik
-        widoczności; <code>updateDrone()</code> ma prędkość, zasięg i amplitudę patrolu, a
-        <code>onHit()</code> — obrażenia, odrzut i nietykalność. Każde pokrętło rusza uruchomioną
-        scenę od razu.
+        Klik w kartę assetu przestawia studio na trzy kolumny: scena po lewej, asset w środku,
+        rozmowa po prawej. Na podglądzie assetu zaznaczasz konkretne części — korpus, wirniki,
+        sensor, poświatę — a każde zaznaczenie dostaje numer, kolor i pole na komentarz. Funkcje i
+        dźwięki zaznacza się tak samo.
       </p>
       <p style="margin-top: 7px">
-        Kodu się tu nie pisze: podgląd funkcji jest do orientacji, a przycisk obok wstawia ją do
-        promptu. Okno ustawia wartości, agent zmienia kod — granica jest ta sama co w reszcie
-        platformy.
+        Zaznaczenia wchodzą do promptu jako kontekst, a nie jako gotowa zmiana. Agent odpowiada
+        jedną rewizją: co zmienia i dlaczego, z miniaturą przed i po. Nic nie rusza się na scenie,
+        dopóki nie klikniesz <b>Zastosuj</b>.
       </p>
     </div>
 
@@ -2539,11 +2349,15 @@
       scale = ps;
       ox = pox;
       oy = poy;
+      var png = null;
       try {
-        return c.toDataURL('image/png');
+        png = c.toDataURL('image/png');
       } catch (err) {
-        return null;
+        png = null;
       }
+      // withMap: host potrzebuje skali i marginesu, żeby położyć klikalne
+      // obszary części dokładnie na podglądzie.
+      return opts.withMap ? { png: png, k: k, pad: pad, w: c.width, h: c.height } : png;
     }
 
     // Właściwości, które host wyrenderuje jako kontrolki. Kolor jest tylko
@@ -3357,6 +3171,48 @@
             post({ type: 'preview', id: m.id, png: null, phase: m.phase || 0, part: m.part || null });
             break;
           }
+          // Tryb assetu: jeden podgląd + prostokąty wszystkich części w pikselach
+          // obrazka, żeby host mógł położyć na nim klikalne obszary.
+          if (m.parts) {
+            var list = partsOf(m.id),
+              rects = {},
+              ax0 = pn.r[0],
+              ay0 = pn.r[1],
+              ax1 = pn.r[0] + pn.r[2],
+              ay1 = pn.r[1] + pn.r[3];
+            for (var pi = 0; pi < list.length; pi++) {
+              var prr = partRect(m.id, list[pi].key, pn.r);
+              rects[list[pi].key] = prr;
+              ax0 = Math.min(ax0, prr[0]);
+              ay0 = Math.min(ay0, prr[1]);
+              ax1 = Math.max(ax1, prr[0] + prr[2]);
+              ay1 = Math.max(ay1, prr[1] + prr[3]);
+            }
+            var acrop = [ax0, ay0, ax1 - ax0, ay1 - ay0];
+            var res = previewOf(acrop, { max: m.max || 300, pad: m.pad, phase: m.phase || 0, withMap: true });
+            var boxes = {};
+            if (res) {
+              for (var bk in rects) {
+                if (!Object.prototype.hasOwnProperty.call(rects, bk)) continue;
+                var br = rects[bk];
+                boxes[bk] = [
+                  (br[0] - acrop[0] + res.pad) * res.k,
+                  (br[1] - acrop[1] + res.pad) * res.k,
+                  br[2] * res.k,
+                  br[3] * res.k
+                ];
+              }
+            }
+            post({
+              type: 'preview',
+              id: m.id,
+              token: m.token || null,
+              png: res ? res.png : null,
+              boxes: boxes,
+              size: res ? [res.w, res.h] : [1, 1]
+            });
+            break;
+          }
           // Część może wystawać poza obrys elementu (poświata, wirniki, smuga),
           // więc kadr to suma obu prostokątów — inaczej obrys wypada za kadrem.
           var prect = m.part ? partRect(m.id, m.part, pn.r) : null;
@@ -3627,20 +3483,7 @@
         // Otwarty edytor idzie za wyborem: kliknięcie innego elementu na
         // scenie przełącza okno, a zmiana wartości tylko odświeża podgląd,
         // żeby nie wyrwać suwaka spod palca.
-        if (WIN.open && WIN.node) {
-          var switched = WIN.node.id !== m.id;
-          var newFamily = !WIN.node.editor || WIN.node.editor.family !== m.editor.family;
-          WIN.node = m;
-          if (switched && newFamily) {
-            WIN.sel = { kind: 'part', key: m.editor.parts[0] ? m.editor.parts[0].key : null };
-            WIN.dirty = {};
-            WIN.phase = 0;
-          }
-          if (switched || WIN.pendingRebuild) {
-            WIN.pendingRebuild = false;
-            buildWin();
-          } else refreshStageImage();
-        }
+        if (ASSET.open) followAsset(m);
       } else if (m.type === 'key' && m.key === 'i') {
         setInspect(!UI.inspect);
       } else if (m.type === 'shot') {
@@ -3724,7 +3567,7 @@
         var top = el('button', 'asset-top');
         top.title = 'Otwórz edytor assetu';
         top.style.cssText = 'width:100%;text-align:left';
-        top.onclick = openWin;
+        top.onclick = openAsset;
         var thumb = el('div', 'asset-thumb');
         if (p.preview) {
           var pimg = document.createElement('img');
@@ -3757,8 +3600,8 @@
           dl.appendChild(el('dt', null, row[0]));
           dl.appendChild(el('dd', null, row[1]));
         });
-        var open = el('button', 'btn asset-open', '▣ Otwórz edytor assetu');
-        open.onclick = openWin;
+        var open = el('button', 'btn btn--primary asset-open', '▣ Otwórz asset i pisz do agenta');
+        open.onclick = openAsset;
         ga.appendChild(open);
         ga.appendChild(dl);
         host.appendChild(ga);
@@ -3921,28 +3764,13 @@
     }
 
     /* =================================================================
-     * Edytor assetu — osobne okno nad sceną.
+     * Tryb assetu — scena po lewej, asset w środku, rozmowa po prawej.
      *
-     * Prawa szyna odpowiada „co to jest”. To okno odpowiada „z czego to
-     * jest zrobione”: każda warstwa rysowania i każda funkcja osobno,
-     * z parametrami, które idą prosto do uruchomionej gry.
+     * Nie ma tu pokręteł. Zaznaczasz konkretne części assetu, dopisujesz
+     * do nich komentarz i piszesz prompt; zmiana wraca jako rewizja od
+     * agenta, nie jako suwak pod palcem.
      * ================================================================= */
-    var WIN = {
-      open: false,
-      max: false,
-      min: false,
-      sel: null,
-      phase: 0,
-      playing: false,
-      timer: null,
-      checker: true,
-      grid: false,
-      zoom: 1,
-      dirty: {},
-      frames: [],
-      node: null
-    };
-    var winEl = null;
+    var ASSET = { open: false, node: null, boxes: {}, size: [1, 1], sel: [], seq: 0, rev: 12 };
     var previewCbs = {};
     var previewSeq = 0;
 
@@ -3955,597 +3783,309 @@
     }
     handlers.push(function (m) {
       if (m.type === 'preview' && m.token && previewCbs[m.token]) {
-        previewCbs[m.token](m.png);
+        previewCbs[m.token](m);
         delete previewCbs[m.token];
       }
     });
 
-    function beep(hz) {
-      try {
-        var AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return;
-        var ac = new AC();
-        var osc = ac.createOscillator();
-        var gain = ac.createGain();
-        osc.type = 'square';
-        osc.frequency.value = hz;
-        gain.gain.value = 0.05;
-        osc.connect(gain);
-        gain.connect(ac.destination);
-        osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.18);
-        osc.stop(ac.currentTime + 0.2);
-        setTimeout(function () {
-          ac.close();
-        }, 500);
-      } catch (err) {
-        /* dźwięk jest ozdobą, nie warunkiem */
-      }
-    }
-
-    function openWin() {
+    function openAsset() {
       if (!UI.picked || !UI.picked.editor) return;
-      var sameAsset = WIN.node && UI.picked.editor.family === WIN.node.editor.family;
-      WIN.node = UI.picked;
-      WIN.open = true;
-      WIN.min = false;
-      if (!sameAsset || !WIN.sel) {
-        WIN.sel = { kind: 'part', key: UI.picked.editor.parts[0] ? UI.picked.editor.parts[0].key : null };
-        WIN.dirty = {};
-        WIN.phase = 0;
+      ASSET.open = true;
+      ASSET.node = UI.picked;
+      ASSET.sel = [];
+      ASSET.seq = 0;
+      document.querySelector('.console').classList.add('console--asset');
+      $('asset-file').textContent = UI.picked.asset.file;
+      if (!UI.paused) setPaused(true);
+      renderAsset();
+      renderThread();
+      renderChips();
+    }
+
+    function closeAsset() {
+      ASSET.open = false;
+      document.querySelector('.console').classList.remove('console--asset');
+      renderChips();
+    }
+
+    /** Wybór innego elementu na scenie przełącza asset bez wychodzenia z trybu. */
+    var assetRefreshTimer = null;
+    function followAsset(m) {
+      if (!ASSET.node) return;
+      var switched = ASSET.node.id !== m.id;
+      ASSET.node = m;
+      $('asset-file').textContent = m.asset.file;
+      if (switched) {
+        ASSET.sel = [];
+        ASSET.seq = 0;
+        renderChips();
       }
-      buildWin();
-    }
-    function closeWin() {
-      WIN.open = false;
-      WIN.playing = false;
-      if (WIN.timer) clearInterval(WIN.timer);
-      if (winEl) winEl.hidden = true;
+      if (assetRefreshTimer) clearTimeout(assetRefreshTimer);
+      assetRefreshTimer = setTimeout(renderAsset, 110);
     }
 
-    /** 1 zmiana, 2–4 zmiany, reszta zmian — inaczej pasek stanu mówi łamaną polszczyzną. */
-    function zmiany(n) {
-      var last = n % 10,
-        teens = n % 100;
-      if (n === 1) return '1 zmiana';
-      if (last >= 2 && last <= 4 && (teens < 12 || teens > 14)) return n + ' zmiany';
-      return n + ' zmian';
+    function selKey(item) {
+      return item.kind + ':' + item.key;
     }
-
-    function winTitle() {
-      var a = WIN.node.asset;
-      return a.file.split('/').pop();
-    }
-
-    function buildWin() {
-      if (!winEl) {
-        winEl = el('div', 'win');
-        winEl.setAttribute('role', 'dialog');
-        winEl.setAttribute('aria-label', 'Edytor assetu');
-        document.body.appendChild(winEl);
-        winEl.style.right = '20px';
-        winEl.style.top = '96px';
-      }
-      winEl.hidden = false;
-      winEl.classList.toggle('win--max', WIN.max);
-      winEl.classList.toggle('win--min', WIN.min);
-      winEl.innerHTML = '';
-
-      var node = WIN.node;
-      var ed = node.editor;
-
-      /* --- pasek tytułu --- */
-      var bar = el('div', 'win-title');
-      bar.appendChild(el('span', 'win-icon', '▣'));
-      var name = el('div', 'win-name');
-      name.appendChild(document.createTextNode(winTitle() + ' — edytor assetu '));
-      name.appendChild(el('span', null, '· ' + node.label));
-      bar.appendChild(name);
-      var btns = el('div', 'win-btns');
-      [
-        ['min', '─', 'Zwiń'],
-        ['max', WIN.max ? '❐' : '▢', WIN.max ? 'Przywróć' : 'Maksymalizuj'],
-        ['close', '✕', 'Zamknij']
-      ].forEach(function (b) {
-        var x = el('button', 'wb' + (b[0] === 'close' ? ' wb--x' : ''), b[1]);
-        x.title = b[2];
-        x.setAttribute('aria-label', b[2]);
-        x.onclick = function () {
-          if (b[0] === 'close') return closeWin();
-          if (b[0] === 'min') WIN.min = !WIN.min;
-          if (b[0] === 'max') {
-            WIN.max = !WIN.max;
-            WIN.min = false;
-          }
-          buildWin();
-        };
-        btns.appendChild(x);
+    function isSelected(kind, key) {
+      return ASSET.sel.some(function (s) {
+        return s.kind === kind && s.key === key;
       });
-      bar.appendChild(btns);
-      dragify(bar);
-      winEl.appendChild(bar);
-
-      /* --- menu --- */
-      var menu = el('div', 'win-menu');
-      var MENUS = [
-        [
-          'Plik',
-          [
-            ['Przywróć domyślne', '↺', function () {
-              send({ type: 'reset-asset', id: node.id });
-              WIN.dirty = {};
-              WIN.pendingRebuild = true;
-            }],
-            ['sep'],
-            ['Zamknij okno', '✕', closeWin]
-          ]
-        ],
-        [
-          'Widok',
-          [
-            ['Szachownica', WIN.checker ? '✓' : '', function () {
-              WIN.checker = !WIN.checker;
-            }],
-            ['Siatka pikseli', WIN.grid ? '✓' : '', function () {
-              WIN.grid = !WIN.grid;
-            }],
-            ['sep'],
-            ['Powiększenie 1×', WIN.zoom === 1 ? '✓' : '', function () {
-              WIN.zoom = 1;
-            }],
-            ['Powiększenie 2×', WIN.zoom === 2 ? '✓' : '', function () {
-              WIN.zoom = 2;
-            }]
-          ]
-        ],
-        [
-          'Uruchom',
-          [
-            [WIN.playing ? 'Zatrzymaj animację' : 'Odtwórz animację', '▶', function () {
-              togglePlay();
-            }],
-            ['Pokaż klatki', '⧉', function () {
-              WIN.sel = { kind: 'frames' };
-            }]
-          ]
-        ]
-      ];
-      MENUS.forEach(function (mn) {
-        var b = el('button', null, mn[0]);
-        b.onclick = function (e) {
-          e.stopPropagation();
-          var open = menu.querySelector('.menu-pop');
-          var wasMine = open && open.dataset.owner === mn[0];
-          if (open) open.remove();
-          document.querySelectorAll('.win-menu > button').forEach(function (x) {
-            x.classList.remove('is-open');
-          });
-          if (wasMine) return;
-          b.classList.add('is-open');
-          var pop = el('div', 'menu-pop');
-          pop.dataset.owner = mn[0];
-          pop.style.left = b.offsetLeft + 'px';
-          mn[1].forEach(function (item) {
-            if (item[0] === 'sep') return pop.appendChild(el('div', 'menu-sep'));
-            var mb = el('button');
-            mb.appendChild(el('i', null, item[1] || ''));
-            mb.appendChild(document.createTextNode(item[0]));
-            mb.onclick = function () {
-              pop.remove();
-              b.classList.remove('is-open');
-              item[2]();
-              buildWin();
-            };
-            pop.appendChild(mb);
-          });
-          menu.appendChild(pop);
-        };
-        menu.appendChild(b);
+    }
+    function toggleSel(kind, key, label, meta) {
+      var at = -1;
+      ASSET.sel.forEach(function (s, i) {
+        if (s.kind === kind && s.key === key) at = i;
       });
-      menu.appendChild(el('span', 'win-menu-right', ed.family + ' · ' + node.asset.type.toLowerCase()));
-      winEl.appendChild(menu);
-
-      /* --- ciało: nawigacja | scena | właściwości --- */
-      var body = el('div', 'win-body');
-      body.appendChild(buildNav(ed));
-      var stage = el('div', 'win-stage');
-      stage.id = 'win-stage';
-      body.appendChild(stage);
-      var props = el('div', 'win-props');
-      props.id = 'win-props';
-      body.appendChild(props);
-      winEl.appendChild(body);
-
-      /* --- pasek stanu --- */
-      var st = el('div', 'win-status');
-      st.appendChild(el('span', null, Math.round(node.w) + '×' + Math.round(node.h) + ' px'));
-      st.appendChild(el('span', null, ed.frames + ' klatki'));
-      st.appendChild(el('span', null, node.asset.instances + ' inst.'));
-      st.appendChild(el('span', null, node.asset.cost));
-      var changed = Object.keys(WIN.dirty).length;
-      st.appendChild(el('span', changed ? 'dirty' : 'clean', changed ? '● ' + zmiany(changed) + ' w szkicu' : 'bez zmian'));
-      winEl.appendChild(st);
-
-      renderStage();
-      renderProps();
+      if (at >= 0) ASSET.sel.splice(at, 1);
+      else {
+        ASSET.seq++;
+        ASSET.sel.push({
+          kind: kind,
+          key: key,
+          label: label,
+          meta: meta || '',
+          n: ASSET.seq,
+          color: NOTE_COLORS[(ASSET.seq - 1) % NOTE_COLORS.length],
+          note: ''
+        });
+      }
+      renderAsset();
+      renderChips();
     }
 
-    function buildNav(ed) {
-      var nav = el('div', 'win-nav');
-      function item(kind, key, label, opts) {
-        var b = el('button', 'nav-item' + (WIN.sel && WIN.sel.kind === kind && WIN.sel.key === key ? ' is-on' : ''));
-        if (opts && opts.color) {
-          var d = el('span', 'sw-dot');
-          d.style.background = opts.color;
-          b.appendChild(d);
-        }
-        var t = el('span', opts && opts.mono ? 'mono' : null, label);
-        b.appendChild(t);
-        if (opts && opts.off) b.appendChild(el('span', 'off', 'ukryta'));
-        b.onclick = function () {
-          WIN.sel = { kind: kind, key: key };
-          buildWin();
-        };
-        nav.appendChild(b);
-      }
+    function renderAsset() {
+      var host = $('asset-body');
+      if (!host || !ASSET.node) return;
+      var node = ASSET.node,
+        ed = node.editor;
+      host.innerHTML = '';
 
-      nav.appendChild(el('div', 'nav-group', 'Części'));
+      var fig = el('div', 'asset-figure');
+      var img = document.createElement('img');
+      img.alt = 'Podgląd assetu ' + node.label;
+      fig.appendChild(img);
+      host.appendChild(fig);
+      askPreview(node.id, { max: 300, pad: 8, parts: true }, function (res) {
+        if (!res || !res.png) return;
+        img.src = res.png;
+        ASSET.boxes = res.boxes || {};
+        ASSET.size = res.size || [1, 1];
+        drawHotspots(fig, ed);
+      });
+
+      host.appendChild(
+        el(
+          'div',
+          'asset-hint',
+          'Kliknij część assetu na podglądzie — dołączy się do promptu jako komentarz. To samo działa dla funkcji i dźwięków.',
+        ),
+      );
+
+      // Część schowana pod inną (poświata pod korpusem) jest na podglądzie
+      // klikalna tylko po obwodzie — lista części jest drogą pewną.
+      var partsRow = el('div');
+      partsRow.appendChild(el('div', 'asset-row-label', 'Części'));
+      var partTokens = el('div', 'asset-tokens');
       ed.parts.forEach(function (p) {
         var colorField = p.fields.filter(function (x) {
           return x.type === 'color';
         })[0];
-        var vis = p.fields.filter(function (x) {
-          return x.key === 'visible';
-        })[0];
-        item('part', p.key, p.label, {
-          color: colorField ? colorField.value : '#334',
-          off: vis && vis.value === false
-        });
-      });
-
-      nav.appendChild(el('div', 'nav-group', 'Funkcje'));
-      ed.functions.forEach(function (fn) {
-        item('fn', fn.name, fn.name + '()', { mono: true });
-      });
-
-      if (ed.sounds.length) {
-        nav.appendChild(el('div', 'nav-group', 'Dźwięki'));
-        ed.sounds.forEach(function (s) {
-          item('sound', s.file, s.file, { mono: true });
-        });
-      }
-
-      nav.appendChild(el('div', 'nav-group', 'Animacja'));
-      item('frames', undefined, ed.frames + ' klatki');
-      return nav;
-    }
-
-    function stageImage(partKey, phase, cb) {
-      askPreview(
-        WIN.node.id,
-        { max: 210 * WIN.zoom, pad: 6, phase: phase || 0, part: partKey || null },
-        cb,
-      );
-    }
-
-    function renderStage() {
-      var stage = $('win-stage');
-      if (!stage) return;
-      var node = WIN.node,
-        ed = node.editor,
-        sel = WIN.sel || {};
-      stage.innerHTML = '';
-
-      var box = el('div', 'stage-canvas' + (WIN.checker ? ' is-checker' : '') + (WIN.grid ? ' is-grid' : ''));
-      var img = document.createElement('img');
-      img.alt = 'Podgląd assetu ' + node.label;
-      box.appendChild(img);
-      stage.appendChild(box);
-      stageImage(sel.kind === 'part' ? sel.key : null, WIN.phase, function (png) {
-        if (png) img.src = png;
-      });
-
-      var capText =
-        sel.kind === 'part'
-          ? 'obrys: ' + (ed.parts.filter(function (p) { return p.key === sel.key; })[0] || {}).label
-          : sel.kind === 'fn'
-            ? sel.key + '() — podgląd bez obrysu'
-            : node.path;
-      stage.appendChild(el('div', 'stage-cap', capText + ' · klatka ' + (WIN.phase + 1) + '/' + ed.frames));
-
-      if (sel.kind === 'fn') {
-        var fn = ed.functions.filter(function (x) {
-          return x.name === sel.key;
-        })[0];
-        if (fn) {
-          var pre = el('div', 'code');
-          pre.appendChild(codeLine(0, fn.sig, true));
-          fn.code.forEach(function (line, i) {
-            pre.appendChild(codeLine(i + 1, '  ' + line));
-          });
-          stage.appendChild(pre);
-          var ask = el('button', 'btn btn--sm', '✎ Poproś agenta o zmianę tej funkcji');
-          ask.onclick = function () {
-            $('prompt').value =
-              ($('prompt').value + ' Zmień ' + fn.name + '() w ' + node.asset.file + ': ').replace(/^\s+/, '');
-            $('prompt').focus();
-          };
-          stage.appendChild(ask);
-        }
-      }
-
-      if (sel.kind === 'sound') {
-        var snd = ed.sounds.filter(function (s) {
-          return s.file === sel.key;
-        })[0];
-        if (snd) {
-          var wave = el('div', 'wave');
-          for (var i = 0; i < 46; i++) {
-            var bar = el('i');
-            var amp = Math.abs(Math.sin(i * 0.7 + snd.hz * 0.01)) * Math.exp(-i / 26);
-            bar.style.height = Math.max(6, amp * 100) + '%';
-            wave.appendChild(bar);
-          }
-          stage.appendChild(wave);
-          var play = el('button', 'btn btn--sm', '▶ Odsłuchaj ' + snd.file);
-          play.onclick = function () {
-            beep(snd.hz);
-          };
-          stage.appendChild(play);
-        }
-      }
-
-      if (sel.kind === 'frames' || ed.frames > 1) {
-        var strip = el('div', 'frames');
-        for (var fr = 0; fr < ed.frames; fr++) {
-          (function (index) {
-            var tile = el('button', 'frame' + (WIN.phase === index ? ' is-on' : ''));
-            var fimg = document.createElement('img');
-            fimg.alt = 'Klatka ' + (index + 1);
-            tile.appendChild(fimg);
-            tile.appendChild(el('span', null, '#' + (index + 1)));
-            tile.onclick = function () {
-              WIN.phase = index;
-              renderStage();
-            };
-            strip.appendChild(tile);
-            askPreview(WIN.node.id, { max: 56, pad: 5, phase: index }, function (png) {
-              if (png) fimg.src = png;
-            });
-          })(fr);
-        }
-        var pl = el('button', 'btn btn--sm', WIN.playing ? '⏸ Stop' : '▶ Odtwórz');
-        pl.onclick = togglePlay;
-        strip.appendChild(pl);
-        stage.appendChild(strip);
-      }
-    }
-
-    function codeLine(n, text, isSig) {
-      var line = document.createElement('div');
-      var num = el('span', 'ln', n === 0 ? '' : String(n));
-      line.appendChild(num);
-      // Kolejność ma znaczenie: łańcuchy najpierw, dopóki jedyne cudzysłowy w
-      // tekście są te z kodu — potem w treści są już cudzysłowy z atrybutów class.
-      var html = text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"([^"]*)"/g, '<span class="str">"$1"</span>')
-        .replace(/\b(if|for|of|return|const|let|void|boolean)\b/g, '<span class="kw">$1</span>')
-        .replace(/(^|[^\w$."])([a-zA-Z_$][\w$]*)\(/g, '$1<span class="fn">$2</span>(')
-        .replace(/(^|[^\w$.#"])(\d+\.?\d*)\b/g, '$1<span class="num">$2</span>');
-      var code = document.createElement('span');
-      code.innerHTML = html;
-      if (isSig) code.style.color = '#dbe4ee';
-      line.appendChild(code);
-      return line;
-    }
-
-    function togglePlay() {
-      WIN.playing = !WIN.playing;
-      if (WIN.timer) clearInterval(WIN.timer);
-      if (WIN.playing) {
-        WIN.timer = setInterval(function () {
-          if (!WIN.open) return clearInterval(WIN.timer);
-          WIN.phase = (WIN.phase + 1) % Math.max(1, WIN.node.editor.frames);
-          renderStage();
-        }, 220);
-      }
-      renderStage();
-    }
-
-    function renderProps() {
-      var host = $('win-props');
-      if (!host) return;
-      var node = WIN.node,
-        ed = node.editor,
-        sel = WIN.sel || {};
-      host.innerHTML = '';
-
-      if (sel.kind === 'part') {
-        var part = ed.parts.filter(function (p) {
-          return p.key === sel.key;
-        })[0];
-        if (!part) return;
-        host.appendChild(el('div', 'props-head', 'Część · ' + part.label));
-        part.fields.forEach(function (fld) {
-          host.appendChild(fieldRow(fld, { part: part.key }));
-        });
-        host.appendChild(
-          el(
-            'div',
-            'prow-note',
-            'Zmiany idą prosto do uruchomionej sceny. Do repo trafią dopiero, gdy agent zamknie je w rewizji.',
-          ),
-        );
-        return;
-      }
-
-      if (sel.kind === 'fn') {
-        var fn = ed.functions.filter(function (x) {
-          return x.name === sel.key;
-        })[0];
-        if (!fn) return;
-        host.appendChild(el('div', 'props-head', 'Funkcja · ' + fn.name));
-        if (!fn.params.length) {
-          host.appendChild(
-            el('div', 'prow-note', 'Ta funkcja nie ma parametrów do nastawienia — rysuje to, co ustawisz w częściach.'),
-          );
-        }
-        fn.params.forEach(function (fld) {
-          host.appendChild(fieldRow(fld, {}));
-        });
-        return;
-      }
-
-      if (sel.kind === 'sound') {
-        var snd = ed.sounds.filter(function (s) {
-          return s.file === sel.key;
-        })[0];
-        if (!snd) return;
-        host.appendChild(el('div', 'props-head', 'Dźwięk · ' + snd.file));
-        var dl = document.createElement('dl');
-        dl.className = 'asset-meta';
-        dl.style.padding = '0 12px';
-        [
-          ['Wyzwalacz', snd.when],
-          ['Ton', snd.hz + ' Hz'],
-          ['Format', 'wav · mono'],
-          ['Ścieżka', 'sfx/' + snd.file]
-        ].forEach(function (row) {
-          dl.appendChild(el('dt', null, row[0]));
-          dl.appendChild(el('dd', null, row[1]));
-        });
-        host.appendChild(dl);
-        return;
-      }
-
-      host.appendChild(el('div', 'props-head', 'Animacja'));
-      host.appendChild(
-        el('div', 'prow-note', ed.frames + ' klatki składane w locie z parametrów assetu — nie ma tu atlasu do podmiany.'),
-      );
-    }
-
-    /** Jedna kontrolka właściwości — kolor, liczba albo przełącznik. */
-    function fieldRow(fld, scope) {
-      var row = el('div', 'prow');
-      var lab = el('label', null, fld.label);
-      row.appendChild(lab);
-
-      function push(value) {
-        var msg = { type: 'set', id: WIN.node.id, key: fld.key, value: value };
-        if (scope.part) msg.part = scope.part;
-        send(msg);
-        WIN.dirty[(scope.part || 'fn') + '.' + fld.key] = true;
-        var st = winEl.querySelector('.win-status .clean, .win-status .dirty');
-        if (st) {
-          st.className = 'dirty';
-          st.textContent = '● ' + zmiany(Object.keys(WIN.dirty).length) + ' w szkicu';
-        }
-      }
-
-      if (fld.type === 'color') {
-        row.appendChild(el('output', null, String(fld.value)));
-        var sw = el('div', 'prow-swatches');
-        PALETTE.forEach(function (hex) {
-          var b = el('button', 'psw' + (hex.toLowerCase() === String(fld.value).toLowerCase() ? ' is-on' : ''));
-          b.style.background = hex;
-          b.title = hex;
-          b.setAttribute('aria-label', fld.label + ' ' + hex);
-          b.onclick = function () {
-            fld.value = hex;
-            push(hex);
-            buildWin();
-          };
-          sw.appendChild(b);
-        });
-        row.appendChild(sw);
-        return row;
-      }
-
-      if (fld.type === 'bool') {
-        var tg = el('button', 'toggle' + (fld.value ? ' is-on' : ''));
-        tg.setAttribute('role', 'switch');
-        tg.setAttribute('aria-checked', String(!!fld.value));
-        tg.setAttribute('aria-label', fld.label);
-        tg.onclick = function () {
-          fld.value = !fld.value;
-          push(fld.value);
-          buildWin();
+        var b = el('button', 'token' + (isSelected('part', p.key) ? ' is-on' : ''));
+        var dot = el('span', 'dot');
+        dot.style.background = colorField ? colorField.value : '#334';
+        b.appendChild(dot);
+        b.appendChild(el('span', null, p.label));
+        b.onclick = function () {
+          toggleSel('part', p.key, p.label);
         };
-        row.appendChild(tg);
-        return row;
-      }
+        partTokens.appendChild(b);
+      });
+      partsRow.appendChild(partTokens);
+      host.appendChild(partsRow);
 
-      var out = el('output', null, fmt(fld.value) + (fld.unit || ''));
-      row.appendChild(out);
-      var inp = document.createElement('input');
-      inp.type = 'range';
-      inp.min = fld.min;
-      inp.max = fld.max;
-      inp.step = fld.step;
-      inp.value = fld.value;
-      inp.setAttribute('aria-label', fld.label);
-      inp.oninput = function () {
-        fld.value = parseFloat(inp.value);
-        out.textContent = fmt(inp.value) + (fld.unit || '');
-        push(parseFloat(inp.value));
-        if (WIN.sel && WIN.sel.kind === 'part') refreshStageImage();
-      };
-      row.appendChild(inp);
-      return row;
-    }
+      var other = el('div');
+      other.appendChild(el('div', 'asset-row-label', 'Funkcje i dźwięki'));
+      var tokens = el('div', 'asset-tokens');
+      ed.functions.forEach(function (fn) {
+        var b = el('button', 'token' + (isSelected('fn', fn.name) ? ' is-on' : ''), fn.name + '()');
+        b.onclick = function () {
+          toggleSel('fn', fn.name, fn.name + '()', fn.sig);
+        };
+        tokens.appendChild(b);
+      });
+      ed.sounds.forEach(function (s) {
+        var b = el('button', 'token' + (isSelected('sound', s.file) ? ' is-on' : ''));
+        b.appendChild(el('span', null, '♪ ' + s.file));
+        b.onclick = function () {
+          toggleSel('sound', s.file, s.file, s.when);
+        };
+        tokens.appendChild(b);
+      });
+      other.appendChild(tokens);
+      host.appendChild(other);
 
-    var stageRefreshTimer = null;
-    function refreshStageImage() {
-      if (stageRefreshTimer) return;
-      stageRefreshTimer = setTimeout(function () {
-        stageRefreshTimer = null;
-        var img = winEl && winEl.querySelector('.stage-canvas img');
-        if (!img) return;
-        stageImage(WIN.sel && WIN.sel.kind === 'part' ? WIN.sel.key : null, WIN.phase, function (png) {
-          if (png) img.src = png;
+      if (ASSET.sel.length) {
+        var box = el('div');
+        box.appendChild(el('div', 'asset-row-label', 'Zaznaczone · ' + ASSET.sel.length));
+        var notes = el('div', 'notes');
+        notes.style.marginTop = '7px';
+        ASSET.sel.forEach(function (s) {
+          var row = el('div', 'note');
+          row.style.borderLeftColor = s.color;
+          var idx = el('span', 'idx', String(s.n));
+          idx.style.background = s.color;
+          row.appendChild(idx);
+          var main = el('div', 'note-main');
+          main.appendChild(el('b', null, s.label));
+          main.appendChild(el('small', null, s.kind === 'part' ? 'część · ' + node.asset.file : s.meta));
+          var inp = document.createElement('input');
+          inp.type = 'text';
+          inp.placeholder = 'Komentarz do agenta…';
+          inp.value = s.note;
+          inp.setAttribute('aria-label', 'Komentarz do: ' + s.label);
+          inp.oninput = function () {
+            s.note = inp.value;
+            renderChips();
+          };
+          main.appendChild(inp);
+          row.appendChild(main);
+          var x = el('button', 'x', '×');
+          x.setAttribute('aria-label', 'Usuń zaznaczenie ' + s.label);
+          x.onclick = function () {
+            toggleSel(s.kind, s.key, s.label);
+          };
+          row.appendChild(x);
+          notes.appendChild(row);
         });
-      }, 90);
+        box.appendChild(notes);
+        host.appendChild(box);
+      }
     }
 
-    /** Przeciąganie okna za pasek tytułu. */
-    function dragify(bar) {
-      bar.addEventListener('pointerdown', function (e) {
-        if (e.target.closest('.wb') || WIN.max) return;
-        var rect = winEl.getBoundingClientRect();
-        var dx = e.clientX - rect.left,
-          dy = e.clientY - rect.top;
-        bar.setPointerCapture(e.pointerId);
-        function move(ev) {
-          var x = Math.max(6, Math.min(window.innerWidth - rect.width - 6, ev.clientX - dx));
-          var y = Math.max(6, Math.min(window.innerHeight - 60, ev.clientY - dy));
-          winEl.style.left = x + 'px';
-          winEl.style.top = y + 'px';
-          winEl.style.right = 'auto';
+    function drawHotspots(fig, ed) {
+      fig.querySelectorAll('.hot').forEach(function (n) {
+        n.remove();
+      });
+      var labels = {};
+      ed.parts.forEach(function (p) {
+        labels[p.key] = p.label;
+      });
+      // Od największego do najmniejszego: poświata obejmuje cały korpus, a
+      // dodana ostatnia leżałaby na wierzchu i łapała każde kliknięcie.
+      var order = Object.keys(ASSET.boxes).sort(function (a, b) {
+        return ASSET.boxes[b][2] * ASSET.boxes[b][3] - ASSET.boxes[a][2] * ASSET.boxes[a][3];
+      });
+      order.forEach(function (key) {
+        var b = ASSET.boxes[key];
+        var on = isSelected('part', key);
+        var sel = ASSET.sel.filter(function (s) {
+          return s.kind === 'part' && s.key === key;
+        })[0];
+        var hot = el('button', 'hot' + (on ? ' is-on' : ''));
+        hot.style.left = (b[0] / ASSET.size[0]) * 100 + '%';
+        hot.style.top = (b[1] / ASSET.size[1]) * 100 + '%';
+        hot.style.width = (b[2] / ASSET.size[0]) * 100 + '%';
+        hot.style.height = (b[3] / ASSET.size[1]) * 100 + '%';
+        hot.setAttribute('aria-label', (on ? 'Odznacz ' : 'Zaznacz ') + (labels[key] || key));
+        if (on && sel) {
+          hot.style.borderColor = sel.color;
+          var badge = el('span', 'hot-badge', String(sel.n));
+          badge.style.background = sel.color;
+          hot.appendChild(badge);
         }
-        function up() {
-          bar.removeEventListener('pointermove', move);
-          bar.removeEventListener('pointerup', up);
-        }
-        bar.addEventListener('pointermove', move);
-        bar.addEventListener('pointerup', up);
+        hot.appendChild(el('span', 'hot-label', labels[key] || key));
+        hot.onclick = function () {
+          toggleSel('part', key, labels[key] || key);
+        };
+        fig.appendChild(hot);
       });
     }
 
-    document.addEventListener('click', function (e) {
-      var pop = winEl && winEl.querySelector('.menu-pop');
-      if (pop && !e.target.closest('.win-menu')) {
-        pop.remove();
-        winEl.querySelectorAll('.win-menu > button').forEach(function (x) {
-          x.classList.remove('is-open');
+    /* ---- co agent proponuje, gdy dostanie te zaznaczenia ---- */
+    var PART_REV = {
+      rotor: ['Wirniki dostają dłuższe łopaty i mocniejsze rozmycie w ruchu.', [['rotor', 'span', 8], ['rotor', 'alpha', 0.8]]],
+      glow: ['Poświata włączona i związana z alarmem — zagrożenie widać z daleka.', [['glow', 'visible', true], ['glow', 'alpha', 0.45], ['glow', 'radius', 22]]],
+      body: ['Korpus dostaje ostrzejszą sylwetkę — mniej zaokrąglenia, ciemniejszy odcień.', [['body', 'radius', 1], ['body', 'color', '#ff6b6b']]],
+      sensor: ['Sensor większy i jaśniejszy, kierunek lotu czytelny na pierwszy rzut oka.', [['sensor', 'size', 5], ['sensor', 'color', '#f0f4f8']]],
+      eyes: ['Oczy większe — od razu widać, w którą stronę patrzy kurier.', [['eyes', 'size', 4]]],
+      trail: ['Smuga włączona: przy szybkim biegu widać kierunek i tempo.', [['trail', 'visible', true], ['trail', 'alpha', 0.45]]],
+      core: ['Rdzeń paczki mocniejszy kolorystycznie, nie ginie na tle miasta.', [['core', 'color', '#ffb443']]],
+      halo: ['Aura paczki szersza i jaśniejsza — widać ją zza budynków.', [['halo', 'alpha', 0.5], ['halo', 'radius', 1.5]]],
+      surface: ['Nawierzchnia ciemniejsza, aktorzy odcinają się od tła.', [['surface', 'color', '#0b1018']]],
+      edge: ['Krawędź jezdni grubsza — styk z podłożem czytelny.', [['edge', 'size', 4], ['edge', 'color', '#00e4ac']]],
+      stripes: ['Pasy jezdni wyraźniejsze, ruch tła daje poczucie prędkości.', [['stripes', 'alpha', 0.85]]],
+      walls: ['Bryły panoramy ciemniejsze — przestają rywalizować z aktorami.', [['walls', 'color', '#141d27']]],
+      windows: ['Okna mocniej świecą, miasto wygląda na zamieszkane.', [['windows', 'alpha', 0.95]]],
+      dots: ['Gwiazdy większe i wyraźniejsze.', [['dots', 'size', 2]]],
+      text: ['Napis HUD większy — na telefonie licznik był nieczytelny.', [['text', 'size', 1.45]]],
+      shadow: ['Cień pod napisem włączony, HUD czytelny na każdym tle.', [['shadow', 'visible', true], ['shadow', 'alpha', 0.7]]],
+      top: ['Górny kolor nieba chłodniejszy, mocniejszy kontrast z aktorami.', [['top', 'color', '#0d141c']]],
+      bottom: ['Dolny kolor nieba ciemniejszy.', [['bottom', 'color', '#070b10']]]
+    };
+    var FN_REV = {
+      updateDrone: ['updateDrone(): wolniejszy patrol i krótsza trasa — przeskok staje się wykonalny.', [[null, 'speed', 0.7], [null, 'range', 34]]],
+      onHit: ['onHit(): łagodniejszy odrzut i dłuższa nietykalność po trafieniu.', [[null, 'knock', 4], [null, 'iframes', 75]]],
+      spawnDrones: ['spawnDrones(): o jednego drona mniej na starcie.', [[null, 'count', 2]]],
+      updatePlayer: ['updatePlayer(): wyższy skok przy tej samej grawitacji.', [[null, 'jump', 10.4]]],
+      onLand: ['onLand(): postać odrobinę większa, lądowanie bardziej czytelne.', [[null, 'size', 1.15]]],
+      onPickup: ['onPickup(): więcej punktów za paczkę — ryzyko ma się opłacać.', [[null, 'points', 25]]],
+      respawn: ['respawn(): mniej paczek naraz, więcej ruchu między nimi.', [[null, 'count', 4]]],
+      drawTerrain: ['drawTerrain(): niższe podłoże, więcej miejsca na rozgrywkę.', [[null, 'height', 34]]],
+      drawSkyline: ['drawSkyline(): wolniejsza paralaksa, tło przestaje ciągnąć wzrok.', [[null, 'parallax', 0.05]]],
+      drawStars: ['drawStars(): rzadsze gwiazdy, spokojniejsze niebo.', [[null, 'density', 24]]],
+      drawHud: ['drawHud(): większa skala napisów.', [[null, 'size', 1.4]]]
+    };
+
+    function revisionFor(sel) {
+      var lines = [],
+        ops = [];
+      sel.forEach(function (s) {
+        var rec = s.kind === 'part' ? PART_REV[s.key] : s.kind === 'fn' ? FN_REV[s.key] : null;
+        if (!rec) {
+          lines.push({ text: (s.label + ': biorę to pod uwagę przy składaniu wersji.'), note: s.note });
+          return;
+        }
+        lines.push({ text: rec[0], note: s.note });
+        rec[1].forEach(function (op) {
+          ops.push({ part: op[0], key: op[1], value: op[2] });
         });
+      });
+      if (!lines.length) {
+        lines.push({ text: 'Bez wskazanych części czytam to jako zmianę całego assetu — zacznę od czytelności sylwetki.', note: '' });
+        ops.push({ part: null, key: 'size', value: 1.15 });
       }
-    });
-    window.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && WIN.open) closeWin();
-    });
+      return { n: ++ASSET.rev, lines: lines, ops: ops, applied: false, before: null, after: null, id: ASSET.node.id, file: ASSET.node.asset.file };
+    }
+
+    function applyRevision(rev) {
+      rev.ops.forEach(function (op) {
+        var msg = { type: 'set', id: rev.id, key: op.key, value: op.value };
+        if (op.part) msg.part = op.part;
+        send(msg);
+      });
+      rev.applied = true;
+      setTimeout(function () {
+        askPreview(rev.id, { max: 120, pad: 6 }, function (res) {
+          rev.after = res && res.png;
+          renderThread();
+        });
+      }, 260);
+      renderThread();
+    }
+
+    function revertRevision(rev) {
+      // Cofnięcie to pełny reset rodziny assetu — po jednej rewizji jest tym samym,
+      // a nie udaje historii zmian, której ten pokaz nie prowadzi.
+      send({ type: 'reset-asset', id: rev.id });
+      rev.applied = false;
+      rev.after = null;
+      renderThread();
+    }
+
+    $('asset-close').onclick = closeAsset;
+
+/*@ASSETJS@*/
 
     /* ---------------- pinezki + załączniki ---------------- */
     function pin(p, note) {
@@ -4573,10 +4113,27 @@
       renderChips();
     }
 
+    /** Zaznaczenia z assetu wyglądają w kompozytorze tak samo jak pinezki ze sceny. */
+    function selAsAtt(s) {
+      return {
+        kind: 'pin',
+        sel: s,
+        pin: { n: s.n, label: s.label, color: s.color, note: s.note, id: ASSET.node ? ASSET.node.id : null }
+      };
+    }
+    function pendingAtts() {
+      return UI.atts.concat(ASSET.open ? ASSET.sel.map(selAsAtt) : []);
+    }
+
     function renderChips() {
-      var box = $('chips');
+      [$('chips'), $('chat-chips')].forEach(function (b) {
+        if (b) fillChips(b);
+      });
+    }
+
+    function fillChips(box) {
       box.innerHTML = '';
-      UI.atts.forEach(function (a) {
+      pendingAtts().forEach(function (a) {
         var c = el('span', 'chip');
         if (a.kind === 'pin') {
           var idx = el('span', 'idx', String(a.pin.n));
@@ -4606,6 +4163,7 @@
         var x = el('button', 'x', '×');
         x.setAttribute('aria-label', 'Usuń załącznik');
         x.onclick = function () {
+          if (a.sel) return toggleSel(a.sel.kind, a.sel.key, a.sel.label);
           if (a.kind === 'pin') return removePin(a.pin.n);
           var at = UI.atts.indexOf(a);
           if (at !== -1) UI.atts.splice(at, 1);
@@ -4651,7 +4209,16 @@
     ];
 
     function renderThread() {
-      var box = $('thread');
+      // Wątek studia i rozmowa w trybie assetu to ta sama rozmowa — rysowana
+      // w obu miejscach, żeby przełączenie trybu niczego nie gubiło.
+      fillThread($('thread'));
+      fillThread($('chat-thread'));
+      $('thread-count').textContent = UI.thread.length + ' wiadomości';
+      if ($('chat-count')) $('chat-count').textContent = UI.thread.length + ' wiadomości';
+    }
+
+    function fillThread(box) {
+      if (!box) return;
       box.innerHTML = '';
       UI.thread.forEach(function (m) {
         var w = el('div', 'msg' + (m.who === 'agent' ? ' msg--agent' : ''));
@@ -4730,11 +4297,67 @@
           });
         }
 
+        if (m.rev) body.appendChild(revBlock(m.rev));
+
         w.appendChild(body);
         box.appendChild(w);
       });
-      $('thread-count').textContent = UI.thread.length + ' wiadomości';
       box.scrollTop = box.scrollHeight;
+    }
+
+    /** Rewizja assetu: co agent zmieni, podgląd przed/po i jeden przycisk. */
+    function revBlock(rev) {
+      var wrap = el('div', 'rev');
+      var head = el('div', 'rev-head');
+      head.appendChild(document.createTextNode('Rewizja #' + rev.n));
+      head.appendChild(el('span', null, rev.file));
+      wrap.appendChild(head);
+
+      var ul = document.createElement('ul');
+      rev.lines.forEach(function (line) {
+        var li = document.createElement('li');
+        li.appendChild(document.createTextNode(line.text));
+        if (line.note) {
+          var em = document.createElement('em');
+          em.style.color = 'var(--muted-dim)';
+          em.textContent = ' — „' + line.note + '”';
+          li.appendChild(em);
+        }
+        ul.appendChild(li);
+      });
+      wrap.appendChild(ul);
+
+      var foot = el('div', 'rev-foot');
+      var shots = el('div', 'rev-shots');
+      if (rev.before) {
+        shots.appendChild(shotFigure(rev.before, 'teraz'));
+        shots.appendChild(el('span', 'rev-arrow', '→'));
+        if (rev.after) shots.appendChild(shotFigure(rev.after, 'po zmianie'));
+        else shots.appendChild(el('span', 'rev-arrow', rev.applied ? '…' : '?'));
+      }
+      foot.appendChild(shots);
+      var btn = el(
+        'button',
+        'btn btn--sm' + (rev.applied ? ' btn--applied' : ' btn--primary'),
+        rev.applied ? '✓ Na scenie' : 'Zastosuj rewizję',
+      );
+      btn.onclick = function () {
+        if (rev.applied) revertRevision(rev);
+        else applyRevision(rev);
+      };
+      foot.appendChild(btn);
+      wrap.appendChild(foot);
+      return wrap;
+    }
+
+    function shotFigure(src, caption) {
+      var f = document.createElement('figure');
+      var i = document.createElement('img');
+      i.src = src;
+      i.alt = caption;
+      f.appendChild(i);
+      f.appendChild(el('figcaption', null, caption));
+      return f;
     }
 
     UI.thread = SEED.slice();
@@ -4864,10 +4487,37 @@
       return bits.join(' ');
     }
 
-    function sendPrompt() {
-      var text = $('prompt').value.trim();
-      if (!text && !UI.atts.length) return;
-      var atts = UI.atts.slice();
+    /** Co agent odpisuje, gdy prompt przyszedł z zaznaczeniami w assecie. */
+    function summariseAsset(sel, node) {
+      if (!sel.length) return 'Nie wskazałeś żadnej części ' + node.label + ' — czytam to jako zmianę całego assetu.';
+      var withNotes = sel.filter(function (s) {
+        return s.note;
+      });
+      var names = sel
+        .map(function (s) {
+          return s.label;
+        })
+        .join(', ');
+      return (
+        'Mam ' +
+        sel.length +
+        (sel.length === 1 ? ' zaznaczony element' : ' zaznaczone elementy') +
+        ' assetu ' +
+        node.label +
+        ': ' +
+        names +
+        '.' +
+        (withNotes.length ? ' Komentarze przy ' + withNotes.length + ' z nich traktuję jako powód zmiany.' : '')
+      );
+    }
+
+    function sendPrompt(assetMode) {
+      var input = assetMode ? $('chat-prompt') : $('prompt');
+      var text = input.value.trim();
+      var sel = assetMode && ASSET.open ? ASSET.sel.slice() : [];
+      if (!text && !UI.atts.length && !sel.length) return;
+
+      var atts = UI.atts.concat(sel.map(selAsAtt));
       UI.thread.push({
         who: 'creator',
         name: 'Ty',
@@ -4875,12 +4525,37 @@
         atts: atts
       });
       UI.atts = [];
-      $('prompt').value = '';
+      if (assetMode) {
+        ASSET.sel = [];
+        ASSET.seq = 0;
+        renderAsset();
+      }
+      input.value = '';
+      input.style.height = 'auto';
       renderChips();
       renderThread();
 
       UI.thread.push({ who: 'agent', name: 'Agent', body: ['Czytam kontekst…'], atts: [] });
       renderThread();
+
+      if (assetMode && ASSET.open) {
+        var node = ASSET.node;
+        var rev = revisionFor(sel);
+        askPreview(node.id, { max: 120, pad: 6 }, function (res) {
+          rev.before = res && res.png;
+          renderThread();
+        });
+        setTimeout(function () {
+          var msg = UI.thread[UI.thread.length - 1];
+          msg.body = [
+            summariseAsset(sel, node),
+            'Złożyłem z tego jedną rewizję. Zastosuj, żeby zobaczyć ją na scenie — do repo trafi, gdy ją zatwierdzisz.'
+          ];
+          msg.rev = rev;
+          renderThread();
+        }, 1100);
+        return;
+      }
 
       setTimeout(function () {
         var msg = UI.thread[UI.thread.length - 1];
@@ -4890,16 +4565,27 @@
       }, 1100);
     }
 
-    $('btn-send').onclick = sendPrompt;
-    $('prompt').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendPrompt();
-      }
-    });
-    $('prompt').addEventListener('input', function (e) {
-      e.target.style.height = 'auto';
-      e.target.style.height = Math.min(120, e.target.scrollHeight) + 'px';
+    $('btn-send').onclick = function () {
+      sendPrompt(false);
+    };
+    $('chat-send').onclick = function () {
+      sendPrompt(true);
+    };
+    [
+      ['prompt', false],
+      ['chat-prompt', true]
+    ].forEach(function (pair) {
+      var node = $(pair[0]);
+      node.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendPrompt(pair[1]);
+        }
+      });
+      node.addEventListener('input', function (e) {
+        e.target.style.height = 'auto';
+        e.target.style.height = Math.min(120, e.target.scrollHeight) + 'px';
+      });
     });
 
     syncTabs();
