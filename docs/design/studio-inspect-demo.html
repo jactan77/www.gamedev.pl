@@ -782,6 +782,90 @@
     cursor: grab;
   }
 
+  /* ---------- karta assetu ---------- */
+  .asset-top {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .asset-thumb {
+    width: 84px;
+    height: 84px;
+    flex: none;
+    border-radius: 8px;
+    border: 1px solid var(--panel-border);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background-color: #0b1018;
+    background-image:
+      linear-gradient(45deg, #182029 25%, transparent 25%),
+      linear-gradient(-45deg, #182029 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #182029 75%),
+      linear-gradient(-45deg, transparent 75%, #182029 75%);
+    background-size: 10px 10px;
+    background-position:
+      0 0,
+      0 5px,
+      5px -5px,
+      -5px 0;
+  }
+
+  .asset-thumb img {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+    image-rendering: pixelated;
+  }
+
+  .asset-id {
+    min-width: 0;
+  }
+
+  .asset-type {
+    font-weight: 600;
+    font-size: 13.5px;
+  }
+
+  .asset-src {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--blue);
+    word-break: break-all;
+    margin-top: 3px;
+  }
+
+  .asset-sym {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted-dim);
+    word-break: break-all;
+    margin-top: 2px;
+  }
+
+  dl.asset-meta {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 5px 12px;
+    margin: 12px 0 0;
+    font-size: 12px;
+  }
+
+  dl.asset-meta dt {
+    color: var(--muted-dim);
+  }
+
+  dl.asset-meta dd {
+    margin: 0;
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: #c6d2de;
+    font-variant-numeric: tabular-nums;
+    word-break: break-word;
+  }
+
   .note-box textarea {
     width: 100%;
     min-height: 62px;
@@ -1107,6 +1191,12 @@
         pytanie „co jest pod tym punktem” prostokątem w układzie logicznym gry. Dlatego działa też
         wtedy, gdy cała gra to jeden <code>&lt;canvas&gt;</code>.
       </p>
+      <p style="margin-top: 7px">
+        Pauza sama otwiera wskazywanie — zatrzymanej gry nie trzeba przełączać w żaden tryb, żeby w
+        nią kliknąć. Wybrany element pokazuje metryczkę assetu: typ, plik i funkcję rysującą,
+        warstwę, kolider, animację, dźwięk, liczbę instancji i koszt klatki. Miniatura to wycinek
+        żywej sceny, nie ikonka.
+      </p>
     </div>
 
     <div class="card">
@@ -1367,6 +1457,142 @@
       return out;
     }
 
+    // Metryczka assetu — czym ten element jest w projekcie gry, a nie tylko
+    // co widać na ekranie. To odpowiedź na „kliknąłem, więc powiedz mi, w co".
+    function assetInfo(id) {
+      if (id === 'player')
+        return {
+          type: 'Sprite proceduralny',
+          file: 'src/actors/player.ts',
+          symbol: 'drawPlayer(ctx, state)',
+          layer: 'actors · z 40',
+          collider: 'AABB ' + Math.round(player.w * player.size) + '×' + Math.round(player.h * player.size),
+          anim: 'squash przy lądowaniu',
+          sfx: 'jump.wav · hurt.wav',
+          instances: 1,
+          cost: '0.2 ms/klatkę'
+        };
+      if (id.indexOf('drone') === 0)
+        return {
+          type: 'Sprite proceduralny',
+          file: 'src/actors/drone.ts',
+          symbol: 'drawDrone(ctx, drone)',
+          layer: 'actors · z 30',
+          collider: 'AABB ' + Math.round(20 * drones.size) + '×' + Math.round(12 * drones.size),
+          anim: 'unoszenie · sin(t)',
+          sfx: 'alert.wav',
+          instances: drones.items.length,
+          cost: '0.3 ms/klatkę'
+        };
+      if (id.indexOf('coin') === 0)
+        return {
+          type: 'Sprite proceduralny',
+          file: 'src/pickups/parcel.ts',
+          symbol: 'drawParcel(ctx, parcel)',
+          layer: 'pickups · z 20',
+          collider: 'okrąg r=' + (5 * coins.size).toFixed(1),
+          anim: 'obrót · 24 fps',
+          sfx: 'pickup.wav',
+          instances: coins.items.length,
+          cost: '0.1 ms/klatkę'
+        };
+      if (id === 'ground' || id.indexOf('platform') === 0)
+        return {
+          type: 'Kafel terenu',
+          file: 'src/level/terrain.ts',
+          symbol: 'drawTerrain(ctx, level)',
+          layer: 'terrain · z 10',
+          collider: 'AABB statyczne',
+          anim: id === 'ground' ? 'pasy jezdni · przewijanie' : 'brak',
+          sfx: 'step.wav',
+          instances: id === 'ground' ? 1 : platforms.length,
+          cost: '0.1 ms/klatkę'
+        };
+      if (id === 'skyline')
+        return {
+          type: 'Warstwa paralaksy',
+          file: 'src/level/backdrop.ts',
+          symbol: 'drawSkyline(ctx, t)',
+          layer: 'background · z 2',
+          collider: 'brak',
+          anim: 'przewijanie 0.12 px/klatkę',
+          sfx: '—',
+          instances: 13,
+          cost: '0.4 ms/klatkę'
+        };
+      if (id === 'stars')
+        return {
+          type: 'Warstwa cząstek',
+          file: 'src/level/backdrop.ts',
+          symbol: 'drawStars(ctx, field)',
+          layer: 'background · z 1',
+          collider: 'brak',
+          anim: 'migotanie · sin(t)',
+          sfx: '—',
+          instances: Math.round(stars.density),
+          cost: '0.2 ms/klatkę'
+        };
+      if (id === 'sky')
+        return {
+          type: 'Gradient tła',
+          file: 'src/level/backdrop.ts',
+          symbol: 'createLinearGradient()',
+          layer: 'background · z 0',
+          collider: 'brak',
+          anim: 'brak',
+          sfx: '—',
+          instances: 1,
+          cost: '0.1 ms/klatkę'
+        };
+      return {
+        type: 'Tekst HUD',
+        file: 'src/ui/hud.ts',
+        symbol: 'drawHud(ctx, score, lives)',
+        layer: 'ui · z 90',
+        collider: 'brak',
+        anim: 'brak',
+        sfx: '—',
+        instances: 1,
+        cost: '0.1 ms/klatkę',
+        font: 'ui-monospace ' + (11 * hud.size).toFixed(0) + 'px'
+      };
+    }
+
+    /** Wycinek żywej sceny w granicach elementu — podgląd assetu, nie ikonka. */
+    function previewOf(r) {
+      var pad = 4;
+      var rw = r[2] + pad * 2,
+        rh = r[3] + pad * 2;
+      var k = Math.max(0.25, Math.min(10, 132 / Math.max(rw, rh)));
+      var c = doc.createElement('canvas');
+      c.width = Math.max(1, Math.round(rw * k));
+      c.height = Math.max(1, Math.round(rh * k));
+      var g = c.getContext('2d');
+      if (!g) return null;
+      var pc = ctx,
+        ps = scale,
+        pox = ox,
+        poy = oy;
+      ctx = g;
+      scale = k;
+      ox = -(r[0] - pad) * k;
+      oy = -(r[1] - pad) * k;
+      try {
+        draw();
+      } catch (err) {
+        /* podgląd jest opcjonalny */
+      }
+      ctx = pc;
+      scale = ps;
+      ox = pox;
+      oy = poy;
+      try {
+        return c.toDataURL('image/png');
+      } catch (err) {
+        return null;
+      }
+    }
+
     // Właściwości, które host wyrenderuje jako kontrolki. Kolor jest tylko
     // jedną z nich — reszta to liczby, które naprawdę zmieniają rozgrywkę.
     function schema(id) {
@@ -1497,7 +1723,7 @@
       var list = nodes();
       // podświetlenie pod kursorem / wskazane z drzewa
       var hv = S.hover ? findNode(S.hover) : null;
-      if (hv && (S.inspect || S.forced)) {
+      if (hv && (S.inspect || S.paused || S.forced)) {
         hoverBox.style.display = 'block';
         var isPicked = S.picked === hv.id;
         hoverBox.style.border = '1.5px ' + (isPicked ? 'solid' : 'dashed') + ' #38bdf8';
@@ -1576,25 +1802,38 @@
         x: Math.round(n.r[0]),
         y: Math.round(n.r[1]),
         props: schema(n.id),
+        asset: assetInfo(n.id),
+        preview: previewOf(n.r),
         why: why || 'pick'
       });
     }
 
+    /**
+     * Furtka: zatrzymana gra jest zawsze wskazywalna.
+     *
+     * Tryb Zaznaczania zostaje dla grania — chcesz wskazać coś, co się rusza,
+     * więc mówisz o tym wprost. Ale na pauzie nie ma czego chronić: nikt nie
+     * steruje, a odruch jest jeden — kliknąć w to, o czym chcę mówić.
+     */
+    function picking() {
+      return S.inspect || S.paused;
+    }
+
     root.addEventListener('mousemove', function (e) {
-      if (!S.inspect) return;
+      if (!picking()) return;
       var n = hit(toLogical(e));
       if ((n ? n.id : null) !== S.hover) sendHover(n);
     });
     root.addEventListener('mouseleave', function () {
-      if (S.inspect) sendHover(null);
+      if (picking()) sendHover(null);
     });
     root.addEventListener('click', function (e) {
-      if (!S.inspect) return;
+      if (!picking()) return;
       var n = hit(toLogical(e));
       if (n) sendPick(n.id);
     });
     root.addEventListener('pointerdown', function (e) {
-      if (S.inspect) e.preventDefault();
+      if (picking()) e.preventDefault();
     });
 
     function key(e, down) {
@@ -1917,16 +2156,19 @@
           break;
         case 'pause':
           S.paused = true;
+          root.style.cursor = 'crosshair';
           post({ type: 'paused', paused: true });
           break;
         case 'resume':
           S.paused = false;
+          root.style.cursor = S.inspect ? 'crosshair' : 'default';
+          if (!S.inspect) sendHover(null);
           post({ type: 'paused', paused: false });
           break;
         case 'inspect':
           S.inspect = !!m.on;
-          root.style.cursor = S.inspect ? 'crosshair' : 'default';
-          if (!S.inspect) sendHover(null);
+          root.style.cursor = picking() ? 'crosshair' : 'default';
+          if (!picking()) sendHover(null);
           break;
         case 'focus':
           S.forced = !!m.id;
@@ -2115,18 +2357,21 @@
       send({ type: next ? 'pause' : 'resume' });
       $('play-icon').textContent = next ? '▶' : '⏸';
       $('play-label').textContent = next ? 'Graj' : 'Pauza';
+      holder.classList.toggle('is-inspect', next || UI.inspect);
       $('hint').innerHTML = next
-        ? 'Zatrzymane — teraz wskaż element, o który chodzi'
-        : 'Naciśnij <kbd>I</kbd> i najedź kursorem na grę — elementy podświetlą się jak w Claude Design';
+        ? 'Zatrzymane — kliknij dowolny element sceny, żeby zobaczyć jego asset'
+        : UI.inspect
+          ? 'Wskazywanie działa też w ruchu — najedź na element i kliknij'
+          : 'Naciśnij <kbd>I</kbd> albo zatrzymaj grę i kliknij w element — jak w Claude Design';
     }
     function setInspect(next) {
       UI.inspect = next;
       send({ type: 'inspect', on: next });
       $('btn-inspect').classList.toggle('btn--on', next);
       $('btn-inspect').setAttribute('aria-pressed', String(next));
-      holder.classList.toggle('is-inspect', next);
+      holder.classList.toggle('is-inspect', next || UI.paused);
       if (next && !UI.paused) setPaused(true);
-      if (next) $('hint').innerHTML = 'Najedź na element gry, kliknij aby wybrać';
+      else if (next) $('hint').innerHTML = 'Najedź na element gry, kliknij aby wybrać';
     }
 
     $('btn-play').onclick = function () {
@@ -2226,7 +2471,11 @@
         e.appendChild(svg);
         e.appendChild(el('p', null, 'Nic nie wybrano.'));
         e.appendChild(
-          el('p', null, 'Włącz Zaznaczanie, najedź kursorem na grę i kliknij element — albo wybierz go z drzewa sceny.'),
+          el(
+            'p',
+            null,
+            'Zatrzymaj grę i kliknij w dowolny element sceny — pokażę, czym jest jako asset. W ruchu to samo robi Zaznaczanie.',
+          ),
         );
         host.appendChild(e);
         return;
@@ -2243,6 +2492,47 @@
         el('div', 'sel-dims', Math.round(p.w) + ' × ' + Math.round(p.h) + ' px  ·  x ' + p.x + '  y ' + p.y),
       );
       host.appendChild(head);
+
+      // asset — czym to jest w projekcie gry
+      if (p.asset) {
+        var ga = el('div', 'group');
+        ga.appendChild(el('div', 'group-label', 'Asset'));
+        var top = el('div', 'asset-top');
+        var thumb = el('div', 'asset-thumb');
+        if (p.preview) {
+          var pimg = document.createElement('img');
+          pimg.src = p.preview;
+          pimg.alt = 'Podgląd elementu ' + p.label;
+          thumb.appendChild(pimg);
+        } else {
+          thumb.appendChild(el('span', 'sel-path', 'brak'));
+        }
+        top.appendChild(thumb);
+        var idb = el('div', 'asset-id');
+        idb.appendChild(el('div', 'asset-type', p.asset.type));
+        idb.appendChild(el('div', 'asset-src', p.asset.file));
+        idb.appendChild(el('div', 'asset-sym', p.asset.symbol));
+        top.appendChild(idb);
+        ga.appendChild(top);
+
+        var dl = document.createElement('dl');
+        dl.className = 'asset-meta';
+        var meta = [
+          ['Warstwa', p.asset.layer],
+          ['Kolizja', p.asset.collider],
+          ['Animacja', p.asset.anim],
+          ['Dźwięk', p.asset.sfx],
+          ['Instancje', String(p.asset.instances)],
+          ['Koszt', p.asset.cost]
+        ];
+        if (p.asset.font) meta.push(['Font', p.asset.font]);
+        meta.forEach(function (row) {
+          dl.appendChild(el('dt', null, row[0]));
+          dl.appendChild(el('dd', null, row[1]));
+        });
+        ga.appendChild(dl);
+        host.appendChild(ga);
+      }
 
       // właściwości
       var colorProps = p.props.filter(function (f) {
