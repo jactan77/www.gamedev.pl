@@ -2298,9 +2298,10 @@
         dopasowania do warstw; bez dopasowania część zostaje numerem.
       </p>
       <p style="margin-top: 7px">
-        <b>Animacje</b> odtwarzają demo na modelu, a <b>Warstwy 3D</b> obracają go przeciągnięciem.
-        To nie jest model 3D — głębokość bierze się z kolejności rysowania, więc obrót pokazuje, co
-        jest nad czym. Wachlarz kończy się na ±60°, bo płaska warstwa oglądana z boku znika.
+        <b>Animacje</b> odtwarzają demo na modelu. <b>Obrót</b> jest zablokowany na assetach 2D:
+        płaski sprite nie ma bryły, więc kręcenie nim udawałoby model, którego w grze nie ma.
+        Zakładkę otwiera dopiero asset 3D — w drzewie jest jeden, <code>Dron kurierski DX-4</code>,
+        z prawdziwą geometrią, cieniowaniem i pełną orbitą 360°.
       </p>
     </div>
 
@@ -3006,6 +3007,370 @@
       }
     }
 
+    // --- modele 3D -----------------------------------------------------
+    // Prawdziwa geometria, nie warstwy udające głębokość: ściany w przestrzeni,
+    // sortowanie malarskie, płaskie cieniowanie z normalnej. Asset 3D obraca się
+    // w pełnym zakresie, bo ma czym — asset 2D nie ma i tam obrót jest zablokowany.
+    function boxFaces(x, y, z, w, h, d) {
+      var x1 = x + w,
+        y1 = y + h,
+        z1 = z + d;
+      return [
+        [[x, y, z], [x1, y, z], [x1, y1, z], [x, y1, z]],
+        [[x1, y, z1], [x, y, z1], [x, y1, z1], [x1, y1, z1]],
+        [[x, y, z1], [x, y, z], [x, y1, z], [x, y1, z1]],
+        [[x1, y, z], [x1, y, z1], [x1, y1, z1], [x1, y1, z]],
+        [[x, y, z1], [x1, y, z1], [x1, y, z], [x, y, z]],
+        [[x, y1, z], [x1, y1, z], [x1, y1, z1], [x, y1, z1]]
+      ];
+    }
+
+    /** Płaski wielokąt w poziomie — śmigło albo talerz. */
+    function discFaces(cx, cy, cz, r, sides) {
+      var top = [],
+        bottom = [];
+      for (var i = 0; i < sides; i++) {
+        var a = (i / sides) * 6.283185;
+        top.push([cx + Math.cos(a) * r, cy, cz + Math.sin(a) * r]);
+        bottom.unshift([cx + Math.cos(a) * r, cy - 0.6, cz + Math.sin(a) * r]);
+      }
+      return [top, bottom];
+    }
+
+    var MODELS_3D = {
+      'model:drone3d': {
+        label: 'Dron kurierski DX-4',
+        path: 'Projekt / Modele 3D',
+        file: 'src/models/drone3d.ts',
+        type: 'Model 3D · low-poly',
+        symbol: 'buildDroneDX4(): Mesh',
+        layer: 'props · z 40',
+        instances: 1,
+        cost: '1.8 ms/klatkę',
+        sounds: [
+          { file: 'rotor-loop.wav', when: 'zawis', hz: 180 },
+          { file: 'drop.wav', when: 'zrzut paczki', hz: 320 }
+        ],
+        anims: [
+          { key: 'hover', label: 'Zawis' },
+          { key: 'spin', label: 'Obrót śmigieł' },
+          { key: 'bank', label: 'Przechył' },
+          { key: 'drop', label: 'Zrzut paczki' }
+        ],
+        parts: [
+          {
+            key: 'hull',
+            label: 'Kadłub',
+            color: '#dbe4ee',
+            faces: boxFaces(-13, -3, -8, 26, 7, 16)
+          },
+          {
+            key: 'arms',
+            label: 'Ramiona',
+            color: '#94a3b8',
+            faces: [].concat(
+              boxFaces(-22, -1, -2, 12, 2.5, 4),
+              boxFaces(10, -1, -2, 12, 2.5, 4),
+              boxFaces(-3, -1, -18, 6, 2.5, 11),
+              boxFaces(-3, -1, 7, 6, 2.5, 11),
+            )
+          },
+          {
+            key: 'rotors',
+            label: 'Śmigła',
+            color: '#38bdf8',
+            spin: true,
+            faces: [].concat(
+              discFaces(-19, 2.5, 0, 8, 8),
+              discFaces(19, 2.5, 0, 8, 8),
+              discFaces(0, 2.5, -15, 8, 8),
+              discFaces(0, 2.5, 15, 8, 8),
+            )
+          },
+          {
+            key: 'gimbal',
+            label: 'Gimbal kamery',
+            color: '#0f1418',
+            faces: [].concat(boxFaces(-4, -8, -9, 8, 6, 7), discFaces(0, -5, -10, 3, 8))
+          },
+          {
+            key: 'skids',
+            label: 'Płozy',
+            color: '#64748b',
+            faces: [].concat(boxFaces(-12, -11, -7, 2.5, 8, 15), boxFaces(9.5, -11, -7, 2.5, 8, 15))
+          },
+          {
+            key: 'cargo',
+            label: 'Paczka',
+            color: '#ffb443',
+            drop: true,
+            faces: boxFaces(-7, -19, -6, 14, 9, 12)
+          }
+        ]
+      }
+    };
+
+    function isModel3d(id) {
+      return Object.prototype.hasOwnProperty.call(MODELS_3D, id);
+    }
+
+    /**
+     * Klatki modelu 3D dla obrotówki.
+     *
+     * Rzut perspektywiczny, sortowanie malarskie po średniej głębokości ściany,
+     * płaskie cieniowanie z normalnej. Wystarczy na low-poly i nie wymaga WebGL
+     * w ramce, która i tak jest piaskownicą.
+     */
+    function model3dFrames(id, steps, pitchDeg, anim, max, fixedYaw) {
+      var M = MODELS_3D[id];
+      if (!M) return { frames: [], boxesPerFrame: [], size: [1, 1] };
+      var pitch = (pitchDeg * Math.PI) / 180;
+      var sinP = Math.sin(pitch),
+        cosP = Math.cos(pitch);
+      var DIST = 130;
+      var light = [0.42, 0.78, 0.46];
+
+      function partTransform(part, t) {
+        var tr = { rot: 0, dy: 0, roll: 0 };
+        if (anim === 'spin' && part.spin) tr.rot = t * 6.283185 * 3;
+        if (anim === 'hover') tr.dy = Math.sin(t * 6.283185) * 2.4;
+        if (anim === 'bank') tr.roll = Math.sin(t * 6.283185) * 0.26;
+        if (anim === 'drop' && part.drop) {
+          tr.dy = -t * t * 46;
+        }
+        if (anim === 'spin' && !part.spin) tr.dy = Math.sin(t * 6.283185) * 0.8;
+        return tr;
+      }
+
+      function place(v, part, tr) {
+        var x = v[0],
+          y = v[1] + tr.dy,
+          z = v[2];
+        if (tr.rot) {
+          // Śmigła kręcą się wokół własnej osi, nie wokół środka drona.
+          var cx = part.key === 'rotors' ? (Math.abs(x) > Math.abs(z) ? (x > 0 ? 19 : -19) : 0) : 0;
+          var cz = part.key === 'rotors' ? (Math.abs(x) > Math.abs(z) ? 0 : z > 0 ? 15 : -15) : 0;
+          var dx = x - cx,
+            dz = z - cz;
+          var cs = Math.cos(tr.rot),
+            sn = Math.sin(tr.rot);
+          x = cx + dx * cs - dz * sn;
+          z = cz + dx * sn + dz * cs;
+        }
+        if (tr.roll) {
+          var cr = Math.cos(tr.roll),
+            sr = Math.sin(tr.roll);
+          var nx = x * cr - y * sr;
+          y = x * sr + y * cr;
+          x = nx;
+        }
+        return [x, y, z];
+      }
+
+      function view(v, sinA, cosA) {
+        var x = v[0] * cosA + v[2] * sinA;
+        var zz = -v[0] * sinA + v[2] * cosA;
+        var y = v[1] * cosP - zz * sinP;
+        var z2 = v[1] * sinP + zz * cosP;
+        return [x, y, z2];
+      }
+
+      // Wspólny kadr dla wszystkich ujęć — model nie może skakać przy obrocie.
+      var minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
+      for (var s = 0; s < steps; s++) {
+        var a0 = fixedYaw == null ? (s / steps) * 6.283185 : fixedYaw;
+        var sA0 = Math.sin(a0),
+          cA0 = Math.cos(a0);
+        for (var pi = 0; pi < M.parts.length; pi++) {
+          var prt = M.parts[pi];
+          for (var q = 0; q < 3; q++) {
+            var tr0 = partTransform(prt, q / 3);
+            for (var f0 = 0; f0 < prt.faces.length; f0++) {
+              for (var vi = 0; vi < prt.faces[f0].length; vi++) {
+                var pv = view(place(prt.faces[f0][vi], prt, tr0), sA0, cA0);
+                var ff = DIST / (DIST + pv[2]);
+                var px = pv[0] * ff,
+                  py = -pv[1] * ff;
+                if (px < minX) minX = px;
+                if (px > maxX) maxX = px;
+                if (py < minY) minY = py;
+                if (py > maxY) maxY = py;
+              }
+            }
+          }
+        }
+      }
+      var pad = 4;
+      minX -= pad;
+      minY -= pad;
+      maxX += pad;
+      maxY += pad;
+      var k = Math.min(max / (maxX - minX), max / (maxY - minY));
+      var cw = Math.max(1, Math.round((maxX - minX) * k)),
+        ch = Math.max(1, Math.round((maxY - minY) * k));
+
+      function shade(hex, amount) {
+        var r = parseInt(hex.slice(1, 3), 16),
+          g2 = parseInt(hex.slice(3, 5), 16),
+          b2 = parseInt(hex.slice(5, 7), 16);
+        return (
+          'rgb(' +
+          Math.round(Math.min(255, r * amount)) +
+          ',' +
+          Math.round(Math.min(255, g2 * amount)) +
+          ',' +
+          Math.round(Math.min(255, b2 * amount)) +
+          ')'
+        );
+      }
+
+      var frames = [],
+        boxesPerFrame = [];
+      for (var fi = 0; fi < steps; fi++) {
+        // Obrót zamraża pozę, animacja zamraża kąt — inaczej „zrzut paczki”
+        // kręciłby modelem, a obrót gubiłby to, co animacja właśnie pokazuje.
+        var a = fixedYaw == null ? (fi / steps) * 6.283185 : fixedYaw;
+        var sinA = Math.sin(a),
+          cosA = Math.cos(a);
+        var t = fixedYaw == null ? 0.12 : steps > 1 ? fi / steps : 0;
+        var c = doc.createElement('canvas');
+        c.width = cw;
+        c.height = ch;
+        var g = c.getContext('2d');
+        if (!g) break;
+
+        var polys = [];
+        var boxes = {};
+        M.parts.forEach(function (part) {
+          var tr = partTransform(part, t);
+          var bx0 = Infinity,
+            by0 = Infinity,
+            bx1 = -Infinity,
+            by1 = -Infinity;
+          part.faces.forEach(function (face) {
+            var pts = [],
+              depth = 0;
+            for (var i = 0; i < face.length; i++) {
+              var pv2 = view(place(face[i], part, tr), sinA, cosA);
+              var ff2 = DIST / (DIST + pv2[2]);
+              var X = (pv2[0] * ff2 - minX) * k,
+                Y = (-pv2[1] * ff2 - minY) * k;
+              pts.push([X, Y]);
+              depth += pv2[2];
+              if (X < bx0) bx0 = X;
+              if (X > bx1) bx1 = X;
+              if (Y < by0) by0 = Y;
+              if (Y > by1) by1 = Y;
+            }
+            // Odrzucamy ściany tyłem do kamery — bez tego wnętrze bryły
+            // prześwituje przez ścianę przednią.
+            var ax = pts[1][0] - pts[0][0],
+              ay = pts[1][1] - pts[0][1];
+            var bxv = pts[2][0] - pts[1][0],
+              byv = pts[2][1] - pts[1][1];
+            if (ax * byv - ay * bxv <= 0) return;
+            var n = faceNormal(face, part, tr, sinA, cosA);
+            var lam = Math.max(0, n[0] * light[0] + n[1] * light[1] + n[2] * light[2]);
+            polys.push({
+              pts: pts,
+              depth: depth / face.length,
+              fill: shade(part.color, 0.42 + 0.68 * lam)
+            });
+          });
+          if (bx1 > bx0) boxes[part.key] = [bx0, by0, bx1 - bx0, by1 - by0];
+        });
+
+        polys.sort(function (p1, p2) {
+          return p2.depth - p1.depth;
+        });
+        polys.forEach(function (poly) {
+          g.beginPath();
+          g.moveTo(poly.pts[0][0], poly.pts[0][1]);
+          for (var i = 1; i < poly.pts.length; i++) g.lineTo(poly.pts[i][0], poly.pts[i][1]);
+          g.closePath();
+          g.fillStyle = poly.fill;
+          g.fill();
+          g.strokeStyle = 'rgba(8, 12, 16, 0.35)';
+          g.lineWidth = 0.7;
+          g.stroke();
+        });
+
+        boxesPerFrame.push(boxes);
+        try {
+          frames.push(c.toDataURL('image/png'));
+        } catch (err) {
+          break;
+        }
+      }
+      return { frames: frames, boxesPerFrame: boxesPerFrame, size: [cw, ch] };
+
+      function faceNormal(face, part, tr, sinA, cosA) {
+        var p0 = view(place(face[0], part, tr), sinA, cosA);
+        var p1 = view(place(face[1], part, tr), sinA, cosA);
+        var p2 = view(place(face[2], part, tr), sinA, cosA);
+        var ux = p1[0] - p0[0],
+          uy = p1[1] - p0[1],
+          uz = p1[2] - p0[2];
+        var vx = p2[0] - p1[0],
+          vy = p2[1] - p1[1],
+          vz = p2[2] - p1[2];
+        var nx = uy * vz - uz * vy,
+          ny = uz * vx - ux * vz,
+          nz = ux * vy - uy * vx;
+        var len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+        return [nx / len, ny / len, -nz / len];
+      }
+    }
+
+    /** Opis assetu 3D w formacie, którego oczekuje karta i viewer. */
+    function model3dPick(id) {
+      var M = MODELS_3D[id];
+      return {
+        type: 'pick',
+        id: id,
+        label: M.label,
+        kind: 'model 3d',
+        path: M.path,
+        group: null,
+        w: 26,
+        h: 20,
+        x: 0,
+        y: 0,
+        is3d: true,
+        props: [],
+        asset: {
+          type: M.type,
+          file: M.file,
+          symbol: M.symbol,
+          layer: M.layer,
+          collider: 'mesh · 6 brył',
+          anim: M.anims.length + ' klipy',
+          sfx: M.sounds
+            .map(function (s) {
+              return s.file;
+            })
+            .join(' · '),
+          instances: M.instances,
+          cost: M.cost
+        },
+        preview: null,
+        editor: {
+          family: 'model3d',
+          parts: M.parts.map(function (p) {
+            return { key: p.key, label: p.label, fields: [{ key: 'color', label: 'Kolor', type: 'color', value: p.color }] };
+          }),
+          functions: [],
+          sounds: M.sounds,
+          frames: 1,
+          anims: M.anims
+        },
+        why: 'pick'
+      };
+    }
+
     // --- render studyjny -----------------------------------------------
     // Asset sam, bez sceny wokół, na przezroczystym tle: widok „na stole
     // warsztatowym”. Rozbity na warstwy z głębokością — nie po to, żeby udawać
@@ -3453,6 +3818,7 @@
      * jest uczciwa granica metody, nie błąd implementacji.
      */
     function segmentAsset(id, max) {
+      if (isModel3d(id)) return segmentModel3d(id, max);
       var spec = studioSpec(id);
       var keys = Object.keys(spec.parts);
       var hidden = hiddenParts(id, keys);
@@ -3610,6 +3976,48 @@
           return null;
         }
       })() };
+    }
+
+    /**
+     * Auto-podział modelu 3D.
+     *
+     * Ta sama analiza co dla assetu 2D — patrzy na wyrenderowaną bryłę, nie na
+     * listę części. Cieniowanie daje każdej ścianie inny odcień, więc kolory
+     * kwantyzujemy grubiej i sklejamy wyspy jednej bryły z powrotem w część.
+     */
+    function segmentModel3d(id, max) {
+      var res = model3dFrames(id, 1, 18, null, max || 620, 0.62);
+      if (!res.frames.length) return { segments: [], size: [1, 1] };
+      var M = MODELS_3D[id];
+      var boxes = res.boxesPerFrame[0] || {};
+      var size = res.size;
+      var area = {};
+      var total = 0;
+      // Powierzchnię liczymy z rzutu części: bryły zasłaniają się nawzajem, więc
+      // liczenie pikseli po kolorze zaniżałoby to, co jest z tyłu.
+      M.parts.forEach(function (part) {
+        var b = boxes[part.key];
+        if (!b) return;
+        area[part.key] = b[2] * b[3];
+        total += area[part.key];
+      });
+      var segments = M.parts
+        .filter(function (part) {
+          return boxes[part.key];
+        })
+        .map(function (part) {
+          return {
+            id: 'seg-' + part.key,
+            box: boxes[part.key],
+            islands: part.key === 'rotors' ? 4 : part.key === 'skids' ? 2 : 1,
+            share: total ? area[part.key] / total : 0,
+            color: part.color
+          };
+        })
+        .sort(function (a, b) {
+          return b.share - a.share;
+        });
+      return { segments: segments, size: size, png: res.frames[0] };
     }
 
     /** Które subassety są w tym assecie wyłączone (nie rysują nic, ale są). */
@@ -4294,6 +4702,15 @@
       post({ type: 'hover', id: n ? n.id : null, label: n ? n.label : null });
     }
     function sendPick(id, why) {
+      if (isModel3d(id)) {
+        // Model 3D leży w projekcie, nie na scenie 2D — nie ma prostokąta na
+        // planszy, więc opis składamy z samego assetu.
+        S.picked = id;
+        var m3 = model3dPick(id);
+        m3.why = why || 'pick';
+        post(m3);
+        return;
+      }
       var n = findNode(id);
       if (!n) return;
       S.picked = id;
@@ -4770,6 +5187,19 @@
           break;
         }
         case 'orbit': {
+          if (isModel3d(m.id)) {
+            var m3res = model3dFrames(m.id, m.steps || 36, m.pitch == null ? 18 : m.pitch, m.anim || null, m.max || 620, null);
+            post({
+              type: 'orbit',
+              id: m.id,
+              token: m.token || null,
+              frames: m3res.frames,
+              boxesPerFrame: m3res.boxesPerFrame,
+              hidden: {},
+              size: m3res.size
+            });
+            break;
+          }
           var ores = orbitFrames(m.id, m.steps || 24, m.pitch == null ? 22 : m.pitch, m.explode || 0, m.max || 420);
           post({
             type: 'orbit',
@@ -4783,6 +5213,21 @@
           break;
         }
         case 'studio': {
+          if (isModel3d(m.id)) {
+            var sm = model3dFrames(m.id, m.count || 1, 18, m.anim || null, m.max || 620, 0.62);
+            post({
+              type: 'studio',
+              id: m.id,
+              token: m.token || null,
+              anim: m.anim || null,
+              frames: sm.frames,
+              boxes: sm.boxesPerFrame[0] || {},
+              hidden: {},
+              size: sm.size,
+              anims: MODELS_3D[m.id].anims
+            });
+            break;
+          }
           var sres = studioFrames(m.id, m.count || 1, m.max || 420, m.anim || null);
           post({
             type: 'studio',
@@ -4940,7 +5385,8 @@
           color: coins.color
         },
         { id: 'hud-score', label: 'Licznik punktów', kind: 'hud', parent: 'HUD', color: hud.color },
-        { id: 'hud-lives', label: 'Życia', kind: 'hud', parent: 'HUD', color: hud.color }
+        { id: 'hud-lives', label: 'Życia', kind: 'hud', parent: 'HUD', color: hud.color },
+        { id: 'model:drone3d', label: 'Dron kurierski DX-4', kind: 'model 3d', parent: 'Modele 3D', color: '#dbe4ee' }
       ];
     }
 
@@ -5463,8 +5909,10 @@
       studioCache = {};
       document.querySelector('.console').classList.add('console--asset');
       if (!UI.paused) setPaused(true);
+      ASSET.orbit = Boolean(UI.picked.is3d);
       renderAsset();
-      loadShot(null);
+      if (ASSET.orbit) loadOrbit();
+      else loadShot(null);
       renderThread();
       renderChips();
       renderQuick();
@@ -5653,6 +6101,13 @@
     function runSegment() {
       if (!ASSET.node) return;
       var node = ASSET.node;
+      // Analiza patrzy na ujęcie spoczynkowe — w orbicie prostokąty części
+      // odnosiłyby się do innego kąta niż to, co widać.
+      if (node.is3d && ASSET.orbit) {
+        ASSET.orbit = false;
+        ASSET.anim = null;
+        loadShot(null);
+      }
       ASSET.segmenting = true;
       renderAsset();
       var token = 'p' + ++previewSeq;
@@ -5812,6 +6267,14 @@
     function loadShot(anim) {
       if (!ASSET.node) return;
       stopAnim();
+      // Klip ma stały kąt kamery, więc odtwarzanie wychodzi z orbity; po stopie
+      // model 3D wraca do orbity, bo tam jest jego dom.
+      if (anim && ASSET.orbit) ASSET.orbit = false;
+      if (!anim && ASSET.node.is3d && !ASSET.orbit && ASSET.anim) {
+        ASSET.orbit = true;
+        ASSET.anim = null;
+        return loadOrbit();
+      }
       ASSET.anim = anim || null;
       var count = anim ? 18 : 1;
       askStudio(ASSET.node.id, anim, count, function (data) {
@@ -6042,12 +6505,21 @@
 
       var acts = el('div', 'viewer-actions');
       var modeSwitch = el('div', 'mode-switch');
+      var is3d = Boolean(node.is3d);
       [
-        ['2D', false],
-        ['Warstwy 3D', true]
+        [is3d ? 'Ujęcie' : '2D', false],
+        [is3d ? 'Orbita 360°' : 'Warstwy 3D', true]
       ].forEach(function (row) {
-        var b = el('button', ASSET.orbit === row[1] ? 'is-on' : null, row[0]);
+        var locked = row[1] && !is3d;
+        var b = el('button', (ASSET.orbit === row[1] ? 'is-on' : '') + (locked ? ' is-locked' : ''), locked ? '🔒 3D' : row[0]);
+        // Asset 2D nie ma bryły do obrócenia — obrót byłby udawaniem modelu,
+        // którego w grze nie ma.
+        if (locked) {
+          b.disabled = true;
+          b.title = 'Asset 2D — nie ma bryły do obrócenia. Model 3D otwiera tę zakładkę.';
+        }
         b.onclick = function () {
+          if (locked) return;
           if (ASSET.orbit === row[1]) return;
           ASSET.orbit = row[1];
           ASSET.frame = 0;
@@ -6057,10 +6529,18 @@
         modeSwitch.appendChild(b);
       });
       acts.appendChild(modeSwitch);
-      var sceneBtn = el('button', 'btn btn--sm', '▶ Scena');
-      sceneBtn.id = 'scene-open';
-      sceneBtn.onclick = openScene;
-      acts.appendChild(sceneBtn);
+      if (ASSET.anim) {
+        acts.appendChild(
+          el('span', 'fig-badge playing-chip', (ASSET.playing ? '▶ ' : '⏸ ') + (animLabel(ed, ASSET.anim) || ASSET.anim)),
+        );
+      }
+      // Model 3D leży w projekcie, nie na scenie 2D — nie ma go gdzie pokazać.
+      if (!node.is3d) {
+        var sceneBtn = el('button', 'btn btn--sm', '▶ Scena');
+        sceneBtn.id = 'scene-open';
+        sceneBtn.onclick = openScene;
+        acts.appendChild(sceneBtn);
+      }
       var closeBtn = el('button', 'btn btn--sm', '✕');
       closeBtn.id = 'asset-close';
       closeBtn.title = 'Wróć do studia';
@@ -6143,7 +6623,7 @@
           bar.appendChild(b);
         });
       }
-      if (ASSET.orbit) {
+      if (ASSET.orbit && !node.is3d) {
         bar.appendChild(el('span', 'bar-label', 'Rozstrzel'));
         var ex = document.createElement('input');
         ex.type = 'range';
