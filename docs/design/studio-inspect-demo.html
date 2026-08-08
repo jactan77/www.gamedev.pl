@@ -998,15 +998,67 @@
     font-size: 12px;
   }
 
-  /* ---------- tryb assetu: scena | asset | rozmowa ---------- */
+  /* ---------- tryb assetu: asset | rozmowa, scena w dialogu ---------- */
   .console--asset {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 400px) 350px;
+    grid-template-columns: minmax(0, 1fr) 384px;
   }
 
   .console--asset .rail--thread,
   .console--asset .rail--inspector,
+  .console--asset .stage,
   .console--asset .stage .composer {
     display: none;
+  }
+
+  /* Scena zostaje w tym samym miejscu drzewa — przenoszenie iframe'a
+     przeładowałoby grę — więc dialog robimy stylem, nie przepinaniem. */
+  body.scene-open .console--asset .stage {
+    display: flex;
+    position: fixed;
+    inset: 5vh 6vw;
+    z-index: 60;
+    border-color: #2c3945;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.7);
+  }
+
+  .scene-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    display: none;
+    background: rgba(6, 10, 15, 0.74);
+    backdrop-filter: blur(3px);
+  }
+
+  body.scene-open .scene-backdrop {
+    display: block;
+  }
+
+  .scene-only {
+    display: none;
+  }
+
+  body.scene-open .console--asset .stage .scene-only {
+    display: inline-flex;
+  }
+
+  .head-scene {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 7px;
+    background: var(--card-2);
+    border: 1px solid var(--panel-border);
+    color: var(--text);
+  }
+
+  .head-scene:hover {
+    border-color: var(--turquoise);
+    color: var(--turquoise);
   }
 
   .console--asset .rail--asset,
@@ -1050,6 +1102,34 @@
     gap: 12px;
     scrollbar-width: thin;
     scrollbar-color: var(--panel-border) transparent;
+  }
+
+  /* Asset jest teraz główną kolumną: podgląd po jednej stronie, listy po
+     drugiej. Poniżej 1100 px wszystko wraca do jednej kolumny. */
+  .asset-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 16px;
+  }
+
+  .asset-left,
+  .asset-right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .asset-left {
+    align-items: center;
+  }
+
+  @media (min-width: 1100px) {
+    .asset-body {
+      grid-template-columns: minmax(260px, 1fr) minmax(280px, 1fr);
+      gap: 22px;
+    }
   }
 
   .asset-figure {
@@ -1347,14 +1427,9 @@
     font-size: 13px;
   }
 
-  @media (max-width: 1240px) {
+  @media (max-width: 1100px) {
     .console--asset {
       grid-template-columns: minmax(0, 1fr) 330px;
-    }
-
-    .console--asset .rail--chat {
-      grid-column: 1 / -1;
-      max-height: 420px;
     }
   }
 
@@ -1363,9 +1438,16 @@
       grid-template-columns: minmax(0, 1fr);
     }
 
-    .console--asset .rail--asset,
+    .console--asset .rail--asset {
+      max-height: 560px;
+    }
+
     .console--asset .rail--chat {
       max-height: 460px;
+    }
+
+    body.scene-open .console--asset .stage {
+      inset: 4vh 3vw;
     }
   }
 
@@ -1504,6 +1586,7 @@
         <span class="pill">FPS <b id="stat-fps">—</b></span>
         <span class="pill">Punkty <b id="stat-score">0</b></span>
         <span class="pill" id="stat-mode">Autopilot</span>
+        <button class="btn scene-only" id="scene-close" style="margin-left: auto">✕ Zamknij scenę</button>
       </div>
 
       <div class="viewport">
@@ -1549,6 +1632,7 @@
       <div class="panel-head">
         <h2>Asset</h2>
         <span class="head-file" id="asset-file"></span>
+        <button class="head-scene" id="scene-open">▶ Podgląd sceny</button>
         <button class="head-close" id="asset-close">✕ Wróć do studia</button>
       </div>
       <div class="asset-body" id="asset-body"></div>
@@ -1576,6 +1660,8 @@
       </div>
     </aside>
   </div>
+
+  <div class="scene-backdrop" id="scene-backdrop"></div>
 
   <section class="explain">
     <div class="explain-lede">
@@ -1621,15 +1707,16 @@
     <div class="card">
       <h3>Asset otwiera rozmowę, nie panel pokręteł</h3>
       <p>
-        Klik w kartę assetu przestawia studio na trzy kolumny: scena po lewej, asset w środku,
-        rozmowa po prawej. Na podglądzie assetu zaznaczasz konkretne części — korpus, wirniki,
-        sensor, poświatę — a każde zaznaczenie dostaje numer, kolor i pole na komentarz. Funkcje i
-        dźwięki zaznacza się tak samo.
+        Klik w kartę assetu oddaje ekran dwóm rzeczom: asset po lewej, rozmowa po prawej. Na
+        podglądzie zaznaczasz konkretne części — korpus, wirniki, sensor, poświatę — a każde
+        zaznaczenie dostaje numer, kolor i pole na komentarz. Funkcje i dźwięki zaznacza się tak
+        samo.
       </p>
       <p style="margin-top: 7px">
         Zaznaczenia wchodzą do promptu jako kontekst, a nie jako gotowa zmiana. Agent odpowiada
-        jedną rewizją: co zmienia i dlaczego, z miniaturą przed i po. Nic nie rusza się na scenie,
-        dopóki nie klikniesz <b>Zastosuj</b>.
+        jedną rewizją: co zmienia i dlaczego, z miniaturą przed i po. Scena nie zajmuje miejsca na
+        stałe — wyskakuje jako dialog wtedy, gdy jest po co: sam ją wołasz albo właśnie
+        zastosowałeś rewizję i chcesz zobaczyć skutek w ruchu.
       </p>
     </div>
 
@@ -2314,8 +2401,14 @@
     function previewOf(r, opts) {
       opts = opts || {};
       var pad = opts.pad == null ? 4 : opts.pad;
-      var rw = r[2] + pad * 2,
-        rh = r[3] + pad * 2;
+      // Kadr przycięty do sceny: element przy krawędzi ma margines tylko tam,
+      // gdzie scena sięga, inaczej podgląd miałby pustą, przezroczystą obwódkę.
+      var wx0 = Math.max(0, r[0] - pad),
+        wy0 = Math.max(0, r[1] - pad),
+        wx1 = Math.min(W, r[0] + r[2] + pad),
+        wy1 = Math.min(H, r[1] + r[3] + pad);
+      var rw = Math.max(1, wx1 - wx0),
+        rh = Math.max(1, wy1 - wy0);
       var max = opts.max || 132;
       var k = Math.max(0.25, Math.min(14, max / Math.max(rw, rh)));
       var c = doc.createElement('canvas');
@@ -2329,8 +2422,8 @@
         poy = oy;
       ctx = g;
       scale = k;
-      ox = -(r[0] - pad) * k;
-      oy = -(r[1] - pad) * k;
+      ox = -wx0 * k;
+      oy = -wy0 * k;
       try {
         withPhase(opts.phase || 0, draw);
         if (opts.partRect) {
@@ -2357,7 +2450,7 @@
       }
       // withMap: host potrzebuje skali i marginesu, żeby położyć klikalne
       // obszary części dokładnie na podglądzie.
-      return opts.withMap ? { png: png, k: k, pad: pad, w: c.width, h: c.height } : png;
+      return opts.withMap ? { png: png, k: k, x0: wx0, y0: wy0, w: c.width, h: c.height } : png;
     }
 
     // Właściwości, które host wyrenderuje jako kontrolki. Kolor jest tylko
@@ -3195,12 +3288,7 @@
               for (var bk in rects) {
                 if (!Object.prototype.hasOwnProperty.call(rects, bk)) continue;
                 var br = rects[bk];
-                boxes[bk] = [
-                  (br[0] - acrop[0] + res.pad) * res.k,
-                  (br[1] - acrop[1] + res.pad) * res.k,
-                  br[2] * res.k,
-                  br[3] * res.k
-                ];
+                boxes[bk] = [(br[0] - res.x0) * res.k, (br[1] - res.y0) * res.k, br[2] * res.k, br[3] * res.k];
               }
             }
             post({
@@ -3861,12 +3949,17 @@
         ed = node.editor;
       host.innerHTML = '';
 
+      var left = el('div', 'asset-left');
+      var right = el('div', 'asset-right');
+      host.appendChild(left);
+      host.appendChild(right);
+
       var fig = el('div', 'asset-figure');
       var img = document.createElement('img');
       img.alt = 'Podgląd assetu ' + node.label;
       fig.appendChild(img);
-      host.appendChild(fig);
-      askPreview(node.id, { max: 300, pad: 8, parts: true }, function (res) {
+      left.appendChild(fig);
+      askPreview(node.id, { max: 440, pad: 8, parts: true }, function (res) {
         if (!res || !res.png) return;
         img.src = res.png;
         ASSET.boxes = res.boxes || {};
@@ -3874,7 +3967,7 @@
         drawHotspots(fig, ed);
       });
 
-      host.appendChild(
+      left.appendChild(
         el(
           'div',
           'asset-hint',
@@ -3902,7 +3995,7 @@
         partTokens.appendChild(b);
       });
       partsRow.appendChild(partTokens);
-      host.appendChild(partsRow);
+      right.appendChild(partsRow);
 
       var other = el('div');
       other.appendChild(el('div', 'asset-row-label', 'Funkcje i dźwięki'));
@@ -3923,7 +4016,7 @@
         tokens.appendChild(b);
       });
       other.appendChild(tokens);
-      host.appendChild(other);
+      right.appendChild(other);
 
       if (ASSET.sel.length) {
         var box = el('div');
@@ -3959,7 +4052,7 @@
           notes.appendChild(row);
         });
         box.appendChild(notes);
-        host.appendChild(box);
+        right.appendChild(box);
       }
     }
 
@@ -4072,6 +4165,8 @@
         });
       }, 260);
       renderThread();
+      // Zastosowanie bez zobaczenia skutku byłoby wiarą na słowo.
+      openScene();
     }
 
     function revertRevision(rev) {
@@ -4083,7 +4178,42 @@
       renderThread();
     }
 
-    $('asset-close').onclick = closeAsset;
+    /**
+     * Scena jako dialog.
+     *
+     * Otwiera się wtedy, kiedy jest po co: sam ją wołasz albo właśnie
+     * zastosowałeś rewizję i chcesz zobaczyć skutek w ruchu.
+     */
+    function openScene() {
+      if (!ASSET.open) return;
+      document.body.classList.add('scene-open');
+      // Scena otwarta znaczy „chcę to zobaczyć w ruchu” — gra rusza, a
+      // Pauza stoi tuż obok, gdyby jednak trzeba było w coś kliknąć.
+      if (UI.paused) setPaused(false);
+      $('scene-close').focus();
+    }
+    function closeScene() {
+      document.body.classList.remove('scene-open');
+      if (!UI.paused) setPaused(true);
+    }
+    function toggleScene() {
+      if (document.body.classList.contains('scene-open')) closeScene();
+      else openScene();
+    }
+
+    $('asset-close').onclick = function () {
+      closeScene();
+      closeAsset();
+    };
+    $('scene-open').onclick = toggleScene;
+    $('scene-close').onclick = closeScene;
+    $('scene-backdrop').onclick = closeScene;
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && document.body.classList.contains('scene-open')) {
+        e.stopPropagation();
+        closeScene();
+      }
+    });
 
 /*@ASSETJS@*/
 
