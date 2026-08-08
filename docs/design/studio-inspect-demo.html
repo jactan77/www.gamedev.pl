@@ -1167,189 +1167,192 @@
     flex: none;
   }
 
-  /* ---- viewer: asset na stole warsztatowym ---- */
-  .stage-wrap {
-    position: relative;
-    max-width: 520px;
-    margin: 0 auto 34px;
-  }
-
-  /* Echo stosu kart ze szkicu — inne ujęcia leżące pod spodem. */
-  .stage-wrap::before,
-  .stage-wrap::after {
-    content: '';
-    position: absolute;
-    inset: 14px -18px 10px;
-    border-radius: 14px;
-    background: #10161c;
-    border: 1px solid #212b35;
-    z-index: 0;
-  }
-
-  .stage-wrap::after {
-    inset: 26px -36px 20px;
-    opacity: 0.6;
-  }
-
-  .stage3d {
-    position: relative;
-    z-index: 1;
-    aspect-ratio: 4 / 3;
-    border-radius: 14px;
+  /* ---- viewer: cały komponent, jak stół w 3daistudio ---- */
+  .rail--asset {
     overflow: hidden;
-    border: 1px solid #26313c;
-    background:
-      radial-gradient(120% 85% at 50% 8%, #1c2530 0%, #0d1218 58%, #080b0f 100%);
-    display: grid;
-    place-items: center;
-    box-shadow: 0 26px 60px rgba(0, 0, 0, 0.55);
   }
 
-  .stage3d-grid {
+  .asset-body {
+    position: relative;
+    flex: 1;
+    /* Cała treść viewera jest pozycjonowana absolutnie, więc panel nie ma z
+       czego wziąć wysokości i w układzie jednokolumnowym zapadał się do paska. */
+    min-height: 440px;
+    padding: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 80% at 50% 120%, rgba(0, 0, 0, 0.45), transparent 60%),
+      linear-gradient(180deg, #2a2d31 0%, #1e2125 52%, #15181b 100%);
+  }
+
+  /* Płyta siatki: skończony kwadrat, nie nieskończona podłoga — obraca się
+     razem z modelem, żeby obrót miał się do czego odnieść. */
+  .viewer-grid {
     position: absolute;
-    left: -30%;
-    right: -30%;
-    bottom: -8%;
-    height: 60%;
+    left: 50%;
+    top: 66%;
+    width: 116%;
+    aspect-ratio: 1 / 1;
+    transform: translate(-50%, -50%) perspective(760px) rotateX(58deg) rotateZ(var(--yaw, 0deg));
     background-image:
-      linear-gradient(rgba(56, 189, 248, 0.16) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(56, 189, 248, 0.16) 1px, transparent 1px);
-    background-size: 42px 42px;
-    transform: perspective(420px) rotateX(62deg);
-    -webkit-mask-image: linear-gradient(to top, #000 6%, transparent 82%);
-    mask-image: linear-gradient(to top, #000 6%, transparent 82%);
+      linear-gradient(rgba(214, 222, 230, 0.17) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(214, 222, 230, 0.17) 1px, transparent 1px);
+    background-size: 7.2% 7.2%;
+    -webkit-mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
+    mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
     pointer-events: none;
+    transition: transform 0.08s linear;
   }
 
   .shot-wrap {
-    position: relative;
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    transform: translate(-50%, -50%);
     z-index: 2;
     line-height: 0;
-    filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.55));
+    filter: drop-shadow(0 22px 26px rgba(0, 0, 0, 0.6));
   }
 
+  /* Rozmiar w jednostkach okna, nie w procentach: procent liczyłby się od
+     kontenera, który sam dopasowuje się do obrazka — i model wychodził mały. */
+  /* Rozmiar modelu ustawiany w px przy renderze — procent liczyłby się od
+     kontenera, który sam dopasowuje się do obrazka, a jednostki okna nie wiedzą
+     nic o wysokości panelu i model wchodził pod pasek animacji. */
   .shot-wrap img {
     display: block;
-    max-width: 100%;
+    width: auto;
+    height: auto;
     image-rendering: pixelated;
   }
 
-  .stage3d-top {
+  /* --- chrom pływający nad widokiem --- */
+  .viewer-head {
     position: absolute;
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    z-index: 5;
+    top: 18px;
+    left: 20px;
+    right: 20px;
+    z-index: 6;
     display: flex;
-    align-items: center;
-    gap: 7px;
+    align-items: flex-start;
+    gap: 16px;
     pointer-events: none;
   }
 
-  .stage3d-top .fig-badge {
+  .viewer-head > * {
     pointer-events: auto;
   }
 
-  .stage3d-foot {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 5;
+  .viewer-title h2 {
+    font-size: 19px;
+    margin-top: 5px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  }
+
+  .viewer-actions {
+    margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 14px 12px;
+    gap: 8px;
+    flex: none;
+  }
+
+  .viewer-foot {
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    bottom: 16px;
+    z-index: 6;
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .viewer-readout {
     font-family: var(--mono);
     font-size: 10.5px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: #b9c7d6;
-    background: linear-gradient(180deg, transparent, rgba(6, 10, 15, 0.8) 60%);
-  }
-
-  .mode-switch {
-    display: flex;
-    gap: 2px;
-    padding: 2px;
-    border-radius: 8px;
-    background: rgba(12, 17, 23, 0.82);
-    border: 1px solid var(--panel-border);
-    backdrop-filter: blur(6px);
-    pointer-events: auto;
-  }
-
-  .mode-switch button {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    padding: 3px 9px;
-    border-radius: 6px;
     color: var(--muted);
-  }
-
-  .mode-switch button.is-on {
-    background: var(--blue);
-    color: #04202e;
-    font-weight: 700;
-  }
-
-  .explode-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    max-width: 520px;
-    margin: 0 auto;
-    padding: 9px 12px;
-    border-radius: 10px;
-    background: var(--card);
-    border: 1px solid var(--panel-border);
-  }
-
-  .explode-label {
-    font-size: 12px;
-    color: #c6d2de;
+    background: rgba(12, 17, 23, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 6px 10px;
+    backdrop-filter: blur(8px);
     white-space: nowrap;
   }
 
-  .explode-row input[type='range'] {
-    flex: 1;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 3px;
-    border-radius: 2px;
-    background: #2b3642;
+  /* Jeden przewijany rząd zamiast zawijania: zawinięty pasek rósł w górę i
+     zasłaniał model, w który trzeba kliknąć. */
+  .viewer-bar {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    max-width: 100%;
+    scrollbar-width: none;
+    justify-content: flex-end;
+    padding: 7px 9px;
+    border-radius: 12px;
+    background: rgba(12, 17, 23, 0.66);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(10px);
   }
 
-  .explode-row input[type='range']::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 13px;
-    height: 13px;
-    border-radius: 50%;
-    background: var(--blue);
-    border: 2px solid #0f1418;
-    cursor: grab;
+  .viewer-bar .token {
+    background: rgba(28, 36, 44, 0.8);
   }
 
-  .explode-row input[type='range']::-moz-range-thumb {
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    background: var(--blue);
-    border: 2px solid #0f1418;
+  .bar-label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted-dim);
+    padding: 0 4px;
   }
 
-  .explode-row output {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--blue);
-    font-variant-numeric: tabular-nums;
+  .viewer-bar::-webkit-scrollbar {
+    display: none;
   }
 
-  .playing-chip {
-    color: var(--turquoise);
-    border-color: rgba(0, 228, 172, 0.45);
-    background: rgba(0, 228, 172, 0.12);
+  .viewer-bar .token {
+    white-space: nowrap;
+    flex: none;
+  }
+
+  @media (max-width: 1100px) {
+    .shot-wrap {
+      top: 40%;
+    }
+
+    .viewer-foot {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+
+    .viewer-bar {
+      margin-left: 0;
+      justify-content: flex-start;
+    }
+
+    .viewer-hint {
+      display: none;
+    }
+  }
+
+  .viewer-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 84px;
+    transform: translateX(-50%);
+    z-index: 5;
+    font-size: 12px;
+    color: var(--muted-dim);
+    pointer-events: none;
+    white-space: nowrap;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
   }
 
   /* ---- ramka podglądu ---- */
@@ -1614,6 +1617,32 @@
 
   /* Subasset wyłączony w assecie: nic nie rysuje, ale nadal jest czymś, o czym
      można napisać — więc obszar zostaje, tylko przygaszony. */
+  /* Część z auto-podziału: pełna ramka w jej własnym kolorze, zawsze widoczna —
+     to wynik analizy, nie podpowiedź. */
+  .hot--seg {
+    border-style: solid;
+    border-width: 1.5px;
+    opacity: 0.85;
+  }
+
+  /* Etykieta w środku ramki: przy krawędzi wszystkie części miały ją na tej
+     samej wysokości i napisy nachodziły na siebie. */
+  .hot--seg .hot-label {
+    opacity: 1;
+    top: 3px;
+    left: 3px;
+  }
+
+  .hot--thin .hot-label {
+    top: -19px;
+    left: -1px;
+  }
+
+  .hot--seg:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.07);
+  }
+
   .hot--ghost {
     border-color: rgba(148, 163, 184, 0.14);
     border-style: dotted;
@@ -2258,22 +2287,20 @@
     <div class="card">
       <h3>Asset na stole warsztatowym</h3>
       <p>
-        Klik w kartę assetu oddaje ekran dwóm komponentom: viewer po lewej, agent chat po prawej.
-        Model jest wyjęty ze sceny i rysowany sam, na siatce — z tych samych wartości, z których
-        rysuje go gra, więc pokazuje prawdę o assecie, a nie ładny render obok.
+        Viewer zajmuje cały komponent: model wyjęty ze sceny, na obracającej się płycie siatki,
+        bez ramek i kart wokół. Rysowany z tych samych wartości, z których rysuje go gra, więc
+        pokazuje prawdę o assecie, a nie ładny render obok.
       </p>
       <p style="margin-top: 7px">
-        Subassety klika się wprost na modelu; zaznaczony trafia do pola wiadomości jako załącznik i
-        do okruszków. <b>Animacje</b> to nie nazwy na liście — kliknięcie odtwarza demo na modelu
-        (patrol drona naprawdę przejeżdża, skok kuriera naprawdę podskakuje). Klatki lecą jednym
-        komunikatem i chodzą lokalnie, bo prośba o każdą z osobna to kilkanaście przelotów przez
-        most na sekundę.
+        <b>Podziel na części</b> analizuje wyrenderowany model — kwantyzuje kolory, znajduje spójne
+        obszary i skleja wyspy tego samego koloru w jedną część. Nie pyta kodu o nic: tak samo
+        podzieliłby asset, o którym nic nie wiadomo. Geometria pochodzi z analizy, nazwy z
+        dopasowania do warstw; bez dopasowania część zostaje numerem.
       </p>
       <p style="margin-top: 7px">
-        <b>Warstwy 3D</b> obracają model przeciągnięciem. To nie jest model 3D — gra rysuje płaskie
-        kształty i to cała prawda o tym assecie. Głębokość bierze się z kolejności rysowania, więc
-        obrót pokazuje coś, co asset naprawdę ma: co jest nad czym i jak daleko. Wachlarz kończy się
-        na ±60°, bo płaska warstwa oglądana z boku znika.
+        <b>Animacje</b> odtwarzają demo na modelu, a <b>Warstwy 3D</b> obracają go przeciągnięciem.
+        To nie jest model 3D — głębokość bierze się z kolejności rysowania, więc obrót pokazuje, co
+        jest nad czym. Wachlarz kończy się na ±60°, bo płaska warstwa oglądana z boku znika.
       </p>
     </div>
 
@@ -3413,6 +3440,178 @@
       };
     }
 
+    /**
+     * Automatyczny podział modelu na części.
+     *
+     * Analizuje wyrenderowany model, nie jego kod: kwantyzuje kolory, znajduje
+     * spójne obszary (flood fill) i skleja wyspy tego samego koloru w jedną
+     * część. Dzięki temu działa na assecie, o którym nic nie wiadomo — nie
+     * potrzebuje deklaracji warstw od twórcy gry.
+     *
+     * Rozdziela to, co widać: ostrze od trzonka, wirniki od korpusu. Nie
+     * rozdzieli dwóch elementów w tym samym kolorze, które się stykają — i to
+     * jest uczciwa granica metody, nie błąd implementacji.
+     */
+    function segmentAsset(id, max) {
+      var spec = studioSpec(id);
+      var keys = Object.keys(spec.parts);
+      var hidden = hiddenParts(id, keys);
+      var ext = studioExtent(spec, hidden);
+      var k = Math.min(max / ext[2], max / ext[3]);
+      var cw = Math.max(1, Math.round(ext[2] * k)),
+        ch = Math.max(1, Math.round(ext[3] * k));
+      var c = doc.createElement('canvas');
+      c.width = cw;
+      c.height = ch;
+      var g = c.getContext('2d');
+      if (!g) return { segments: [], size: [1, 1] };
+      var st = spec.state(0, null);
+      g.save();
+      g.translate(-ext[0] * k, -ext[1] * k);
+      g.scale(k, k);
+      g.translate(st.dx, st.dy);
+      for (var l = 0; l < spec.layers.length; l++) {
+        try {
+          spec.layers[l].draw(g, st);
+        } catch (err) {
+          /* warstwa bez treści nie psuje analizy */
+        }
+      }
+      g.restore();
+
+      var data;
+      try {
+        data = g.getImageData(0, 0, cw, ch).data;
+      } catch (err) {
+        return { segments: [], size: [cw, ch] };
+      }
+
+      // Kwantyzacja: cień i wygładzanie krawędzi dają setki odcieni jednej bryły.
+      // Krycie wchodzi do kodu razem z kolorem: wirniki rysowane z alfą 0.45
+      // mają dokładnie to samo RGB co korpus i bez tego scalały się w jedno.
+      var STEP = 26;
+      var codes = new Int32Array(cw * ch);
+      for (var i = 0; i < cw * ch; i++) {
+        var a = data[i * 4 + 3];
+        if (a < 60) {
+          codes[i] = -1;
+          continue;
+        }
+        var r = Math.round(data[i * 4] / STEP),
+          gg = Math.round(data[i * 4 + 1] / STEP),
+          bb = Math.round(data[i * 4 + 2] / STEP),
+          aq = Math.round(a / 70);
+        codes[i] = ((r * 11 + gg) * 11 + bb) * 5 + aq;
+      }
+
+      var seen = new Uint8Array(cw * ch);
+      var islands = [];
+      var stack = new Int32Array(cw * ch);
+      for (var p0 = 0; p0 < cw * ch; p0++) {
+        if (seen[p0] || codes[p0] < 0) continue;
+        var code = codes[p0];
+        var top = 0;
+        stack[top++] = p0;
+        seen[p0] = 1;
+        var minX = cw,
+          minY = ch,
+          maxX = 0,
+          maxY = 0,
+          area = 0,
+          sumR = 0,
+          sumG = 0,
+          sumB = 0;
+        while (top > 0) {
+          var q = stack[--top];
+          var qx = q % cw,
+            qy = (q / cw) | 0;
+          area++;
+          sumR += data[q * 4];
+          sumG += data[q * 4 + 1];
+          sumB += data[q * 4 + 2];
+          if (qx < minX) minX = qx;
+          if (qx > maxX) maxX = qx;
+          if (qy < minY) minY = qy;
+          if (qy > maxY) maxY = qy;
+          if (qx > 0 && !seen[q - 1] && codes[q - 1] === code) {
+            seen[q - 1] = 1;
+            stack[top++] = q - 1;
+          }
+          if (qx < cw - 1 && !seen[q + 1] && codes[q + 1] === code) {
+            seen[q + 1] = 1;
+            stack[top++] = q + 1;
+          }
+          if (qy > 0 && !seen[q - cw] && codes[q - cw] === code) {
+            seen[q - cw] = 1;
+            stack[top++] = q - cw;
+          }
+          if (qy < ch - 1 && !seen[q + cw] && codes[q + cw] === code) {
+            seen[q + cw] = 1;
+            stack[top++] = q + cw;
+          }
+        }
+        if (area < cw * ch * 0.0009) continue;
+        islands.push({
+          code: code,
+          area: area,
+          box: [minX, minY, maxX - minX + 1, maxY - minY + 1],
+          rgb: [Math.round(sumR / area), Math.round(sumG / area), Math.round(sumB / area)]
+        });
+      }
+
+      // Wyspy tego samego koloru to jedna część: dwa wirniki drona są jednym
+      // elementem, który twórca opisze jednym zdaniem.
+      var byCode = {};
+      islands.forEach(function (isl) {
+        var key = String(isl.code);
+        if (!byCode[key]) {
+          byCode[key] = { area: 0, islands: 0, rgb: isl.rgb, box: isl.box.slice() };
+          byCode[key].box = isl.box.slice();
+        }
+        var e = byCode[key];
+        e.area += isl.area;
+        e.islands++;
+        var x0 = Math.min(e.box[0], isl.box[0]),
+          y0 = Math.min(e.box[1], isl.box[1]);
+        var x1 = Math.max(e.box[0] + e.box[2], isl.box[0] + isl.box[2]),
+          y1 = Math.max(e.box[1] + e.box[3], isl.box[1] + isl.box[3]);
+        e.box = [x0, y0, x1 - x0, y1 - y0];
+      });
+
+      var total = 0;
+      Object.keys(byCode).forEach(function (kk) {
+        total += byCode[kk].area;
+      });
+      var segments = Object.keys(byCode)
+        .map(function (kk) {
+          var e = byCode[kk];
+          return {
+            id: 'seg-' + kk,
+            box: e.box,
+            islands: e.islands,
+            share: total ? e.area / total : 0,
+            color:
+              '#' +
+              [e.rgb[0], e.rgb[1], e.rgb[2]]
+                .map(function (v) {
+                  return ('0' + v.toString(16)).slice(-2);
+                })
+                .join('')
+          };
+        })
+        .sort(function (m1, m2) {
+          return m2.share - m1.share;
+        });
+
+      return { segments: segments, size: [cw, ch], png: (function () {
+        try {
+          return c.toDataURL('image/png');
+        } catch (err) {
+          return null;
+        }
+      })() };
+    }
+
     /** Które subassety są w tym assecie wyłączone (nie rysują nic, ale są). */
     function hiddenParts(id, keys) {
       var group = art[family(id)];
@@ -3480,14 +3679,23 @@
       }
 
       var boxes = {};
+      var MIN = 30;
       keys.forEach(function (key) {
         var p = spec.parts[key];
         var bx = Math.max(0, (p[0] - ext[0]) * k),
           by = Math.max(0, (p[1] - ext[1]) * k);
         var bw = Math.min(cw, (p[0] + p[2] - ext[0]) * k) - bx,
           bh = Math.min(ch, (p[1] + p[3] - ext[1]) * k) - by;
-        if (bw <= 2 || bh <= 2) return;
-        boxes[key] = [bx, by, bw, bh];
+        if (bw > 6 && bh > 6) {
+          boxes[key] = [bx, by, bw, bh];
+          return;
+        }
+        // Wyłączony subasset potrafi leżeć całkiem poza kadrem (smuga kuriera
+        // ciągnie się w lewo od sylwetki). Bez listy subassetów byłby wtedy nie
+        // do kliknięcia — więc dostaje znacznik przypięty do krawędzi kadru.
+        var cxp = (p[0] + p[2] / 2 - ext[0]) * k - MIN / 2,
+          cyp = (p[1] + p[3] / 2 - ext[1]) * k - MIN / 2;
+        boxes[key] = [Math.max(0, Math.min(cw - MIN, cxp)), Math.max(0, Math.min(ch - MIN, cyp)), MIN, MIN];
       });
       return { frames: frames, boxes: boxes, hidden: hidden, size: [cw, ch], anims: spec.anims };
     }
@@ -4556,6 +4764,11 @@
           else setProp(m.id, m.key, m.value);
           post({ type: 'tree', nodes: treePayload() });
           break;
+        case 'segment': {
+          var seg = segmentAsset(m.id, m.max || 620);
+          post({ type: 'segment', id: m.id, token: m.token || null, segments: seg.segments, size: seg.size, png: seg.png });
+          break;
+        }
         case 'orbit': {
           var ores = orbitFrames(m.id, m.steps || 24, m.pitch == null ? 22 : m.pitch, m.explode || 0, m.max || 420);
           post({
@@ -5213,7 +5426,11 @@
       orbit: false,
       explode: 1,
       boxesPerFrame: [],
-      hidden: {}
+      hidden: {},
+      /** Wynik auto-podziału modelu na części. */
+      segments: [],
+      segSize: [1, 1],
+      segmenting: false
     };
     var previewCbs = {};
     var previewSeq = 0;
@@ -5242,6 +5459,7 @@
       ASSET.anim = null;
       ASSET.frames = [];
       ASSET.frame = 0;
+      ASSET.segments = [];
       studioCache = {};
       document.querySelector('.console').classList.add('console--asset');
       if (!UI.paused) setPaused(true);
@@ -5273,6 +5491,7 @@
         ASSET.sel = [];
         ASSET.seq = 0;
         ASSET.focus = null;
+        ASSET.segments = [];
         wasAnim = null;
         renderChips();
       }
@@ -5395,10 +5614,10 @@
         studioCache[key] = data;
         cb(data);
       };
-      send({ type: 'studio', id: id, token: token, anim: anim || null, count: count, max: 420 });
+      send({ type: 'studio', id: id, token: token, anim: anim || null, count: count, max: 620 });
     }
     handlers.push(function (m) {
-      if ((m.type === 'studio' || m.type === 'orbit') && m.token && previewCbs[m.token]) {
+      if ((m.type === 'studio' || m.type === 'orbit' || m.type === 'segment') && m.token && previewCbs[m.token]) {
         previewCbs[m.token](m);
         delete previewCbs[m.token];
       }
@@ -5423,7 +5642,55 @@
         studioCache[key] = data;
         cb(data);
       };
-      send({ type: 'orbit', id: id, token: token, steps: 24, pitch: 22, explode: explode, max: 420 });
+      send({ type: 'orbit', id: id, token: token, steps: 24, pitch: 20, explode: explode, max: 620 });
+    }
+
+    /**
+     * Auto-podział: pytamy most o analizę modelu i pokazujemy znalezione części
+     * jako obszary na modelu. Nazwy nadaje agent — analiza widzi kształty, nie
+     * wie, że to wirniki.
+     */
+    function runSegment() {
+      if (!ASSET.node) return;
+      var node = ASSET.node;
+      ASSET.segmenting = true;
+      renderAsset();
+      var token = 'p' + ++previewSeq;
+      previewCbs[token] = function (m) {
+        ASSET.segmenting = false;
+        ASSET.segments = m.segments || [];
+        ASSET.segSize = m.size || [1, 1];
+        renderAsset();
+        var edm = ASSET.node ? ASSET.node.editor : null;
+        UI.thread.push({
+          who: 'agent',
+          name: 'Agent',
+          body: [
+            'Podzieliłem model na ' +
+              ASSET.segments.length +
+              (ASSET.segments.length === 1 ? ' część' : ASSET.segments.length < 5 ? ' części' : ' części') +
+              '. Analiza patrzy na kształt i kolor, nie na kod — nazwy proponuję ja:',
+            ASSET.segments
+              .map(function (sg, i) {
+                var mp = edm ? matchPart(sg, edm) : null;
+                return (
+                  '• ' +
+                  (mp ? mp.label : 'Element ' + (i + 1)) +
+                  ' — ' +
+                  Math.round(sg.share * 100) +
+                  '% powierzchni' +
+                  (sg.islands > 1 ? ', ' + sg.islands + " wyspy" : '')
+                );
+              })
+              .join('\n'),
+            'Kliknij część na modelu, żeby o niej napisać.'
+          ],
+          atts: [],
+          at: clockNow()
+        });
+        renderThread();
+      };
+      send({ type: 'segment', id: node.id, token: token, max: 620 });
     }
 
     function loadOrbit() {
@@ -5502,8 +5769,16 @@
         if (img) img.src = ASSET.frames[next];
         var wrap = stage.querySelector('.shot-wrap');
         if (wrap && ASSET.node) drawHotspots(wrap, ASSET.node.editor);
+        var gridEl = $('viewer-grid');
+        if (gridEl) gridEl.style.setProperty('--yaw', orbitAngle(next) * 0.9 + 'deg');
         var counter = $('shot-counter');
-        if (counter) counter.textContent = 'obrót ' + orbitAngle(next) + '°';
+        if (counter && ASSET.node) {
+          counter.textContent =
+            ASSET.node.asset.file.split('/').pop() +
+            ' · ' + ASSET.node.asset.layer +
+            ' · ' + ASSET.node.asset.instances + '×' +
+            ' · obrót ' + orbitAngle(next) + '°';
+        }
       });
       function end(e) {
         if (!dragging) return;
@@ -5605,6 +5880,77 @@
       });
     }
 
+    /**
+     * Części z auto-podziału jako obszary na modelu.
+     *
+     * Nazwy biorą się z listy subassetów po kolejności udziału w powierzchni —
+     * bo tak samo zgaduje je agent. Gdy nazw zabraknie, część zostaje numerem:
+     * analiza widzi kształt, nie wie, co to jest.
+     */
+    /**
+     * Nazwa dla znalezionej części.
+     *
+     * Analiza zwraca geometrię, nie znaczenie — nazwę bierzemy z dopasowania
+     * prostokątów do warstw assetu (największe pokrycie wygrywa). Po kolejności
+     * byłoby to zgadywanie udające odpowiedź; bez dopasowania część zostaje
+     * numerem, i to jest uczciwe.
+     */
+    function matchPart(seg, ed) {
+      var best = null,
+        bestScore = 0;
+      ed.parts.forEach(function (p) {
+        var b = ASSET.boxes[p.key];
+        if (!b) return;
+        var ix = Math.max(0, Math.min(seg.box[0] + seg.box[2], b[0] + b[2]) - Math.max(seg.box[0], b[0]));
+        var iy = Math.max(0, Math.min(seg.box[1] + seg.box[3], b[1] + b[3]) - Math.max(seg.box[1], b[1]));
+        var inter = ix * iy;
+        if (!inter) return;
+        var union = seg.box[2] * seg.box[3] + b[2] * b[3] - inter;
+        var score = union ? inter / union : 0;
+        if (score > bestScore) {
+          bestScore = score;
+          best = p;
+        }
+      });
+      return bestScore > 0.12 ? best : null;
+    }
+
+    function drawSegments(wrap, ed) {
+      wrap.querySelectorAll('.hot').forEach(function (n) {
+        n.remove();
+      });
+      ASSET.segments.forEach(function (sg, i) {
+        var part = matchPart(sg, ed);
+        var label = part ? part.label : 'Element ' + (i + 1);
+        var key = part ? part.key : sg.id;
+        var on = isSelected('part', key);
+        var sel = ASSET.sel.filter(function (s) {
+          return s.kind === 'part' && s.key === key;
+        })[0];
+        var thin = (sg.box[3] / ASSET.segSize[1]) * (wrap.clientHeight || 300) < 26;
+        var hot = el('button', 'hot hot--seg' + (on ? ' is-on' : '') + (thin ? ' hot--thin' : ''));
+        hot.style.left = (sg.box[0] / ASSET.segSize[0]) * 100 + '%';
+        hot.style.top = (sg.box[1] / ASSET.segSize[1]) * 100 + '%';
+        hot.style.width = (sg.box[2] / ASSET.segSize[0]) * 100 + '%';
+        hot.style.height = (sg.box[3] / ASSET.segSize[1]) * 100 + '%';
+        hot.style.borderColor = on && sel ? sel.color : sg.color;
+        hot.setAttribute('aria-label', (on ? 'Odznacz ' : 'Zaznacz ') + label);
+        if (on && sel) {
+          var badge = el('span', 'hot-badge', String(sel.n));
+          badge.style.background = sel.color;
+          hot.appendChild(badge);
+        }
+        var tag = el('span', 'hot-label', label + ' · ' + Math.round(sg.share * 100) + '%');
+        tag.style.background = sg.color;
+        tag.style.color = '#0b1018';
+        hot.appendChild(tag);
+        hot.onclick = function () {
+          toggleSel('part', key, label);
+        };
+        wrap.appendChild(hot);
+      });
+    }
+
     /* ---- opisy assetów: to, co karta mówi o sobie na górze ---- */
     var ASSET_LEDE = {
       drone: 'Przeciwnik rysowany w kodzie dla sceny „Neonowy Kurier”. Patroluje trzy wysokości i odbiera życie przy zderzeniu.',
@@ -5651,10 +5997,27 @@
           })[0]
         : null;
 
-      /* --- nagłówek --- */
-      var top = el('div', 'asset-top-row');
-      var idBox = el('div');
-      idBox.appendChild(el('div', 'eyebrow', 'Podgląd assetu'));
+      /* --- płyta siatki --- */
+      var grid = el('div', 'viewer-grid');
+      grid.id = 'viewer-grid';
+      grid.style.setProperty('--yaw', (ASSET.orbit ? orbitAngle(ASSET.frame) * 0.9 : 0) + 'deg');
+      host.appendChild(grid);
+
+      /* --- model --- */
+      var shot = el('div', 'shot-wrap');
+      var img = document.createElement('img');
+      img.alt = 'Asset ' + node.label;
+      sizeShot(img);
+      if (ASSET.frames.length) img.src = ASSET.frames[Math.min(ASSET.frame, ASSET.frames.length - 1)];
+      shot.appendChild(img);
+      host.appendChild(shot);
+      if (ASSET.segments.length && !ASSET.orbit && !ASSET.playing) drawSegments(shot, ed);
+      else if (!ASSET.playing) drawHotspots(shot, ed);
+
+      /* --- nagłówek nad widokiem --- */
+      var head = el('div', 'viewer-head');
+      var titleBox = el('div', 'viewer-title');
+      titleBox.appendChild(el('div', 'eyebrow', 'Podgląd assetu'));
 
       var crumbs = el('div', 'crumbs');
       node.path.split(' / ').forEach(function (step) {
@@ -5673,42 +6036,11 @@
       } else {
         crumbs.appendChild(el('span', 'here', node.label));
       }
-      idBox.appendChild(crumbs);
-      idBox.appendChild(el('h2', 'asset-h1', node.label + ' — ' + node.asset.type.toLowerCase()));
-      idBox.appendChild(el('p', 'asset-lede', ASSET_LEDE[fam] || 'Asset sceny „Neonowy Kurier”.'));
-      top.appendChild(idBox);
+      titleBox.appendChild(crumbs);
+      titleBox.appendChild(el('h2', null, node.label + ' — ' + node.asset.type.toLowerCase()));
+      head.appendChild(titleBox);
 
-      var acts = el('div', 'asset-top-actions');
-      var sceneBtn = el('button', 'btn', '▶ Otwórz scenę');
-      sceneBtn.id = 'scene-open';
-      sceneBtn.onclick = openScene;
-      acts.appendChild(sceneBtn);
-      var closeBtn = el('button', 'btn btn--ghost', '✕');
-      closeBtn.id = 'asset-close';
-      closeBtn.title = 'Wróć do studia';
-      closeBtn.setAttribute('aria-label', 'Wróć do studia');
-      closeBtn.onclick = function () {
-        closeScene();
-        closeAsset();
-      };
-      acts.appendChild(closeBtn);
-      top.appendChild(acts);
-      host.appendChild(top);
-
-      /* --- viewer --- */
-      var wrapOuter = el('div', 'stage-wrap');
-      var stage = el('div', 'stage3d');
-      stage.appendChild(el('div', 'stage3d-grid'));
-
-      var shot = el('div', 'shot-wrap');
-      var img = document.createElement('img');
-      img.alt = 'Asset ' + node.label;
-      if (ASSET.frames.length) img.src = ASSET.frames[Math.min(ASSET.frame, ASSET.frames.length - 1)];
-      shot.appendChild(img);
-      stage.appendChild(shot);
-      if (!ASSET.playing) drawHotspots(shot, ed);
-
-      var topBar = el('div', 'stage3d-top');
+      var acts = el('div', 'viewer-actions');
       var modeSwitch = el('div', 'mode-switch');
       [
         ['2D', false],
@@ -5724,126 +6056,119 @@
         };
         modeSwitch.appendChild(b);
       });
-      topBar.appendChild(modeSwitch);
-      topBar.appendChild(el('span', 'fig-badge', 'v' + ASSET.rev + ' · szkic'));
-      if (ASSET.anim) {
-        var playingChip = el(
-          'span',
-          'fig-badge playing-chip',
-          '▶ ' + (animLabel(ed, ASSET.anim) || ASSET.anim),
-        );
-        topBar.appendChild(playingChip);
-      }
-      stage.appendChild(topBar);
+      acts.appendChild(modeSwitch);
+      var sceneBtn = el('button', 'btn btn--sm', '▶ Scena');
+      sceneBtn.id = 'scene-open';
+      sceneBtn.onclick = openScene;
+      acts.appendChild(sceneBtn);
+      var closeBtn = el('button', 'btn btn--sm', '✕');
+      closeBtn.id = 'asset-close';
+      closeBtn.title = 'Wróć do studia';
+      closeBtn.setAttribute('aria-label', 'Wróć do studia');
+      closeBtn.onclick = function () {
+        closeScene();
+        closeAsset();
+      };
+      acts.appendChild(closeBtn);
+      head.appendChild(acts);
+      host.appendChild(head);
 
-      var foot = el('div', 'stage3d-foot');
-      foot.appendChild(el('span', null, node.asset.file.split('/').pop() + ' · ' + node.asset.cost));
-      var counter = el(
-        'span',
-        null,
-        ASSET.orbit
-          ? 'obrót ' + orbitAngle(ASSET.frame) + '°'
-          : ASSET.frames.length > 1
-            ? 'klatka ' + (ASSET.frame + 1) + ' z ' + ASSET.frames.length
-            : 'ujęcie spoczynkowe',
-      );
-      counter.id = 'shot-counter';
-      counter.style.marginLeft = 'auto';
-      counter.style.textTransform = 'none';
-      counter.style.letterSpacing = '0';
-      foot.appendChild(counter);
-      stage.appendChild(foot);
-
-      wrapOuter.appendChild(stage);
-      host.appendChild(wrapOuter);
-      if (ASSET.orbit) {
-        stage.style.cursor = 'grab';
-        orbitDrag(stage);
-      }
-
+      /* --- podpowiedź --- */
       host.appendChild(
         el(
-          'p',
-          'asset-hint',
+          'div',
+          'viewer-hint',
           ASSET.playing
-            ? 'Animacja leci — zatrzymaj ją, żeby wskazywać subassety na modelu.'
+            ? 'Animacja leci — zatrzymaj ją, żeby wskazywać subassety'
             : ASSET.orbit
-              ? 'Przeciągnij po modelu, żeby go obrócić. Subassety klikasz tak samo jak na płasko.'
-              : 'Kliknij część modelu, żeby dopiąć ją do wiadomości jako załącznik.',
+              ? 'Przeciągnij, żeby obrócić · kliknij część modelu, żeby dopiąć ją do wiadomości'
+              : 'Kliknij część modelu, żeby dopiąć ją do wiadomości jako załącznik',
         ),
       );
 
+      /* --- pasek na dole --- */
+      var foot = el('div', 'viewer-foot');
+      var readout = el(
+        'div',
+        'viewer-readout',
+        node.asset.file.split('/').pop() +
+          ' · ' +
+          node.asset.layer +
+          ' · ' +
+          node.asset.instances +
+          '× · ' +
+          node.asset.cost +
+          (ASSET.orbit
+            ? ' · obrót ' + orbitAngle(ASSET.frame) + '°'
+            : ASSET.frames.length > 1
+              ? ' · klatka ' + (ASSET.frame + 1) + '/' + ASSET.frames.length
+              : '') +
+          (ASSET.sel.length ? ' · ' + ASSET.sel.length + ' w wiadomości' : ''),
+      );
+      readout.id = 'shot-counter';
+      foot.appendChild(readout);
+
+      var bar = el('div', 'viewer-bar');
+      var segBtn = el(
+        'button',
+        'token' + (ASSET.segments.length ? ' is-on' : ''),
+        ASSET.segmenting ? '⋯ Dzielę…' : ASSET.segments.length ? '⌗ Części: ' + ASSET.segments.length : '⌗ Podziel na części',
+      );
+      segBtn.id = 'seg-run';
+      segBtn.onclick = function () {
+        if (ASSET.segments.length) {
+          ASSET.segments = [];
+          renderAsset();
+        } else runSegment();
+      };
+      bar.appendChild(segBtn);
+      bar.appendChild(el('span', 'bar-label', 'Animacje'));
+      ed.anims.forEach(function (a) {
+        var on = ASSET.anim === a.key;
+        var b = el('button', 'token' + (on ? ' is-on' : ''), (on && ASSET.playing ? '⏸ ' : '▶ ') + a.label);
+        b.onclick = function () {
+          if (ASSET.anim === a.key) loadShot(null);
+          else loadShot(a.key);
+        };
+        bar.appendChild(b);
+      });
+      if (ed.sounds.length) {
+        bar.appendChild(el('span', 'bar-label', 'Dźwięki'));
+        ed.sounds.forEach(function (s) {
+          var b = el('button', 'token' + (isSelected('sound', s.file) ? ' is-on' : ''), '♪ ' + s.file);
+          b.onclick = function () {
+            beep(s.hz);
+            toggleSel('sound', s.file, s.file, s.when);
+          };
+          bar.appendChild(b);
+        });
+      }
       if (ASSET.orbit) {
-        var exRow = el('div', 'explode-row');
-        exRow.appendChild(el('span', 'explode-label', 'Rozstrzelenie warstw'));
+        bar.appendChild(el('span', 'bar-label', 'Rozstrzel'));
         var ex = document.createElement('input');
         ex.type = 'range';
         ex.min = '0';
         ex.max = '3';
         ex.step = '1';
         ex.value = String(ASSET.explode);
+        ex.style.width = '92px';
+        ex.className = 'explode-slider';
         ex.setAttribute('aria-label', 'Rozstrzelenie warstw');
         ex.onchange = function () {
           ASSET.explode = parseInt(ex.value, 10);
           loadOrbit();
         };
-        exRow.appendChild(ex);
-        exRow.appendChild(el('output', null, ASSET.explode + ' / 3'));
-        host.appendChild(exRow);
+        bar.appendChild(ex);
       }
+      foot.appendChild(bar);
+      host.appendChild(foot);
 
-      /* --- animacje --- */
-      var ah = el('div', 'sub-head');
-      ah.appendChild(el('h3', null, 'Animacje'));
-      ah.appendChild(el('span', null, String(ed.anims.length)));
-      ah.appendChild(el('span', 'hint', 'Kliknij, żeby zobaczyć demo na modelu'));
-      host.appendChild(ah);
-
-      var arow = el('div', 'asset-tokens');
-      ed.anims.forEach(function (a) {
-        var on = ASSET.anim === a.key;
-        var b = el('button', 'token' + (on ? ' is-on' : ''));
-        b.appendChild(el('span', null, (on && ASSET.playing ? '⏸ ' : '▶ ') + a.label));
-        b.onclick = function () {
-          if (ASSET.anim === a.key) loadShot(null);
-          else loadShot(a.key);
-        };
-        arow.appendChild(b);
-      });
-      host.appendChild(arow);
-
-      /* --- dźwięki --- */
-      if (ed.sounds.length) {
-        var sh = el('div', 'sub-head');
-        sh.appendChild(el('h3', null, 'Dźwięki'));
-        sh.appendChild(el('span', null, String(ed.sounds.length)));
-        host.appendChild(sh);
-        var srow = el('div', 'asset-tokens');
-        ed.sounds.forEach(function (s) {
-          var b = el('button', 'token' + (isSelected('sound', s.file) ? ' is-on' : ''));
-          b.appendChild(el('span', null, '♪ ' + s.file));
-          b.onclick = function () {
-            beep(s.hz);
-            toggleSel('sound', s.file, s.file, s.when);
-          };
-          srow.appendChild(b);
-        });
-        host.appendChild(srow);
+      if (ASSET.orbit) {
+        host.style.cursor = 'grab';
+        orbitDrag(host);
+      } else {
+        host.style.cursor = '';
       }
-
-      /* --- kafle --- */
-      var tiles = el('div', 'meta-tiles');
-      [
-        ['Załączone', ASSET.sel.length ? ASSET.sel.length + ' do wiadomości' : 'nic', ASSET.sel.length > 0],
-        ['Warstwa', node.asset.layer, false],
-        ['Instancje na scenie', String(node.asset.instances), false]
-      ].forEach(function (row) {
-        var t = el('dl', 'tile');
-        t.appendChild(el('dt', null, row[0]));
-        t.appendChild(el('dd', row[2] ? 'good' : null, row[1]));
-        tiles.appendChild(t);
-      });
-      host.appendChild(tiles);
 
       syncChatContext();
     }
@@ -5854,6 +6179,20 @@
       if (n < 2) return 0;
       return Math.round(-60 + (frame / (n - 1)) * 120);
     }
+
+    /** Model zajmuje połowę panelu — i mieści się nad paskiem na dole. */
+    function sizeShot(img) {
+      var host = $('asset-body');
+      if (!host) return;
+      var h = host.clientHeight || 520,
+        w = host.clientWidth || 640;
+      img.style.maxHeight = Math.max(120, Math.round(h * 0.5)) + 'px';
+      img.style.maxWidth = Math.max(120, Math.round(w * 0.52)) + 'px';
+    }
+    window.addEventListener('resize', function () {
+      var img = document.querySelector('.shot-wrap img');
+      if (img) sizeShot(img);
+    });
 
     function animLabel(ed, key) {
       var a = ed.anims.filter(function (x) {
