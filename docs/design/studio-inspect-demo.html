@@ -1167,6 +1167,113 @@
     flex: none;
   }
 
+  /* ---- viewer: asset na stole warsztatowym ---- */
+  .stage-wrap {
+    position: relative;
+    max-width: 520px;
+    margin: 0 auto 34px;
+  }
+
+  /* Echo stosu kart ze szkicu — inne ujęcia leżące pod spodem. */
+  .stage-wrap::before,
+  .stage-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 14px -18px 10px;
+    border-radius: 14px;
+    background: #10161c;
+    border: 1px solid #212b35;
+    z-index: 0;
+  }
+
+  .stage-wrap::after {
+    inset: 26px -36px 20px;
+    opacity: 0.6;
+  }
+
+  .stage3d {
+    position: relative;
+    z-index: 1;
+    aspect-ratio: 4 / 3;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #26313c;
+    background:
+      radial-gradient(120% 85% at 50% 8%, #1c2530 0%, #0d1218 58%, #080b0f 100%);
+    display: grid;
+    place-items: center;
+    box-shadow: 0 26px 60px rgba(0, 0, 0, 0.55);
+  }
+
+  .stage3d-grid {
+    position: absolute;
+    left: -30%;
+    right: -30%;
+    bottom: -8%;
+    height: 60%;
+    background-image:
+      linear-gradient(rgba(56, 189, 248, 0.16) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56, 189, 248, 0.16) 1px, transparent 1px);
+    background-size: 42px 42px;
+    transform: perspective(420px) rotateX(62deg);
+    -webkit-mask-image: linear-gradient(to top, #000 6%, transparent 82%);
+    mask-image: linear-gradient(to top, #000 6%, transparent 82%);
+    pointer-events: none;
+  }
+
+  .shot-wrap {
+    position: relative;
+    z-index: 2;
+    line-height: 0;
+    filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.55));
+  }
+
+  .shot-wrap img {
+    display: block;
+    max-width: 100%;
+    image-rendering: pixelated;
+  }
+
+  .stage3d-top {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    pointer-events: none;
+  }
+
+  .stage3d-top .fig-badge {
+    pointer-events: auto;
+  }
+
+  .stage3d-foot {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 14px 12px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #b9c7d6;
+    background: linear-gradient(180deg, transparent, rgba(6, 10, 15, 0.8) 60%);
+  }
+
+  .playing-chip {
+    color: var(--turquoise);
+    border-color: rgba(0, 228, 172, 0.45);
+    background: rgba(0, 228, 172, 0.12);
+  }
+
   /* ---- ramka podglądu ---- */
   .asset-figure {
     position: relative;
@@ -1425,6 +1532,29 @@
     border-style: solid;
     background: rgba(56, 189, 248, 0.1);
     z-index: 2;
+  }
+
+  /* Subasset wyłączony w assecie: nic nie rysuje, ale nadal jest czymś, o czym
+     można napisać — więc obszar zostaje, tylko przygaszony. */
+  .hot--ghost {
+    border-color: rgba(148, 163, 184, 0.14);
+    border-style: dotted;
+  }
+
+  /* Ledwo widoczny, dopóki nie szukasz — pełny obrys dopiero, gdy kursor jest
+     na modelu, żeby wyłączony subasset nie zaśmiecał ujęcia. */
+  .stage3d:hover .hot--ghost {
+    border-color: rgba(148, 163, 184, 0.4);
+  }
+
+  .hot--ghost:hover {
+    border-color: var(--muted);
+    background: rgba(148, 163, 184, 0.1);
+  }
+
+  .hot--ghost .hot-label {
+    background: var(--muted);
+    color: #0f1418;
   }
 
   .hot-badge {
@@ -2048,19 +2178,18 @@
     </div>
 
     <div class="card">
-      <h3>Scena → asset → subasset</h3>
+      <h3>Asset na stole warsztatowym</h3>
       <p>
-        Klik w kartę assetu oddaje ekran dwóm komponentom: karta assetu po lewej, agent chat po
-        prawej. Karta ma okruszki, po których widać, gdzie jesteś: <code>Scena / Aktorzy / Drony /
-        Dron 1</code>. Poniżej podglądu leżą <b>subassety</b> — korpus, wirniki, sensor, poświata —
-        każdy z własną miniaturą.
+        Klik w kartę assetu oddaje ekran dwóm komponentom: viewer po lewej, agent chat po prawej.
+        Model jest wyjęty ze sceny i rysowany sam, na siatce — z tych samych wartości, z których
+        rysuje go gra, więc pokazuje prawdę o assecie, a nie ładny render obok.
       </p>
       <p style="margin-top: 7px">
-        Kliknięcie subassetu robi dwie rzeczy naraz: zacieśnia kadr do niego (okruszek dostaje
-        kolejny stopień) i dopina go do promptu jako komentarz. Podpowiedzi w chacie zmieniają się
-        wtedy razem z kontekstem — inne dla efektu, inne dla detalu, inne dla ruchu. Scena nie
-        zajmuje miejsca na stałe: wyskakuje jako dialog, gdy sam ją zawołasz albo gdy właśnie
-        zastosowałeś rewizję.
+        Subassety klika się wprost na modelu; zaznaczony trafia do pola wiadomości jako załącznik i
+        do okruszków. <b>Animacje</b> to nie nazwy na liście — kliknięcie odtwarza demo na modelu
+        (patrol drona naprawdę przejeżdża, skok kuriera naprawdę podskakuje). Klatki lecą jednym
+        komunikatem i chodzą lokalnie, bo prośba o każdą z osobna to kilkanaście przelotów przez
+        most na sekundę.
       </p>
     </div>
 
@@ -2698,7 +2827,8 @@
         parts: partsOf(id),
         functions: functionsOf(id),
         sounds: SOUNDS[fam] || [],
-        frames: FRAMES[fam] || 1
+        frames: FRAMES[fam] || 1,
+        anims: studioSpec(id).anims
       };
     }
 
@@ -2764,6 +2894,392 @@
           return [x, y, w, h];
       }
     }
+
+    // --- render studyjny -----------------------------------------------
+    // Asset sam, bez sceny wokół, na przezroczystym tle: widok „na stole
+    // warsztatowym”. Rysowany w lokalnych jednostkach z tych samych wartości
+    // `art`, z których rysuje scena, więc pokazuje prawdę o assecie.
+    function rrIn(g, x, y, w, h, r) {
+      g.beginPath();
+      if (g.roundRect) g.roundRect(x, y, w, h, r || 0);
+      else g.rect(x, y, w, h);
+      g.fill();
+    }
+
+    function studioSpec(id) {
+      var fam = family(id);
+      var A = art[fam];
+
+      if (fam === 'drone') {
+        var dw = 20,
+          dh = 12,
+          span = A.rotor.span,
+          ss = A.sensor.size,
+          R = A.glow.radius;
+        var dparts = {
+          body: [-dw / 2, -dh / 2, dw, dh],
+          rotor: [-dw / 2 - span * 0.75, -dh / 2 - 2, dw + span * 1.5, 3],
+          sensor: [2, -ss / 2, ss, ss]
+        };
+        dparts.glow = [-R, -R, R * 2, R * 2];
+        return {
+          parts: dparts,
+          anims: [
+            { key: 'bob', label: 'Unoszenie' },
+            { key: 'patrol', label: 'Patrol' },
+            { key: 'rotors', label: 'Rozruch wirników' },
+            { key: 'hit', label: 'Trafienie gracza' }
+          ],
+          draw: function (g, t, anim) {
+            var dx = 0,
+              dy = 0,
+              alpha = 1,
+              rs = span,
+              dir = 1;
+            if (anim === 'bob' || !anim) dy = Math.sin(t * 6.283) * 2.5;
+            if (anim === 'patrol') {
+              dx = Math.sin(t * 6.283) * 9;
+              dir = Math.cos(t * 6.283) >= 0 ? 1 : -1;
+              dy = Math.sin(t * 12.57) * 1.2;
+            }
+            if (anim === 'rotors') rs = span * (1 + 0.55 * Math.abs(Math.sin(t * 12.57)));
+            if (anim === 'hit') {
+              dx = Math.sin(t * 37.7) * 2 * (1 - t);
+              alpha = Math.floor(t * 10) % 2 ? 0.35 : 1;
+            }
+            g.save();
+            g.translate(dx, dy);
+            g.globalAlpha = alpha;
+            if (A.glow.visible && A.glow.alpha > 0) {
+              g.globalAlpha = alpha * A.glow.alpha;
+              g.fillStyle = A.glow.color;
+              g.beginPath();
+              g.arc(0, 0, R, 0, 6.283);
+              g.fill();
+              g.globalAlpha = alpha;
+            }
+            if (A.rotor.visible) {
+              g.globalAlpha = alpha * A.rotor.alpha;
+              g.fillStyle = A.rotor.color;
+              g.fillRect(-dw / 2 - rs * 0.75, -dh / 2 - 1, rs, 1.5);
+              g.fillRect(dw / 2 - rs * 0.25, -dh / 2 - 1, rs, 1.5);
+              g.globalAlpha = alpha;
+            }
+            if (A.body.visible) {
+              g.fillStyle = A.body.color;
+              rrIn(g, -dw / 2, -dh / 2, dw, dh, A.body.radius);
+            }
+            if (A.sensor.visible) {
+              g.fillStyle = A.sensor.color;
+              g.fillRect(dir > 0 ? 2 : -2 - ss, -ss / 2, ss, ss);
+            }
+            g.restore();
+          }
+        };
+      }
+
+      if (fam === 'player') {
+        var pw = 16,
+          ph = 20,
+          es = A.eyes.size;
+        return {
+          parts: {
+            body: [-pw / 2, -ph / 2, pw, ph],
+            eyes: [-pw / 2 + 2, -ph / 2 + 3.5, es * 2 + 5, es + 2],
+            trail: [-pw / 2 - 13, -ph / 2, pw, ph]
+          },
+          anims: [
+            { key: 'run', label: 'Bieg' },
+            { key: 'jump', label: 'Skok' },
+            { key: 'land', label: 'Lądowanie' },
+            { key: 'hit', label: 'Trafienie' }
+          ],
+          draw: function (g, t, anim) {
+            var dy = 0,
+              sq = 0,
+              alpha = 1,
+              dx = 0;
+            if (anim === 'run' || !anim) {
+              dy = -Math.abs(Math.sin(t * 6.283)) * 1.6;
+              sq = Math.abs(Math.sin(t * 6.283)) * 0.12;
+            }
+            if (anim === 'jump') dy = -Math.sin(t * 3.14) * 13;
+            if (anim === 'land') sq = Math.max(0, 1 - t * 2.6) * 0.5;
+            if (anim === 'hit') {
+              dx = Math.sin(t * 37.7) * 2 * (1 - t);
+              alpha = Math.floor(t * 10) % 2 ? 0.35 : 1;
+            }
+            g.save();
+            g.translate(dx, dy);
+            g.globalAlpha = alpha;
+            if (A.trail.visible) {
+              g.globalAlpha = alpha * A.trail.alpha;
+              g.fillStyle = A.trail.color;
+              for (var i = 1; i <= 3; i++) rrIn(g, -pw / 2 - i * 4, -ph / 2, pw, ph, A.body.radius);
+              g.globalAlpha = alpha;
+            }
+            if (A.body.visible) {
+              g.fillStyle = A.body.color;
+              var w2 = pw * (1 + sq * 0.35),
+                h2 = ph * (1 - sq * 0.3);
+              rrIn(g, -w2 / 2, ph / 2 - h2, w2, h2, A.body.radius);
+            }
+            if (A.eyes.visible) {
+              g.fillStyle = A.eyes.color;
+              g.fillRect(-1, -ph / 2 + 4, es, es + 0.5);
+              g.fillRect(3, -ph / 2 + 4, es, es + 0.5);
+            }
+            g.restore();
+          }
+        };
+      }
+
+      if (fam === 'coin') {
+        var cs = 10;
+        var hr = cs * A.halo.radius;
+        return {
+          parts: { core: [-cs / 2, -cs / 2, cs, cs], halo: [-hr, -hr, hr * 2, hr * 2] },
+          anims: [
+            { key: 'spin', label: 'Obrót' },
+            { key: 'pickup', label: 'Zebranie' },
+            { key: 'idle', label: 'Spoczynek' }
+          ],
+          draw: function (g, t, anim) {
+            var sc = 1,
+              alpha = 1,
+              spin = t * 6.283;
+            if (anim === 'pickup') {
+              sc = 1 + t * 0.8;
+              alpha = 1 - t;
+              spin = t * 12.57;
+            }
+            if (anim === 'idle') spin = 0;
+            g.save();
+            g.globalAlpha = alpha;
+            g.scale(sc, sc);
+            if (A.halo.visible) {
+              g.globalAlpha = alpha * A.halo.alpha;
+              g.fillStyle = A.halo.color;
+              g.beginPath();
+              g.arc(0, 0, hr, 0, 6.283);
+              g.fill();
+              g.globalAlpha = alpha;
+            }
+            if (A.core.visible) {
+              g.fillStyle = A.core.color;
+              g.beginPath();
+              g.ellipse(0, 0, Math.max(1, Math.abs(Math.cos(spin)) * cs * 0.5), cs / 2, 0, 0, 6.283);
+              g.fill();
+            }
+            g.restore();
+          }
+        };
+      }
+
+      if (fam === 'terrain') {
+        var tw = 44,
+          th = 14;
+        return {
+          parts: {
+            surface: [-tw / 2, -th / 2, tw, th],
+            edge: [-tw / 2, -th / 2, tw, A.edge.size],
+            stripes: [-tw / 2, -1, tw, 2]
+          },
+          anims: [
+            { key: 'scroll', label: 'Przewijanie pasów' },
+            { key: 'idle', label: 'Bez ruchu' }
+          ],
+          draw: function (g, t, anim) {
+            var off = anim === 'scroll' ? t * 12 : 0;
+            if (A.surface.visible) {
+              g.fillStyle = A.surface.color;
+              rrIn(g, -tw / 2, -th / 2, tw, th, 2);
+            }
+            if (A.edge.visible) {
+              g.fillStyle = A.edge.color;
+              g.fillRect(-tw / 2, -th / 2, tw, A.edge.size);
+            }
+            if (A.stripes.visible) {
+              g.globalAlpha = A.stripes.alpha;
+              g.fillStyle = A.stripes.color;
+              for (var i = 0; i < 5; i++) g.fillRect(-tw / 2 + (((i * 12 - off) % (tw + 12)) + tw + 12) % (tw + 12), -0.75, 7, 1.5);
+              g.globalAlpha = 1;
+            }
+          }
+        };
+      }
+
+      if (fam === 'skyline') {
+        var sw = 46,
+          sh = 26;
+        return {
+          parts: { walls: [-sw / 2, -sh / 2, sw, sh], windows: [-sw / 2, -sh / 2, sw, sh * 0.6] },
+          anims: [
+            { key: 'parallax', label: 'Paralaksa' },
+            { key: 'idle', label: 'Bez ruchu' }
+          ],
+          draw: function (g, t, anim) {
+            var off = anim === 'parallax' ? t * 16 : 0;
+            for (var b = 0; b < 5; b++) {
+              var bw = 7 + ((b * 5) % 6),
+                bh = 10 + ((b * 9) % 16);
+              var bx = -sw / 2 + ((((b * 11 - off) % (sw + 12)) + sw + 12) % (sw + 12));
+              if (A.walls.visible) {
+                g.fillStyle = A.walls.color;
+                g.fillRect(bx, sh / 2 - bh, bw, bh);
+              }
+              if (A.windows.visible) {
+                g.globalAlpha = A.windows.alpha;
+                g.fillStyle = A.windows.color;
+                g.fillRect(bx + 2, sh / 2 - bh + 3, 1.5, 2);
+                g.fillRect(bx + bw - 3, sh / 2 - bh + 6, 1.5, 2);
+                g.globalAlpha = 1;
+              }
+            }
+          }
+        };
+      }
+
+      if (fam === 'stars') {
+        var vw = 40,
+          vh = 24;
+        return {
+          parts: { dots: [-vw / 2, -vh / 2, vw, vh] },
+          anims: [
+            { key: 'twinkle', label: 'Migotanie' },
+            { key: 'idle', label: 'Bez ruchu' }
+          ],
+          draw: function (g, t, anim) {
+            g.fillStyle = A.dots.color;
+            for (var i = 0; i < 26; i++) {
+              var rx = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+              var ry = Math.abs(Math.sin(i * 78.233) * 43758.5453) % 1;
+              g.globalAlpha = anim === 'twinkle' ? 0.25 + 0.7 * Math.abs(Math.sin(t * 6.283 + i)) : 0.7;
+              g.fillRect(rx * vw - vw / 2, ry * vh - vh / 2, A.dots.size, A.dots.size);
+            }
+            g.globalAlpha = 1;
+          }
+        };
+      }
+
+      if (fam === 'sky') {
+        var gw = 40,
+          gh = 26;
+        return {
+          parts: { top: [-gw / 2, -gh / 2, gw, gh / 2], bottom: [-gw / 2, 0, gw, gh / 2] },
+          anims: [{ key: 'idle', label: 'Statyczny gradient' }],
+          draw: function (g) {
+            var lg = g.createLinearGradient(0, -gh / 2, 0, gh / 2);
+            lg.addColorStop(0, A.top.color);
+            lg.addColorStop(1, A.bottom.color);
+            g.fillStyle = lg;
+            rrIn(g, -gw / 2, -gh / 2, gw, gh, 2);
+          }
+        };
+      }
+
+      var hw = 46,
+        hh = 12;
+      return {
+        parts: { text: [-hw / 2, -hh / 2, hw, hh], shadow: [-hw / 2 + 1, -hh / 2 + 1, hw, hh] },
+        anims: [
+          { key: 'tick', label: 'Zmiana licznika' },
+          { key: 'idle', label: 'Bez ruchu' }
+        ],
+        draw: function (g, t, anim) {
+          var val = anim === 'tick' ? String(Math.floor(t * 42) * 10).padStart(4, '0') : '0420';
+          g.font = '600 ' + 9 * A.text.size + 'px ui-monospace, Menlo, monospace';
+          g.textBaseline = 'middle';
+          g.textAlign = 'center';
+          if (A.shadow.visible && A.shadow.alpha > 0) {
+            g.globalAlpha = A.shadow.alpha;
+            g.fillStyle = A.shadow.color;
+            g.fillText('PUNKTY ' + val, 1, 1);
+            g.globalAlpha = 1;
+          }
+          if (A.text.visible) {
+            g.fillStyle = A.text.color;
+            g.fillText('PUNKTY ' + val, 0, 0);
+          }
+        }
+      };
+    }
+
+    /** Klatki animacji assetu na przezroczystym tle + obszary subassetów. */
+    function studioFrames(id, count, max, anim) {
+      var spec = studioSpec(id);
+      var group = art[family(id)];
+      var keys = Object.keys(spec.parts);
+      // Wyłączony subasset nadal ma swój obszar (inaczej nie byłoby jak go
+      // kliknąć), ale nie rozpycha kadru — schowana poświata o promieniu 16 px
+      // zmniejszyłaby model dwukrotnie.
+      var hidden = {};
+      keys.forEach(function (k) {
+        if (group[k] && group[k].visible === false) hidden[k] = true;
+      });
+      var x0 = Infinity,
+        y0 = Infinity,
+        x1 = -Infinity,
+        y1 = -Infinity;
+      keys.forEach(function (k) {
+        if (hidden[k]) return;
+        var p = spec.parts[k];
+        x0 = Math.min(x0, p[0]);
+        y0 = Math.min(y0, p[1]);
+        x1 = Math.max(x1, p[0] + p[2]);
+        y1 = Math.max(y1, p[1] + p[3]);
+      });
+      // Zapas na ruch — animacje wychodzą poza spoczynkową sylwetkę (patrol
+      // odjeżdża o 9 px, skok podnosi o 13), a przycięta łopata wygląda jak błąd.
+      var pad = Math.max(11, (x1 - x0) * 0.3);
+      x0 -= pad;
+      y0 -= pad;
+      x1 += pad;
+      y1 += pad;
+      var lw = x1 - x0,
+        lh = y1 - y0;
+      var k = Math.min(max / lw, max / lh);
+      var cw = Math.max(1, Math.round(lw * k)),
+        ch = Math.max(1, Math.round(lh * k));
+
+      var frames = [];
+      for (var f = 0; f < count; f++) {
+        var c = doc.createElement('canvas');
+        c.width = cw;
+        c.height = ch;
+        var g = c.getContext('2d');
+        if (!g) break;
+        g.save();
+        g.translate(-x0 * k, -y0 * k);
+        g.scale(k, k);
+        try {
+          spec.draw(g, count === 1 ? 0 : f / count, anim || null);
+        } catch (err) {
+          /* pojedyncza klatka może paść, reszta i tak leci */
+        }
+        g.restore();
+        try {
+          frames.push(c.toDataURL('image/png'));
+        } catch (err) {
+          break;
+        }
+      }
+
+      var boxes = {};
+      keys.forEach(function (key) {
+        var p = spec.parts[key];
+        // Obszar ducha może wystawać poza kadr — przycinamy go, żeby dało się
+        // w niego trafić kursorem.
+        var bx = Math.max(0, (p[0] - x0) * k),
+          by = Math.max(0, (p[1] - y0) * k);
+        var bw = Math.min(cw, (p[0] + p[2] - x0) * k) - bx,
+          bh = Math.min(ch, (p[1] + p[3] - y0) * k) - by;
+        if (bw <= 2 || bh <= 2) return;
+        boxes[key] = [bx, by, bw, bh];
+      });
+      return { frames: frames, boxes: boxes, hidden: hidden, size: [cw, ch], anims: spec.anims };
+    }
+
 
     /**
      * Wycinek żywej sceny w granicach elementu — podgląd assetu, nie ikonka.
@@ -3632,6 +4148,21 @@
           else setProp(m.id, m.key, m.value);
           post({ type: 'tree', nodes: treePayload() });
           break;
+        case 'studio': {
+          var sres = studioFrames(m.id, m.count || 1, m.max || 420, m.anim || null);
+          post({
+            type: 'studio',
+            id: m.id,
+            token: m.token || null,
+            anim: m.anim || null,
+            frames: sres.frames,
+            boxes: sres.boxes,
+            hidden: sres.hidden,
+            size: sres.size,
+            anims: sres.anims
+          });
+          break;
+        }
         case 'preview': {
           var pn = findNode(m.id);
           if (!pn) {
@@ -4249,9 +4780,14 @@
       sel: [],
       seq: 0,
       rev: 12,
-      /** Subasset, w który weszliśmy — kadr zacieśnia się do niego. */
+      /** Subasset, o którym teraz mowa — trafia do okruszków i kontekstu chatu. */
       focus: null,
-      phase: 0
+      /** Odtwarzana animacja i jej klatki. */
+      anim: null,
+      frames: [],
+      frame: 0,
+      playing: false,
+      timer: null
     };
     var previewCbs = {};
     var previewSeq = 0;
@@ -4277,11 +4813,14 @@
       ASSET.sel = [];
       ASSET.seq = 0;
       ASSET.focus = null;
-      ASSET.phase = 0;
-      dropThumbs();
+      ASSET.anim = null;
+      ASSET.frames = [];
+      ASSET.frame = 0;
+      studioCache = {};
       document.querySelector('.console').classList.add('console--asset');
       if (!UI.paused) setPaused(true);
       renderAsset();
+      loadShot(null);
       renderThread();
       renderChips();
       renderQuick();
@@ -4289,6 +4828,7 @@
 
     function closeAsset() {
       ASSET.open = false;
+      stopAnim();
       document.querySelector('.console').classList.remove('console--asset');
       renderChips();
       renderQuick();
@@ -4299,19 +4839,20 @@
     function followAsset(m) {
       if (!ASSET.node) return;
       var switched = ASSET.node.id !== m.id;
+      var wasAnim = ASSET.anim;
       ASSET.node = m;
-      // Miniatury subassetów są nieaktualne po każdej zmianie assetu.
-      dropThumbs();
+      // Ujęcia studyjne są nieaktualne po każdej zmianie assetu.
+      studioCache = {};
       if (switched) {
         ASSET.sel = [];
         ASSET.seq = 0;
         ASSET.focus = null;
-        ASSET.phase = 0;
+        wasAnim = null;
         renderChips();
       }
       if (assetRefreshTimer) clearTimeout(assetRefreshTimer);
       assetRefreshTimer = setTimeout(function () {
-        renderAsset();
+        loadShot(wasAnim);
         renderQuick();
       }, 110);
     }
@@ -4414,10 +4955,76 @@
       });
     }
 
-    function drawHotspots(fig, ed) {
-      fig.querySelectorAll('.hot').forEach(function (n) {
+    /* ---- klatki studyjne: jeden request na animację, potem odtwarzanie lokalne ---- */
+    var studioCache = {};
+    function studioKey(id, anim) {
+      return id + '|' + (anim || 'static');
+    }
+    function askStudio(id, anim, count, cb) {
+      var key = studioKey(id, anim);
+      if (studioCache[key]) return cb(studioCache[key]);
+      var token = 'p' + ++previewSeq;
+      previewCbs[token] = function (m) {
+        var data = { frames: m.frames || [], boxes: m.boxes || {}, hidden: m.hidden || {}, size: m.size || [1, 1] };
+        studioCache[key] = data;
+        cb(data);
+      };
+      send({ type: 'studio', id: id, token: token, anim: anim || null, count: count, max: 420 });
+    }
+    handlers.push(function (m) {
+      if (m.type === 'studio' && m.token && previewCbs[m.token]) {
+        previewCbs[m.token](m);
+        delete previewCbs[m.token];
+      }
+    });
+
+    function stopAnim() {
+      if (ASSET.timer) clearInterval(ASSET.timer);
+      ASSET.timer = null;
+      ASSET.playing = false;
+    }
+
+    /**
+     * Wczytuje ujęcie assetu i — gdy podano animację — zapętla je.
+     *
+     * Klatki lecą jednym komunikatem, a potem chodzą lokalnie: prośba o każdą
+     * klatkę z osobna to kilkanaście przelotów przez most na sekundę.
+     */
+    function loadShot(anim) {
+      if (!ASSET.node) return;
+      stopAnim();
+      ASSET.anim = anim || null;
+      var count = anim ? 18 : 1;
+      askStudio(ASSET.node.id, anim, count, function (data) {
+        if (!ASSET.open || ASSET.anim !== (anim || null)) return;
+        ASSET.frames = data.frames;
+        ASSET.boxes = data.boxes;
+        ASSET.hidden = data.hidden || {};
+        ASSET.size = data.size;
+        ASSET.frame = 0;
+        // Kolejność ma znaczenie: obszary subassetów rysują się tylko na
+        // nieruchomym modelu, więc flaga musi być ustawiona przed renderem.
+        ASSET.playing = Boolean(anim && data.frames.length > 1);
+        renderAsset();
+        if (ASSET.playing) {
+          ASSET.timer = setInterval(function () {
+            if (!ASSET.open) return stopAnim();
+            ASSET.frame = (ASSET.frame + 1) % ASSET.frames.length;
+            var img = document.querySelector('.shot-wrap img');
+            if (img) img.src = ASSET.frames[ASSET.frame];
+            var counter = $('shot-counter');
+            if (counter) counter.textContent = 'klatka ' + (ASSET.frame + 1) + ' z ' + ASSET.frames.length;
+          }, 70);
+        }
+      });
+    }
+
+    /** Klikalne obszary subassetów — jedyna droga do zaznaczenia subassetu. */
+    function drawHotspots(wrap, ed) {
+      wrap.querySelectorAll('.hot').forEach(function (n) {
         n.remove();
       });
+      if (ASSET.playing) return;
       var labels = {};
       ed.parts.forEach(function (p) {
         labels[p.key] = p.label;
@@ -4433,7 +5040,8 @@
         var sel = ASSET.sel.filter(function (s) {
           return s.kind === 'part' && s.key === key;
         })[0];
-        var hot = el('button', 'hot' + (on ? ' is-on' : ''));
+        var ghost = ASSET.hidden && ASSET.hidden[key];
+        var hot = el('button', 'hot' + (on ? ' is-on' : '') + (ghost ? ' hot--ghost' : ''));
         hot.style.left = (b[0] / ASSET.size[0]) * 100 + '%';
         hot.style.top = (b[1] / ASSET.size[1]) * 100 + '%';
         hot.style.width = (b[2] / ASSET.size[0]) * 100 + '%';
@@ -4445,11 +5053,11 @@
           badge.style.background = sel.color;
           hot.appendChild(badge);
         }
-        hot.appendChild(el('span', 'hot-label', labels[key] || key));
+        hot.appendChild(el('span', 'hot-label', (labels[key] || key) + (ghost ? ' · wyłączony' : '')));
         hot.onclick = function () {
           toggleSel('part', key, labels[key] || key);
         };
-        fig.appendChild(hot);
+        wrap.appendChild(hot);
       });
     }
 
@@ -4485,15 +5093,6 @@
       shadow: 'efekt'
     };
 
-    /** Miniatury subassetów są drogie — trzymamy je, aż asset naprawdę się zmieni. */
-    var thumbCache = {};
-    function thumbKey(id, part) {
-      return id + '|' + part;
-    }
-    function dropThumbs() {
-      thumbCache = {};
-    }
-
     function renderAsset() {
       var host = $('asset-body');
       if (!host || !ASSET.node) return;
@@ -4511,7 +5110,7 @@
       /* --- nagłówek --- */
       var top = el('div', 'asset-top-row');
       var idBox = el('div');
-      idBox.appendChild(el('div', 'eyebrow', focus ? 'Podgląd subassetu' : 'Podgląd assetu'));
+      idBox.appendChild(el('div', 'eyebrow', 'Podgląd assetu'));
 
       var crumbs = el('div', 'crumbs');
       node.path.split(' / ').forEach(function (step) {
@@ -4531,19 +5130,8 @@
         crumbs.appendChild(el('span', 'here', node.label));
       }
       idBox.appendChild(crumbs);
-
-      idBox.appendChild(
-        el('h2', 'asset-h1', focus ? node.label + ' — ' + focus.label : node.label + ' — ' + node.asset.type.toLowerCase()),
-      );
-      idBox.appendChild(
-        el(
-          'p',
-          'asset-lede',
-          focus
-            ? 'Subasset assetu ' + node.label + ', rysowany w ' + node.asset.symbol + '. Zaznaczony — komentarz przy nim trafi do agenta razem z promptem.'
-            : ASSET_LEDE[fam] || 'Asset sceny „Neonowy Kurier”.',
-        ),
-      );
+      idBox.appendChild(el('h2', 'asset-h1', node.label + ' — ' + node.asset.type.toLowerCase()));
+      idBox.appendChild(el('p', 'asset-lede', ASSET_LEDE[fam] || 'Asset sceny „Neonowy Kurier”.'));
       top.appendChild(idBox);
 
       var acts = el('div', 'asset-top-actions');
@@ -4563,199 +5151,116 @@
       top.appendChild(acts);
       host.appendChild(top);
 
-      /* --- ramka podglądu --- */
-      var fig = el('div', 'asset-figure');
+      /* --- viewer --- */
+      var wrapOuter = el('div', 'stage-wrap');
+      var stage = el('div', 'stage3d');
+      stage.appendChild(el('div', 'stage3d-grid'));
+
+      var shot = el('div', 'shot-wrap');
       var img = document.createElement('img');
-      img.alt = 'Podgląd: ' + (focus ? focus.label : node.label);
-      fig.appendChild(img);
+      img.alt = 'Asset ' + node.label;
+      if (ASSET.frames.length) img.src = ASSET.frames[Math.min(ASSET.frame, ASSET.frames.length - 1)];
+      shot.appendChild(img);
+      stage.appendChild(shot);
+      if (!ASSET.playing) drawHotspots(shot, ed);
 
-      var badges = el('div', 'fig-badges');
-      badges.appendChild(el('span', 'fig-badge fig-badge--live', 'SPRITE / 2D'));
-      badges.appendChild(el('span', 'fig-badge', 'v' + ASSET.rev + ' · szkic'));
-      fig.appendChild(badges);
-
-      var foot = el('div', 'fig-foot');
-      foot.appendChild(
-        el(
+      var topBar = el('div', 'stage3d-top');
+      topBar.appendChild(el('span', 'fig-badge fig-badge--live', 'SPRITE / 2D'));
+      topBar.appendChild(el('span', 'fig-badge', 'v' + ASSET.rev + ' · szkic'));
+      if (ASSET.anim) {
+        var playingChip = el(
           'span',
-          null,
-          (focus ? focus.label + ' · ' : '') + node.asset.file.split('/').pop() + ' · ' + node.asset.cost,
+          'fig-badge playing-chip',
+          '▶ ' + (animLabel(ed, ASSET.anim) || ASSET.anim),
+        );
+        topBar.appendChild(playingChip);
+      }
+      stage.appendChild(topBar);
+
+      var foot = el('div', 'stage3d-foot');
+      foot.appendChild(el('span', null, node.asset.file.split('/').pop() + ' · ' + node.asset.cost));
+      var counter = el('span', null, ASSET.frames.length > 1 ? 'klatka ' + (ASSET.frame + 1) + ' z ' + ASSET.frames.length : 'ujęcie spoczynkowe');
+      counter.id = 'shot-counter';
+      counter.style.marginLeft = 'auto';
+      counter.style.textTransform = 'none';
+      counter.style.letterSpacing = '0';
+      foot.appendChild(counter);
+      stage.appendChild(foot);
+
+      wrapOuter.appendChild(stage);
+      host.appendChild(wrapOuter);
+
+      host.appendChild(
+        el(
+          'p',
+          'asset-hint',
+          ASSET.playing
+            ? 'Animacja leci — zatrzymaj ją, żeby wskazywać subassety na modelu.'
+            : 'Kliknij część modelu, żeby dopiąć ją do wiadomości jako załącznik.',
         ),
       );
-      var nav = el('div', 'frames-nav');
-      var prev = el('button', null, '‹');
-      prev.setAttribute('aria-label', 'Poprzednia klatka');
-      var next = el('button', null, '›');
-      next.setAttribute('aria-label', 'Następna klatka');
-      var step = function (d) {
-        ASSET.phase = (ASSET.phase + d + ed.frames) % ed.frames;
-        renderAsset();
-      };
-      prev.onclick = function () {
-        step(-1);
-      };
-      next.onclick = function () {
-        step(1);
-      };
-      nav.appendChild(prev);
-      nav.appendChild(el('span', null, 'klatka ' + (ASSET.phase + 1) + ' z ' + ed.frames));
-      nav.appendChild(next);
-      foot.appendChild(nav);
-      fig.appendChild(foot);
-      host.appendChild(fig);
 
-      if (focus) {
-        askPreview(
-          node.id,
-          { max: 460, pad: 6, phase: ASSET.phase, part: focus.key, tight: true },
-          function (res) {
-            if (res && res.png) img.src = res.png;
-          },
-        );
-      } else {
-        askPreview(node.id, { max: 460, pad: 8, phase: ASSET.phase, parts: true }, function (res) {
-          if (!res || !res.png) return;
-          img.src = res.png;
-          ASSET.boxes = res.boxes || {};
-          ASSET.size = res.size || [1, 1];
-          drawHotspots(fig, ed);
+      /* --- animacje --- */
+      var ah = el('div', 'sub-head');
+      ah.appendChild(el('h3', null, 'Animacje'));
+      ah.appendChild(el('span', null, String(ed.anims.length)));
+      ah.appendChild(el('span', 'hint', 'Kliknij, żeby zobaczyć demo na modelu'));
+      host.appendChild(ah);
+
+      var arow = el('div', 'asset-tokens');
+      ed.anims.forEach(function (a) {
+        var on = ASSET.anim === a.key;
+        var b = el('button', 'token' + (on ? ' is-on' : ''));
+        b.appendChild(el('span', null, (on && ASSET.playing ? '⏸ ' : '▶ ') + a.label));
+        b.onclick = function () {
+          if (ASSET.anim === a.key) loadShot(null);
+          else loadShot(a.key);
+        };
+        arow.appendChild(b);
+      });
+      host.appendChild(arow);
+
+      /* --- dźwięki --- */
+      if (ed.sounds.length) {
+        var sh = el('div', 'sub-head');
+        sh.appendChild(el('h3', null, 'Dźwięki'));
+        sh.appendChild(el('span', null, String(ed.sounds.length)));
+        host.appendChild(sh);
+        var srow = el('div', 'asset-tokens');
+        ed.sounds.forEach(function (s) {
+          var b = el('button', 'token' + (isSelected('sound', s.file) ? ' is-on' : ''));
+          b.appendChild(el('span', null, '♪ ' + s.file));
+          b.onclick = function () {
+            beep(s.hz);
+            toggleSel('sound', s.file, s.file, s.when);
+          };
+          srow.appendChild(b);
         });
+        host.appendChild(srow);
       }
 
       /* --- kafle --- */
       var tiles = el('div', 'meta-tiles');
       [
-        ['Zaznaczone', ASSET.sel.length ? ASSET.sel.length + ' do promptu' : 'nic', ASSET.sel.length > 0],
+        ['Załączone', ASSET.sel.length ? ASSET.sel.length + ' do wiadomości' : 'nic', ASSET.sel.length > 0],
         ['Warstwa', node.asset.layer, false],
         ['Instancje na scenie', String(node.asset.instances), false]
       ].forEach(function (row) {
         var t = el('dl', 'tile');
         t.appendChild(el('dt', null, row[0]));
-        var dd = el('dd', row[2] ? 'good' : null, row[1]);
-        t.appendChild(dd);
+        t.appendChild(el('dd', row[2] ? 'good' : null, row[1]));
         tiles.appendChild(t);
       });
       host.appendChild(tiles);
 
-      /* --- subassety --- */
-      var sh = el('div', 'sub-head');
-      sh.appendChild(el('h3', null, 'Subassety'));
-      sh.appendChild(el('span', null, String(ed.parts.length)));
-      sh.appendChild(el('span', 'hint', 'Kliknij na podglądzie albo tutaj — dołączy się do promptu jako komentarz'));
-      host.appendChild(sh);
-
-      var grid = el('div', 'sub-grid');
-      ed.parts.forEach(function (p) {
-        var on = isSelected('part', p.key);
-        var sel = ASSET.sel.filter(function (s) {
-          return s.kind === 'part' && s.key === p.key;
-        })[0];
-        var colorField = p.fields.filter(function (x) {
-          return x.type === 'color';
-        })[0];
-        var vis = p.fields.filter(function (x) {
-          return x.key === 'visible';
-        })[0];
-
-        var b = el('button', 'sub' + (on ? ' is-on' : ''));
-        var th = el('div', 'sub-thumb');
-        var timg = document.createElement('img');
-        timg.alt = '';
-        var cached = thumbCache[thumbKey(node.id, p.key)];
-        if (cached) timg.src = cached;
-        else
-          askPreview(node.id, { max: 40, pad: 3, part: p.key, tight: true }, function (res) {
-            if (!res || !res.png) return;
-            thumbCache[thumbKey(node.id, p.key)] = res.png;
-            timg.src = res.png;
-          });
-        th.appendChild(timg);
-        b.appendChild(th);
-
-        var txt = el('div', 'sub-text');
-        txt.appendChild(el('b', null, p.label));
-        txt.appendChild(
-          el('small', null, (SUB_KIND[p.key] || 'część') + (vis && vis.value === false ? ' · ukryty' : '')),
-        );
-        b.appendChild(txt);
-
-        var pick = el('span', 'sub-pick', on && sel ? String(sel.n) : '+');
-        if (on && sel) pick.style.background = sel.color;
-        else if (colorField) pick.style.borderColor = colorField.value;
-        b.appendChild(pick);
-
-        b.onclick = function () {
-          toggleSel('part', p.key, p.label);
-        };
-        grid.appendChild(b);
-      });
-      host.appendChild(grid);
-
-      /* --- funkcje i dźwięki --- */
-      var fh = el('div', 'sub-head');
-      fh.appendChild(el('h3', null, 'Funkcje i dźwięki'));
-      fh.appendChild(el('span', null, String(ed.functions.length + ed.sounds.length)));
-      host.appendChild(fh);
-
-      var tokens = el('div', 'asset-tokens');
-      ed.functions.forEach(function (fn) {
-        var b = el('button', 'token' + (isSelected('fn', fn.name) ? ' is-on' : ''), fn.name + '()');
-        b.onclick = function () {
-          toggleSel('fn', fn.name, fn.name + '()', fn.sig);
-        };
-        tokens.appendChild(b);
-      });
-      ed.sounds.forEach(function (s) {
-        var b = el('button', 'token' + (isSelected('sound', s.file) ? ' is-on' : ''), '♪ ' + s.file);
-        b.onclick = function () {
-          toggleSel('sound', s.file, s.file, s.when);
-        };
-        tokens.appendChild(b);
-      });
-      host.appendChild(tokens);
-
-      /* --- zaznaczenia z komentarzami --- */
-      if (ASSET.sel.length) {
-        var nh = el('div', 'sub-head');
-        nh.appendChild(el('h3', null, 'Komentarze do promptu'));
-        nh.appendChild(el('span', null, String(ASSET.sel.length)));
-        host.appendChild(nh);
-
-        var notes = el('div', 'notes');
-        ASSET.sel.forEach(function (s) {
-          var row = el('div', 'note');
-          row.style.borderLeftColor = s.color;
-          var idx = el('span', 'idx', String(s.n));
-          idx.style.background = s.color;
-          row.appendChild(idx);
-          var main = el('div', 'note-main');
-          main.appendChild(el('b', null, s.label));
-          main.appendChild(
-            el('small', null, s.kind === 'part' ? 'subasset · ' + node.asset.file : s.meta || s.kind),
-          );
-          var inp = document.createElement('input');
-          inp.type = 'text';
-          inp.placeholder = 'Komentarz do agenta…';
-          inp.value = s.note;
-          inp.setAttribute('aria-label', 'Komentarz do: ' + s.label);
-          inp.oninput = function () {
-            s.note = inp.value;
-            renderChips();
-          };
-          main.appendChild(inp);
-          row.appendChild(main);
-          var x = el('button', 'x', '×');
-          x.setAttribute('aria-label', 'Usuń zaznaczenie ' + s.label);
-          x.onclick = function () {
-            toggleSel(s.kind, s.key, s.label);
-          };
-          row.appendChild(x);
-          notes.appendChild(row);
-        });
-        host.appendChild(notes);
-      }
-
       syncChatContext();
+    }
+
+    function animLabel(ed, key) {
+      var a = ed.anims.filter(function (x) {
+        return x.key === key;
+      })[0];
+      return a ? a.label : null;
     }
 
 
@@ -4795,11 +5300,17 @@
       drawHud: ['drawHud(): większa skala napisów.', [[null, 'size', 1.4]]]
     };
 
+    var SOUND_REV = [
+      'Dźwięk: krótszy atak i cichszy ogon, żeby nie zagłuszał reszty sceny.',
+      [[null, 'iframes', 60]]
+    ];
+
     function revisionFor(sel) {
       var lines = [],
         ops = [];
       sel.forEach(function (s) {
-        var rec = s.kind === 'part' ? PART_REV[s.key] : s.kind === 'fn' ? FN_REV[s.key] : null;
+        var rec =
+          s.kind === 'part' ? PART_REV[s.key] : s.kind === 'fn' ? FN_REV[s.key] : s.kind === 'sound' ? SOUND_REV : null;
         if (!rec) {
           lines.push({ text: (s.label + ': biorę to pod uwagę przy składaniu wersji.'), note: s.note });
           return;
