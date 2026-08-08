@@ -1096,68 +1096,315 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    padding: 20px 22px 22px;
     scrollbar-width: thin;
     scrollbar-color: var(--panel-border) transparent;
   }
 
-  /* Asset jest teraz główną kolumną: podgląd po jednej stronie, listy po
-     drugiej. Poniżej 1100 px wszystko wraca do jednej kolumny. */
-  .asset-body {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-content: start;
-    gap: 16px;
-  }
-
-  .asset-left,
-  .asset-right {
+  /* ---- nagłówek karty assetu ---- */
+  .asset-top-row {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    min-width: 0;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 14px;
   }
 
-  .asset-left {
+  .eyebrow {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--turquoise);
+  }
+
+  .crumbs {
+    display: flex;
     align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted-dim);
   }
 
-  @media (min-width: 1100px) {
-    .asset-body {
-      grid-template-columns: minmax(260px, 1fr) minmax(280px, 1fr);
-      gap: 22px;
-    }
+  .crumbs button {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    border-radius: 4px;
+    padding: 1px 3px;
   }
 
+  .crumbs button:hover {
+    color: var(--turquoise);
+    text-decoration: underline;
+  }
+
+  .crumbs .here {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .asset-h1 {
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    margin-top: 7px;
+  }
+
+  .asset-lede {
+    margin-top: 7px;
+    font-size: 13.5px;
+    color: var(--muted);
+    max-width: 60ch;
+    line-height: 1.5;
+  }
+
+  .asset-top-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    flex: none;
+  }
+
+  /* ---- ramka podglądu ---- */
   .asset-figure {
     position: relative;
-    align-self: center;
-    max-width: 100%;
     line-height: 0;
-    border-radius: 8px;
+    /* Podgląd jest rysowany w rozdzielczości sceny — rozciągnięty na całą
+       szerokość panelu zjadałby kafle i subassety poniżej. */
+    max-width: 520px;
+    margin: 0 auto;
+    border-radius: 12px;
     overflow: hidden;
     background-color: #0b1018;
-    background-image:
-      linear-gradient(45deg, #182029 25%, transparent 25%),
-      linear-gradient(-45deg, #182029 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, #182029 75%),
-      linear-gradient(-45deg, transparent 75%, #182029 75%);
-    background-size: 14px 14px;
-    background-position:
-      0 0,
-      0 7px,
-      7px -7px,
-      -7px 0;
-    border: 1px solid var(--panel-border);
+    border: 1px solid #26313c;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
   }
 
   .asset-figure img {
     display: block;
-    max-width: 100%;
+    width: 100%;
     image-rendering: pixelated;
+  }
+
+  .fig-badges {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 4;
+  }
+
+  .fig-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(12, 17, 23, 0.82);
+    border: 1px solid var(--panel-border);
+    color: var(--muted);
+    backdrop-filter: blur(6px);
+  }
+
+  .fig-badge--live {
+    color: var(--turquoise);
+    border-color: rgba(0, 228, 172, 0.4);
+  }
+
+  .fig-foot {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #cfdae6;
+    background: linear-gradient(180deg, transparent, rgba(6, 10, 15, 0.86) 55%);
+  }
+
+  .fig-foot .frames-nav {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--muted);
+  }
+
+  .fig-foot .frames-nav button {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: rgba(20, 27, 35, 0.9);
+    border: 1px solid var(--panel-border);
+    color: var(--text);
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+  }
+
+  .fig-foot .frames-nav button:hover {
+    border-color: var(--turquoise);
+    color: var(--turquoise);
+  }
+
+  /* ---- kafle metryki ---- */
+  .meta-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin: 12px auto 0;
+    max-width: 520px;
+  }
+
+  .tile {
+    background: var(--card);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+
+  .tile dt {
+    font-size: 10px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted-dim);
+    font-weight: 600;
+  }
+
+  .tile dd {
+    margin: 4px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .tile dd.good {
+    color: var(--turquoise);
+  }
+
+  /* ---- lista subassetów ---- */
+  .sub-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 20px 0 10px;
+  }
+
+  .sub-head h3 {
+    font-size: 11px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--muted-dim);
+  }
+
+  .sub-head span {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted-dim);
+  }
+
+  .sub-head .hint {
+    margin-left: auto;
+    font-size: 11.5px;
+    color: var(--muted-dim);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .sub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+  }
+
+  .sub {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: var(--card);
+    border: 1px solid var(--panel-border);
+    text-align: left;
+    transition: 0.12s;
+  }
+
+  .sub:hover {
+    border-color: #3a4956;
+    background: var(--card-2);
+  }
+
+  .sub.is-on {
+    border-color: var(--blue);
+    background: rgba(56, 189, 248, 0.08);
+  }
+
+  .sub-thumb {
+    width: 42px;
+    height: 42px;
+    flex: none;
+    border-radius: 7px;
+    border: 1px solid var(--panel-border);
+    background: #0b1018;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+
+  .sub-thumb img {
+    max-width: 100%;
+    max-height: 100%;
+    image-rendering: pixelated;
+    display: block;
+  }
+
+  .sub-text {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .sub-text b {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .sub-text small {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted-dim);
+    margin-top: 1px;
+  }
+
+  .sub-pick {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid var(--panel-border);
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted-dim);
+  }
+
+  .sub.is-on .sub-pick {
+    border-color: transparent;
+    color: #06211a;
   }
 
   .hot {
@@ -1272,6 +1519,104 @@
     height: 8px;
     border-radius: 2px;
     border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* ---- komponent 2: agent chat ---- */
+  .chat-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--panel-border);
+    flex: none;
+  }
+
+  .chat-title {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--turquoise);
+  }
+
+  .chat-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .chat-status i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--turquoise);
+    box-shadow: 0 0 0 3px rgba(0, 228, 172, 0.18);
+  }
+
+  .chat-context {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    padding: 5px 9px;
+    border-radius: 7px;
+    background: var(--card-2);
+    border: 1px solid var(--panel-border);
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 190px;
+  }
+
+  .msg--me {
+    align-items: flex-end;
+  }
+
+  .msg--me .msg-who {
+    flex-direction: row-reverse;
+  }
+
+  .msg--me .msg-body {
+    background: rgba(0, 228, 172, 0.09);
+    border-color: rgba(0, 228, 172, 0.28);
+  }
+
+  .msg-time {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted-dim);
+  }
+
+  .msg--me .msg-time {
+    align-self: flex-end;
+  }
+
+  .quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 9px;
+  }
+
+  .quick:empty {
+    display: none;
+  }
+
+  .quick button {
+    font-size: 12px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    background: var(--card);
+    border: 1px solid var(--panel-border);
+    color: #c6d2de;
+  }
+
+  .quick button:hover {
+    border-color: var(--turquoise);
+    color: var(--turquoise);
   }
 
   .notes {
@@ -1627,34 +1972,32 @@
       <div class="inspector-body" id="inspector"></div>
     </aside>
 
-    <!-- ============ ASSET (tryb assetu) ============ -->
+    <!-- ============ KOMPONENT 1 · ASSET ============ -->
     <aside class="panel rail--asset">
-      <div class="panel-head">
-        <h2>Asset</h2>
-        <span class="head-file" id="asset-file"></span>
-        <button class="head-scene" id="scene-open">▶ Podgląd sceny</button>
-        <button class="head-close" id="asset-close">✕ Wróć do studia</button>
-      </div>
       <div class="asset-body" id="asset-body"></div>
     </aside>
 
-    <!-- ============ ROZMOWA (tryb assetu) ============ -->
+    <!-- ============ KOMPONENT 2 · AGENT CHAT ============ -->
     <aside class="panel rail--chat">
-      <div class="panel-head">
-        <h2>Rozmowa</h2>
-        <span class="count" id="chat-count"></span>
+      <div class="chat-head">
+        <div class="chat-id">
+          <div class="chat-title">Agent chat</div>
+          <div class="chat-status"><i></i> Online · odpowiada zwykle w 30 s</div>
+        </div>
+        <span class="chat-context" id="chat-context">Kontekst: asset</span>
       </div>
       <div class="thread" id="chat-thread"></div>
       <div class="composer">
         <div class="chips" id="chat-chips"></div>
+        <div class="quick" id="chat-quick"></div>
         <div class="composer-row">
           <textarea
             id="chat-prompt"
             rows="1"
-            placeholder="Napisz, co ma się zmienić w tym assecie…"
+            placeholder="Wpisz wiadomość…"
           ></textarea>
           <div class="composer-tools">
-            <button class="btn btn--primary" id="chat-send">Wyślij ⏎</button>
+            <button class="btn btn--primary" id="chat-send">Wyślij</button>
           </div>
         </div>
       </div>
@@ -1705,18 +2048,19 @@
     </div>
 
     <div class="card">
-      <h3>Asset otwiera rozmowę, nie panel pokręteł</h3>
+      <h3>Scena → asset → subasset</h3>
       <p>
-        Klik w kartę assetu oddaje ekran dwóm rzeczom: asset po lewej, rozmowa po prawej. Na
-        podglądzie zaznaczasz konkretne części — korpus, wirniki, sensor, poświatę — a każde
-        zaznaczenie dostaje numer, kolor i pole na komentarz. Funkcje i dźwięki zaznacza się tak
-        samo.
+        Klik w kartę assetu oddaje ekran dwóm komponentom: karta assetu po lewej, agent chat po
+        prawej. Karta ma okruszki, po których widać, gdzie jesteś: <code>Scena / Aktorzy / Drony /
+        Dron 1</code>. Poniżej podglądu leżą <b>subassety</b> — korpus, wirniki, sensor, poświata —
+        każdy z własną miniaturą.
       </p>
       <p style="margin-top: 7px">
-        Zaznaczenia wchodzą do promptu jako kontekst, a nie jako gotowa zmiana. Agent odpowiada
-        jedną rewizją: co zmienia i dlaczego, z miniaturą przed i po. Scena nie zajmuje miejsca na
-        stałe — wyskakuje jako dialog wtedy, gdy jest po co: sam ją wołasz albo właśnie
-        zastosowałeś rewizję i chcesz zobaczyć skutek w ruchu.
+        Kliknięcie subassetu robi dwie rzeczy naraz: zacieśnia kadr do niego (okruszek dostaje
+        kolejny stopień) i dopina go do promptu jako komentarz. Podpowiedzi w chacie zmieniają się
+        wtedy razem z kontekstem — inne dla efektu, inne dla detalu, inne dla ruchu. Scena nie
+        zajmuje miejsca na stałe: wyskakuje jako dialog, gdy sam ją zawołasz albo gdy właśnie
+        zastosowałeś rewizję.
       </p>
     </div>
 
@@ -1981,12 +2325,15 @@
         var dr = drones.items[d];
         var dw = 20 * drones.size,
           dh = 12 * drones.size;
+        // Z uwzględnieniem unoszenia — inaczej ramka wskazania i kadr subassetu
+        // stoją kilka pikseli obok tego, co widać.
+        var dy = dr.y + Math.sin(dr.bob) * drones.bob;
         out.push({
           id: dr.id,
           label: 'Dron ' + (d + 1),
           kind: 'przeciwnik',
           path: 'Scena / Aktorzy / Drony',
-          r: [dr.x - dw / 2, dr.y - dh / 2, dw, dh],
+          r: [dr.x - dw / 2, dy - dh / 2, dw, dh],
           o: drones,
           group: 'drones'
         });
@@ -2355,25 +2702,52 @@
       };
     }
 
-    /** Prostokąt części w układzie logicznym — do obrysu w podglądzie edytora. */
+    function droneById(id) {
+      for (var i = 0; i < drones.items.length; i++) if (drones.items[i].id === id) return drones.items[i];
+      return null;
+    }
+
+    /**
+     * Prostokąt części w układzie logicznym — obrys i kadr subassetu.
+     *
+     * Liczony z tych samych wartości, z których rysuje `draw()`. Przybliżenia
+     * tu nie wystarczą: sensor drona siedzi po stronie lotu, a poświata rośnie
+     * z własnego promienia — obrys „mniej więcej tam” pokazuje nie ten piksel,
+     * o którym się pisze.
+     */
     function partRect(id, key, r) {
       var x = r[0],
         y = r[1],
         w = r[2],
         h = r[3];
+      var cx = x + w / 2,
+        cy = y + h / 2;
       switch (key) {
-        case 'rotor':
-          return [x - 4, y - 2, w + 8, 3];
-        case 'sensor':
-          return [x + w * 0.55, y + h / 2 - 2, 4, 4];
-        case 'glow':
-          return [x - 8, y - 8, w + 16, h + 16];
-        case 'eyes':
-          return [x + w * 0.25, y + 4, w * 0.6, 4];
+        case 'rotor': {
+          var span = art.drone.rotor.span;
+          return [x - span * 0.75, y - 2, w + span * 1.5, 3];
+        }
+        case 'sensor': {
+          var ss = art.drone.sensor.size * drones.size;
+          var d = droneById(id);
+          var sx = d ? d.x + (d.dir > 0 ? 2 : -2 - ss) * drones.size : cx;
+          return [sx, cy - ss / 2, ss, ss];
+        }
+        case 'glow': {
+          var gr = art.drone.glow.radius;
+          return [cx - gr, cy - gr, gr * 2, gr * 2];
+        }
+        case 'eyes': {
+          var es = art.player.eyes.size;
+          var ex = cx - 1 + (player.vx > 0 ? 2 : -4);
+          return [ex - 1, y + 4, es * 2 + 6, es + 2.5];
+        }
         case 'trail':
           return [x - w, y, w, h];
-        case 'halo':
-          return [x - w * 0.3, y - h * 0.3, w * 1.6, h * 1.6];
+        case 'halo': {
+          var hr = (w / 2) * art.coin.halo.radius * 2;
+          return [cx - hr, cy - hr, hr * 2, hr * 2];
+        }
         case 'edge':
           return [x, y, w, 2.5];
         case 'stripes':
@@ -3274,6 +3648,13 @@
               ax1 = pn.r[0] + pn.r[2],
               ay1 = pn.r[1] + pn.r[3];
             for (var pi = 0; pi < list.length; pi++) {
+              // Wyłączony subasset nie jest rysowany, więc nie ma czego na nim
+              // wskazywać ani po co pod niego poszerzać kadr — wyłączona
+              // poświata o promieniu 16 px rozdmuchiwała podgląd drona dwukrotnie.
+              var visField = list[pi].fields.filter(function (fl) {
+                return fl.key === 'visible';
+              })[0];
+              if (visField && visField.value === false) continue;
               var prr = partRect(m.id, list[pi].key, pn.r);
               rects[list[pi].key] = prr;
               ax0 = Math.min(ax0, prr[0]);
@@ -3305,7 +3686,9 @@
           // więc kadr to suma obu prostokątów — inaczej obrys wypada za kadrem.
           var prect = m.part ? partRect(m.id, m.part, pn.r) : null;
           var crop = pn.r;
-          if (prect) {
+          // tight: kadr wyłącznie na subasseecie — wejście w głąb, a nie cały asset.
+          if (prect && m.tight) crop = prect;
+          else if (prect) {
             var x0 = Math.min(pn.r[0], prect[0]),
               y0 = Math.min(pn.r[1], prect[1]),
               x1 = Math.max(pn.r[0] + pn.r[2], prect[0] + prect[2]),
@@ -3858,7 +4241,18 @@
      * do nich komentarz i piszesz prompt; zmiana wraca jako rewizja od
      * agenta, nie jako suwak pod palcem.
      * ================================================================= */
-    var ASSET = { open: false, node: null, boxes: {}, size: [1, 1], sel: [], seq: 0, rev: 12 };
+    var ASSET = {
+      open: false,
+      node: null,
+      boxes: {},
+      size: [1, 1],
+      sel: [],
+      seq: 0,
+      rev: 12,
+      /** Subasset, w który weszliśmy — kadr zacieśnia się do niego. */
+      focus: null,
+      phase: 0
+    };
     var previewCbs = {};
     var previewSeq = 0;
 
@@ -3882,18 +4276,22 @@
       ASSET.node = UI.picked;
       ASSET.sel = [];
       ASSET.seq = 0;
+      ASSET.focus = null;
+      ASSET.phase = 0;
+      dropThumbs();
       document.querySelector('.console').classList.add('console--asset');
-      $('asset-file').textContent = UI.picked.asset.file;
       if (!UI.paused) setPaused(true);
       renderAsset();
       renderThread();
       renderChips();
+      renderQuick();
     }
 
     function closeAsset() {
       ASSET.open = false;
       document.querySelector('.console').classList.remove('console--asset');
       renderChips();
+      renderQuick();
     }
 
     /** Wybór innego elementu na scenie przełącza asset bez wychodzenia z trybu. */
@@ -3902,14 +4300,20 @@
       if (!ASSET.node) return;
       var switched = ASSET.node.id !== m.id;
       ASSET.node = m;
-      $('asset-file').textContent = m.asset.file;
+      // Miniatury subassetów są nieaktualne po każdej zmianie assetu.
+      dropThumbs();
       if (switched) {
         ASSET.sel = [];
         ASSET.seq = 0;
+        ASSET.focus = null;
+        ASSET.phase = 0;
         renderChips();
       }
       if (assetRefreshTimer) clearTimeout(assetRefreshTimer);
-      assetRefreshTimer = setTimeout(renderAsset, 110);
+      assetRefreshTimer = setTimeout(function () {
+        renderAsset();
+        renderQuick();
+      }, 110);
     }
 
     function selKey(item) {
@@ -3925,8 +4329,17 @@
       ASSET.sel.forEach(function (s, i) {
         if (s.kind === kind && s.key === key) at = i;
       });
-      if (at >= 0) ASSET.sel.splice(at, 1);
-      else {
+      if (at >= 0) {
+        ASSET.sel.splice(at, 1);
+        // Wyjście z subassetu wraca do widoku całego assetu, chyba że inny
+        // subasset jest jeszcze zaznaczony — wtedy kadr idzie na niego.
+        if (kind === 'part' && ASSET.focus === key) {
+          var stillPart = ASSET.sel.filter(function (s) {
+            return s.kind === 'part';
+          });
+          ASSET.focus = stillPart.length ? stillPart[stillPart.length - 1].key : null;
+        }
+      } else {
         ASSET.seq++;
         ASSET.sel.push({
           kind: kind,
@@ -3937,123 +4350,68 @@
           color: NOTE_COLORS[(ASSET.seq - 1) % NOTE_COLORS.length],
           note: ''
         });
+        // Zaznaczenie subassetu jest zarazem wejściem w niego — jeden gest,
+        // bo i tak chcesz go zobaczyć z bliska, skoro o nim piszesz.
+        if (kind === 'part') ASSET.focus = key;
       }
       renderAsset();
       renderChips();
+      renderQuick();
     }
 
-    function renderAsset() {
-      var host = $('asset-body');
-      if (!host || !ASSET.node) return;
-      var node = ASSET.node,
-        ed = node.editor;
-      host.innerHTML = '';
+    /* ---- kontekst i podpowiedzi w chacie ---- */
+    function syncChatContext() {
+      var badge = $('chat-context');
+      if (!badge || !ASSET.node) return;
+      var focus = ASSET.focus;
+      badge.textContent = 'Kontekst: ' + ASSET.node.label + (focus ? ' / ' + labelOfPart(focus) : '');
+      badge.title = ASSET.node.path + ' / ' + ASSET.node.label + (focus ? ' / ' + labelOfPart(focus) : '');
+    }
+    function labelOfPart(key) {
+      if (!ASSET.node) return key;
+      var p = ASSET.node.editor.parts.filter(function (x) {
+        return x.key === key;
+      })[0];
+      return p ? p.label : key;
+    }
 
-      var left = el('div', 'asset-left');
-      var right = el('div', 'asset-right');
-      host.appendChild(left);
-      host.appendChild(right);
+    var QUICK_BY_KIND = {
+      efekt: ['Za słabo widać ten efekt', 'Zwiąż to z momentem trafienia'],
+      detal: ['Ten detal ginie na tle', 'Powiększ go dwukrotnie'],
+      ruch: ['Ruch jest nieczytelny', 'Zwolnij to o połowę'],
+      kształt: ['Sylwetka za mało wyrazista', 'Zrób ją ostrzejszą'],
+      linia: ['Za cienka linia'],
+      wzór: ['Wzór za mało widoczny'],
+      cząstki: ['Za dużo tego na ekranie'],
+      gradient: ['Za jasne tło'],
+      wypełnienie: ['Za jasne, aktorzy się gubią'],
+      typografia: ['Za małe na telefonie']
+    };
 
-      var fig = el('div', 'asset-figure');
-      var img = document.createElement('img');
-      img.alt = 'Podgląd assetu ' + node.label;
-      fig.appendChild(img);
-      left.appendChild(fig);
-      askPreview(node.id, { max: 440, pad: 8, parts: true }, function (res) {
-        if (!res || !res.png) return;
-        img.src = res.png;
-        ASSET.boxes = res.boxes || {};
-        ASSET.size = res.size || [1, 1];
-        drawHotspots(fig, ed);
-      });
-
-      left.appendChild(
-        el(
-          'div',
-          'asset-hint',
-          'Kliknij część assetu na podglądzie — dołączy się do promptu jako komentarz. To samo działa dla funkcji i dźwięków.',
-        ),
-      );
-
-      // Część schowana pod inną (poświata pod korpusem) jest na podglądzie
-      // klikalna tylko po obwodzie — lista części jest drogą pewną.
-      var partsRow = el('div');
-      partsRow.appendChild(el('div', 'asset-row-label', 'Części'));
-      var partTokens = el('div', 'asset-tokens');
-      ed.parts.forEach(function (p) {
-        var colorField = p.fields.filter(function (x) {
-          return x.type === 'color';
-        })[0];
-        var b = el('button', 'token' + (isSelected('part', p.key) ? ' is-on' : ''));
-        var dot = el('span', 'dot');
-        dot.style.background = colorField ? colorField.value : '#334';
-        b.appendChild(dot);
-        b.appendChild(el('span', null, p.label));
-        b.onclick = function () {
-          toggleSel('part', p.key, p.label);
-        };
-        partTokens.appendChild(b);
-      });
-      partsRow.appendChild(partTokens);
-      right.appendChild(partsRow);
-
-      var other = el('div');
-      other.appendChild(el('div', 'asset-row-label', 'Funkcje i dźwięki'));
-      var tokens = el('div', 'asset-tokens');
-      ed.functions.forEach(function (fn) {
-        var b = el('button', 'token' + (isSelected('fn', fn.name) ? ' is-on' : ''), fn.name + '()');
-        b.onclick = function () {
-          toggleSel('fn', fn.name, fn.name + '()', fn.sig);
-        };
-        tokens.appendChild(b);
-      });
-      ed.sounds.forEach(function (s) {
-        var b = el('button', 'token' + (isSelected('sound', s.file) ? ' is-on' : ''));
-        b.appendChild(el('span', null, '♪ ' + s.file));
-        b.onclick = function () {
-          toggleSel('sound', s.file, s.file, s.when);
-        };
-        tokens.appendChild(b);
-      });
-      other.appendChild(tokens);
-      right.appendChild(other);
-
-      if (ASSET.sel.length) {
-        var box = el('div');
-        box.appendChild(el('div', 'asset-row-label', 'Zaznaczone · ' + ASSET.sel.length));
-        var notes = el('div', 'notes');
-        notes.style.marginTop = '7px';
-        ASSET.sel.forEach(function (s) {
-          var row = el('div', 'note');
-          row.style.borderLeftColor = s.color;
-          var idx = el('span', 'idx', String(s.n));
-          idx.style.background = s.color;
-          row.appendChild(idx);
-          var main = el('div', 'note-main');
-          main.appendChild(el('b', null, s.label));
-          main.appendChild(el('small', null, s.kind === 'part' ? 'część · ' + node.asset.file : s.meta));
-          var inp = document.createElement('input');
-          inp.type = 'text';
-          inp.placeholder = 'Komentarz do agenta…';
-          inp.value = s.note;
-          inp.setAttribute('aria-label', 'Komentarz do: ' + s.label);
-          inp.oninput = function () {
-            s.note = inp.value;
-            renderChips();
-          };
-          main.appendChild(inp);
-          row.appendChild(main);
-          var x = el('button', 'x', '×');
-          x.setAttribute('aria-label', 'Usuń zaznaczenie ' + s.label);
-          x.onclick = function () {
-            toggleSel(s.kind, s.key, s.label);
-          };
-          row.appendChild(x);
-          notes.appendChild(row);
-        });
-        box.appendChild(notes);
-        right.appendChild(box);
+    function renderQuick() {
+      var box = $('chat-quick');
+      if (!box) return;
+      box.innerHTML = '';
+      if (!ASSET.open || !ASSET.node) return;
+      var chips = [];
+      if (ASSET.focus) {
+        var kind = SUB_KIND[ASSET.focus] || 'część';
+        chips = (QUICK_BY_KIND[kind] || []).slice(0, 2);
+        chips.push('Dlaczego to tak wygląda?');
+      } else if (ASSET.sel.length) {
+        chips = ['Popraw czytelność tych elementów', 'Co byś tu zmienił?'];
+      } else {
+        chips = ['Co jest nie tak z tym assetem?', 'Pokaż, co da się poprawić'];
       }
+      chips.forEach(function (text) {
+        var b = el('button', null, text);
+        b.onclick = function () {
+          var input = $('chat-prompt');
+          input.value = input.value ? input.value.trim() + ' ' + text : text;
+          input.focus();
+        };
+        box.appendChild(b);
+      });
     }
 
     function drawHotspots(fig, ed) {
@@ -4094,6 +4452,313 @@
         fig.appendChild(hot);
       });
     }
+
+    /* ---- opisy assetów: to, co karta mówi o sobie na górze ---- */
+    var ASSET_LEDE = {
+      drone: 'Przeciwnik rysowany w kodzie dla sceny „Neonowy Kurier”. Patroluje trzy wysokości i odbiera życie przy zderzeniu.',
+      player: 'Postać gracza dla sceny „Neonowy Kurier”. Biegnie w prawo, skacze po platformach i zbiera paczki.',
+      coin: 'Przedmiot do zebrania. Ten sam model obsługuje wszystkie paczki na scenie.',
+      terrain: 'Podłoże i platformy sceny. Jeden asset odpowiada za kolizję i za to, jak scena wygląda od dołu.',
+      skyline: 'Warstwa paralaksy z bryłami miasta. Przewija się wolniej niż akcja, żeby dać głębię.',
+      stars: 'Warstwa cząstek nad panoramą. Migocze niezależnie od reszty sceny.',
+      sky: 'Gradient tła — najniższa warstwa sceny, po niej rysowane jest wszystko inne.',
+      hud: 'Warstwa interfejsu rysowana ponad grą. Licznik punktów i życia.'
+    };
+    var SUB_KIND = {
+      body: 'kształt',
+      rotor: 'ruch',
+      sensor: 'detal',
+      glow: 'efekt',
+      eyes: 'detal',
+      trail: 'efekt',
+      core: 'kształt',
+      halo: 'efekt',
+      surface: 'wypełnienie',
+      edge: 'linia',
+      stripes: 'wzór',
+      walls: 'kształt',
+      windows: 'detal',
+      dots: 'cząstki',
+      top: 'gradient',
+      bottom: 'gradient',
+      text: 'typografia',
+      shadow: 'efekt'
+    };
+
+    /** Miniatury subassetów są drogie — trzymamy je, aż asset naprawdę się zmieni. */
+    var thumbCache = {};
+    function thumbKey(id, part) {
+      return id + '|' + part;
+    }
+    function dropThumbs() {
+      thumbCache = {};
+    }
+
+    function renderAsset() {
+      var host = $('asset-body');
+      if (!host || !ASSET.node) return;
+      var node = ASSET.node,
+        ed = node.editor,
+        fam = ed.family;
+      host.innerHTML = '';
+
+      var focus = ASSET.focus
+        ? ed.parts.filter(function (p) {
+            return p.key === ASSET.focus;
+          })[0]
+        : null;
+
+      /* --- nagłówek --- */
+      var top = el('div', 'asset-top-row');
+      var idBox = el('div');
+      idBox.appendChild(el('div', 'eyebrow', focus ? 'Podgląd subassetu' : 'Podgląd assetu'));
+
+      var crumbs = el('div', 'crumbs');
+      node.path.split(' / ').forEach(function (step) {
+        crumbs.appendChild(el('span', null, step));
+        crumbs.appendChild(el('span', null, '/'));
+      });
+      if (focus) {
+        var back = el('button', null, node.label);
+        back.onclick = function () {
+          ASSET.focus = null;
+          renderAsset();
+        };
+        crumbs.appendChild(back);
+        crumbs.appendChild(el('span', null, '/'));
+        crumbs.appendChild(el('span', 'here', focus.label));
+      } else {
+        crumbs.appendChild(el('span', 'here', node.label));
+      }
+      idBox.appendChild(crumbs);
+
+      idBox.appendChild(
+        el('h2', 'asset-h1', focus ? node.label + ' — ' + focus.label : node.label + ' — ' + node.asset.type.toLowerCase()),
+      );
+      idBox.appendChild(
+        el(
+          'p',
+          'asset-lede',
+          focus
+            ? 'Subasset assetu ' + node.label + ', rysowany w ' + node.asset.symbol + '. Zaznaczony — komentarz przy nim trafi do agenta razem z promptem.'
+            : ASSET_LEDE[fam] || 'Asset sceny „Neonowy Kurier”.',
+        ),
+      );
+      top.appendChild(idBox);
+
+      var acts = el('div', 'asset-top-actions');
+      var sceneBtn = el('button', 'btn', '▶ Otwórz scenę');
+      sceneBtn.id = 'scene-open';
+      sceneBtn.onclick = openScene;
+      acts.appendChild(sceneBtn);
+      var closeBtn = el('button', 'btn btn--ghost', '✕');
+      closeBtn.id = 'asset-close';
+      closeBtn.title = 'Wróć do studia';
+      closeBtn.setAttribute('aria-label', 'Wróć do studia');
+      closeBtn.onclick = function () {
+        closeScene();
+        closeAsset();
+      };
+      acts.appendChild(closeBtn);
+      top.appendChild(acts);
+      host.appendChild(top);
+
+      /* --- ramka podglądu --- */
+      var fig = el('div', 'asset-figure');
+      var img = document.createElement('img');
+      img.alt = 'Podgląd: ' + (focus ? focus.label : node.label);
+      fig.appendChild(img);
+
+      var badges = el('div', 'fig-badges');
+      badges.appendChild(el('span', 'fig-badge fig-badge--live', 'SPRITE / 2D'));
+      badges.appendChild(el('span', 'fig-badge', 'v' + ASSET.rev + ' · szkic'));
+      fig.appendChild(badges);
+
+      var foot = el('div', 'fig-foot');
+      foot.appendChild(
+        el(
+          'span',
+          null,
+          (focus ? focus.label + ' · ' : '') + node.asset.file.split('/').pop() + ' · ' + node.asset.cost,
+        ),
+      );
+      var nav = el('div', 'frames-nav');
+      var prev = el('button', null, '‹');
+      prev.setAttribute('aria-label', 'Poprzednia klatka');
+      var next = el('button', null, '›');
+      next.setAttribute('aria-label', 'Następna klatka');
+      var step = function (d) {
+        ASSET.phase = (ASSET.phase + d + ed.frames) % ed.frames;
+        renderAsset();
+      };
+      prev.onclick = function () {
+        step(-1);
+      };
+      next.onclick = function () {
+        step(1);
+      };
+      nav.appendChild(prev);
+      nav.appendChild(el('span', null, 'klatka ' + (ASSET.phase + 1) + ' z ' + ed.frames));
+      nav.appendChild(next);
+      foot.appendChild(nav);
+      fig.appendChild(foot);
+      host.appendChild(fig);
+
+      if (focus) {
+        askPreview(
+          node.id,
+          { max: 460, pad: 6, phase: ASSET.phase, part: focus.key, tight: true },
+          function (res) {
+            if (res && res.png) img.src = res.png;
+          },
+        );
+      } else {
+        askPreview(node.id, { max: 460, pad: 8, phase: ASSET.phase, parts: true }, function (res) {
+          if (!res || !res.png) return;
+          img.src = res.png;
+          ASSET.boxes = res.boxes || {};
+          ASSET.size = res.size || [1, 1];
+          drawHotspots(fig, ed);
+        });
+      }
+
+      /* --- kafle --- */
+      var tiles = el('div', 'meta-tiles');
+      [
+        ['Zaznaczone', ASSET.sel.length ? ASSET.sel.length + ' do promptu' : 'nic', ASSET.sel.length > 0],
+        ['Warstwa', node.asset.layer, false],
+        ['Instancje na scenie', String(node.asset.instances), false]
+      ].forEach(function (row) {
+        var t = el('dl', 'tile');
+        t.appendChild(el('dt', null, row[0]));
+        var dd = el('dd', row[2] ? 'good' : null, row[1]);
+        t.appendChild(dd);
+        tiles.appendChild(t);
+      });
+      host.appendChild(tiles);
+
+      /* --- subassety --- */
+      var sh = el('div', 'sub-head');
+      sh.appendChild(el('h3', null, 'Subassety'));
+      sh.appendChild(el('span', null, String(ed.parts.length)));
+      sh.appendChild(el('span', 'hint', 'Kliknij na podglądzie albo tutaj — dołączy się do promptu jako komentarz'));
+      host.appendChild(sh);
+
+      var grid = el('div', 'sub-grid');
+      ed.parts.forEach(function (p) {
+        var on = isSelected('part', p.key);
+        var sel = ASSET.sel.filter(function (s) {
+          return s.kind === 'part' && s.key === p.key;
+        })[0];
+        var colorField = p.fields.filter(function (x) {
+          return x.type === 'color';
+        })[0];
+        var vis = p.fields.filter(function (x) {
+          return x.key === 'visible';
+        })[0];
+
+        var b = el('button', 'sub' + (on ? ' is-on' : ''));
+        var th = el('div', 'sub-thumb');
+        var timg = document.createElement('img');
+        timg.alt = '';
+        var cached = thumbCache[thumbKey(node.id, p.key)];
+        if (cached) timg.src = cached;
+        else
+          askPreview(node.id, { max: 40, pad: 3, part: p.key, tight: true }, function (res) {
+            if (!res || !res.png) return;
+            thumbCache[thumbKey(node.id, p.key)] = res.png;
+            timg.src = res.png;
+          });
+        th.appendChild(timg);
+        b.appendChild(th);
+
+        var txt = el('div', 'sub-text');
+        txt.appendChild(el('b', null, p.label));
+        txt.appendChild(
+          el('small', null, (SUB_KIND[p.key] || 'część') + (vis && vis.value === false ? ' · ukryty' : '')),
+        );
+        b.appendChild(txt);
+
+        var pick = el('span', 'sub-pick', on && sel ? String(sel.n) : '+');
+        if (on && sel) pick.style.background = sel.color;
+        else if (colorField) pick.style.borderColor = colorField.value;
+        b.appendChild(pick);
+
+        b.onclick = function () {
+          toggleSel('part', p.key, p.label);
+        };
+        grid.appendChild(b);
+      });
+      host.appendChild(grid);
+
+      /* --- funkcje i dźwięki --- */
+      var fh = el('div', 'sub-head');
+      fh.appendChild(el('h3', null, 'Funkcje i dźwięki'));
+      fh.appendChild(el('span', null, String(ed.functions.length + ed.sounds.length)));
+      host.appendChild(fh);
+
+      var tokens = el('div', 'asset-tokens');
+      ed.functions.forEach(function (fn) {
+        var b = el('button', 'token' + (isSelected('fn', fn.name) ? ' is-on' : ''), fn.name + '()');
+        b.onclick = function () {
+          toggleSel('fn', fn.name, fn.name + '()', fn.sig);
+        };
+        tokens.appendChild(b);
+      });
+      ed.sounds.forEach(function (s) {
+        var b = el('button', 'token' + (isSelected('sound', s.file) ? ' is-on' : ''), '♪ ' + s.file);
+        b.onclick = function () {
+          toggleSel('sound', s.file, s.file, s.when);
+        };
+        tokens.appendChild(b);
+      });
+      host.appendChild(tokens);
+
+      /* --- zaznaczenia z komentarzami --- */
+      if (ASSET.sel.length) {
+        var nh = el('div', 'sub-head');
+        nh.appendChild(el('h3', null, 'Komentarze do promptu'));
+        nh.appendChild(el('span', null, String(ASSET.sel.length)));
+        host.appendChild(nh);
+
+        var notes = el('div', 'notes');
+        ASSET.sel.forEach(function (s) {
+          var row = el('div', 'note');
+          row.style.borderLeftColor = s.color;
+          var idx = el('span', 'idx', String(s.n));
+          idx.style.background = s.color;
+          row.appendChild(idx);
+          var main = el('div', 'note-main');
+          main.appendChild(el('b', null, s.label));
+          main.appendChild(
+            el('small', null, s.kind === 'part' ? 'subasset · ' + node.asset.file : s.meta || s.kind),
+          );
+          var inp = document.createElement('input');
+          inp.type = 'text';
+          inp.placeholder = 'Komentarz do agenta…';
+          inp.value = s.note;
+          inp.setAttribute('aria-label', 'Komentarz do: ' + s.label);
+          inp.oninput = function () {
+            s.note = inp.value;
+            renderChips();
+          };
+          main.appendChild(inp);
+          row.appendChild(main);
+          var x = el('button', 'x', '×');
+          x.setAttribute('aria-label', 'Usuń zaznaczenie ' + s.label);
+          x.onclick = function () {
+            toggleSel(s.kind, s.key, s.label);
+          };
+          row.appendChild(x);
+          notes.appendChild(row);
+        });
+        host.appendChild(notes);
+      }
+
+      syncChatContext();
+    }
+
+
 
     /* ---- co agent proponuje, gdy dostanie te zaznaczenia ---- */
     var PART_REV = {
@@ -4201,11 +4866,6 @@
       else openScene();
     }
 
-    $('asset-close').onclick = function () {
-      closeScene();
-      closeAsset();
-    };
-    $('scene-open').onclick = toggleScene;
     $('scene-close').onclick = closeScene;
     $('scene-backdrop').onclick = closeScene;
     window.addEventListener('keydown', function (e) {
@@ -4313,7 +4973,8 @@
         who: 'creator',
         name: 'Ty',
         body: ['Zrób grę o kurierze, który biega po neonowym mieście i zbiera paczki. Drony mają przeszkadzać.'],
-        atts: []
+        atts: [],
+        at: clockNow(24)
       },
       {
         who: 'agent',
@@ -4322,19 +4983,22 @@
           'Gotowe — wersja #11 jest na scenie. Kurier biegnie w prawo, trzy drony patrolują na trzech wysokościach, sześć paczek do zebrania.',
           'Zagraj, zatrzymaj w dowolnym momencie i wskaż mi, co poprawić.'
         ],
-        atts: []
+        atts: [],
+        at: clockNow(21)
       },
       {
         who: 'creator',
         name: 'Ty',
         body: ['Środkowy dron jest za nisko, zabiera życie zanim zdążę wyskoczyć na platformę.'],
-        atts: [{ kind: 'pinRef', n: 1, label: 'Dron 2', color: '#ff6b6b' }]
+        atts: [{ kind: 'pinRef', n: 1, label: 'Dron 2', color: '#ff6b6b' }],
+        at: clockNow(9)
       },
       {
         who: 'agent',
         name: 'Agent',
         body: ['Podniosłem trasę drona 2 o 18 px i skróciłem patrol. Wersja #12 — sprawdź, czy przeskok jest już wykonalny.'],
-        atts: []
+        atts: [],
+        at: clockNow(7)
       }
     ];
 
@@ -4347,14 +5011,19 @@
       if ($('chat-count')) $('chat-count').textContent = UI.thread.length + ' wiadomości';
     }
 
+    /** Godzina w formacie, w jakim ludzie czytają czat. */
+    function clockNow(minutesAgo) {
+      var d = new Date(Date.now() - (minutesAgo || 0) * 60000);
+      return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
     function fillThread(box) {
       if (!box) return;
       box.innerHTML = '';
       UI.thread.forEach(function (m) {
-        var w = el('div', 'msg' + (m.who === 'agent' ? ' msg--agent' : ''));
+        var w = el('div', 'msg' + (m.who === 'agent' ? ' msg--agent' : ' msg--me'));
         var who = el('div', 'msg-who');
-        var i = el('i', null, m.who === 'agent' ? '◆' : 'Ty');
-        if (m.who !== 'agent') i.textContent = '●';
+        var i = el('i', null, m.who === 'agent' ? '◆' : '●');
         who.appendChild(i);
         who.appendChild(el('span', null, m.name));
         w.appendChild(who);
@@ -4430,6 +5099,7 @@
         if (m.rev) body.appendChild(revBlock(m.rev));
 
         w.appendChild(body);
+        w.appendChild(el('div', 'msg-time', m.at || clockNow()));
         box.appendChild(w);
       });
       box.scrollTop = box.scrollHeight;
@@ -4652,7 +5322,8 @@
         who: 'creator',
         name: 'Ty',
         body: text ? [text] : ['(bez opisu — sam kontekst ze sceny)'],
-        atts: atts
+        atts: atts,
+        at: clockNow()
       });
       UI.atts = [];
       if (assetMode) {
@@ -4665,7 +5336,7 @@
       renderChips();
       renderThread();
 
-      UI.thread.push({ who: 'agent', name: 'Agent', body: ['Czytam kontekst…'], atts: [] });
+      UI.thread.push({ who: 'agent', name: 'Agent', body: ['Czytam kontekst…'], atts: [], at: clockNow() });
       renderThread();
 
       if (assetMode && ASSET.open) {
