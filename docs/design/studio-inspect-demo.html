@@ -998,6 +998,599 @@
     font-size: 12px;
   }
 
+  /* ---------- okno edytora assetu ---------- */
+  .win {
+    position: fixed;
+    z-index: 40;
+    width: min(760px, calc(100vw - 32px));
+    background: var(--panel);
+    border: 1px solid #2c3945;
+    border-radius: 8px;
+    box-shadow:
+      0 40px 90px rgba(0, 0, 0, 0.62),
+      0 0 0 1px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-size: 13px;
+  }
+
+  .win[hidden] {
+    display: none;
+  }
+
+  .win--max {
+    inset: 74px 16px 16px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  .win-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 7px 7px 11px;
+    background: linear-gradient(180deg, #26313d, #1d252e);
+    border-bottom: 1px solid #2c3945;
+    cursor: grab;
+    user-select: none;
+    flex: none;
+  }
+
+  .win-title:active {
+    cursor: grabbing;
+  }
+
+  .win-icon {
+    width: 15px;
+    height: 15px;
+    border-radius: 3px;
+    background: var(--blue);
+    color: #04202e;
+    display: grid;
+    place-items: center;
+    font-size: 9px;
+    font-weight: 700;
+    flex: none;
+  }
+
+  .win-name {
+    font-weight: 600;
+    font-size: 12.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .win-name span {
+    font-family: var(--mono);
+    font-weight: 400;
+    color: var(--muted-dim);
+  }
+
+  .win-btns {
+    margin-left: auto;
+    display: flex;
+    gap: 2px;
+  }
+
+  .wb {
+    width: 26px;
+    height: 22px;
+    border-radius: 4px;
+    color: var(--muted);
+    font-size: 11px;
+    display: grid;
+    place-items: center;
+  }
+
+  .wb:hover {
+    background: #33404e;
+    color: var(--text);
+  }
+
+  .wb--x:hover {
+    background: var(--error);
+    color: #2a0b0b;
+  }
+
+  .win-menu {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    padding: 3px 6px;
+    border-bottom: 1px solid var(--panel-border);
+    background: #1a2129;
+    flex: none;
+    position: relative;
+  }
+
+  .win-menu > button {
+    font-size: 12px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    color: #c6d2de;
+  }
+
+  .win-menu > button:hover,
+  .win-menu > button.is-open {
+    background: #2a3542;
+  }
+
+  .win-menu-right {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--muted-dim);
+    padding-right: 4px;
+  }
+
+  .menu-pop {
+    position: absolute;
+    top: 100%;
+    z-index: 3;
+    min-width: 190px;
+    background: #202932;
+    border: 1px solid #313e4c;
+    border-radius: 6px;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.55);
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .menu-pop button {
+    text-align: left;
+    padding: 6px 9px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    color: #d6e0ea;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .menu-pop button:hover {
+    background: var(--blue);
+    color: #04202e;
+  }
+
+  .menu-pop button i {
+    font-style: normal;
+    width: 12px;
+    color: var(--turquoise);
+  }
+
+  .menu-pop button:hover i {
+    color: #04202e;
+  }
+
+  .menu-sep {
+    height: 1px;
+    background: #313e4c;
+    margin: 4px 2px;
+  }
+
+  .win-body {
+    display: grid;
+    grid-template-columns: 172px minmax(0, 1fr) 232px;
+    min-height: 0;
+    flex: 1;
+  }
+
+  .win--min .win-body,
+  .win--min .win-status,
+  .win--min .win-menu {
+    display: none;
+  }
+
+  .win-nav {
+    border-right: 1px solid var(--panel-border);
+    background: #131920;
+    overflow-y: auto;
+    padding: 8px 6px;
+    max-height: 420px;
+  }
+
+  .win--max .win-nav,
+  .win--max .win-stage,
+  .win--max .win-props {
+    max-height: none;
+  }
+
+  .nav-group {
+    font-size: 10.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted-dim);
+    font-weight: 600;
+    padding: 8px 8px 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    text-align: left;
+    padding: 5px 8px;
+    border-radius: 5px;
+    color: #c6d2de;
+    font-size: 12.5px;
+  }
+
+  .nav-item:hover {
+    background: #1e2833;
+  }
+
+  .nav-item.is-on {
+    background: var(--blue);
+    color: #04202e;
+    font-weight: 600;
+  }
+
+  .nav-item .sw-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    flex: none;
+  }
+
+  .nav-item .mono {
+    font-family: var(--mono);
+    font-size: 11.5px;
+  }
+
+  .nav-item .off {
+    margin-left: auto;
+    font-size: 10px;
+    opacity: 0.55;
+  }
+
+  .win-stage {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    max-height: 420px;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.06), transparent 62%), #10161c;
+  }
+
+  .stage-canvas {
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    min-height: 148px;
+    display: grid;
+    place-items: center;
+    padding: 10px;
+    background-color: #0b1018;
+  }
+
+  .stage-canvas.is-checker {
+    background-image:
+      linear-gradient(45deg, #182029 25%, transparent 25%),
+      linear-gradient(-45deg, #182029 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #182029 75%),
+      linear-gradient(-45deg, transparent 75%, #182029 75%);
+    background-size: 12px 12px;
+    background-position:
+      0 0,
+      0 6px,
+      6px -6px,
+      -6px 0;
+  }
+
+  .stage-canvas.is-grid {
+    background-image:
+      linear-gradient(rgba(56, 189, 248, 0.16) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56, 189, 248, 0.16) 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+
+  .stage-canvas img {
+    max-width: 100%;
+    image-rendering: pixelated;
+    display: block;
+  }
+
+  .stage-cap {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--muted-dim);
+    text-align: center;
+  }
+
+  .frames {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .frame {
+    width: 54px;
+    border: 1px solid var(--panel-border);
+    border-radius: 5px;
+    padding: 3px;
+    background: #0b1018;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+  }
+
+  .frame.is-on {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 1px var(--blue);
+  }
+
+  .frame img {
+    width: 100%;
+    image-rendering: pixelated;
+    display: block;
+  }
+
+  .frame span {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted-dim);
+  }
+
+  .code {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.65;
+    background: #0d131a;
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 9px 11px;
+    overflow-x: auto;
+    color: #b9c7d6;
+  }
+
+  .code .ln {
+    color: #46566a;
+    display: inline-block;
+    width: 18px;
+    user-select: none;
+  }
+
+  .code .kw {
+    color: #c084fc;
+  }
+
+  .code .fn {
+    color: var(--blue);
+  }
+
+  .code .num {
+    color: var(--amber);
+  }
+
+  .code .str {
+    color: var(--turquoise);
+  }
+
+  .wave {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 44px;
+    padding: 0 2px;
+  }
+
+  .wave i {
+    flex: 1;
+    background: var(--turquoise);
+    border-radius: 1px;
+    opacity: 0.75;
+  }
+
+  .win-props {
+    border-left: 1px solid var(--panel-border);
+    background: #151b22;
+    overflow-y: auto;
+    max-height: 420px;
+    padding-bottom: 10px;
+  }
+
+  .props-head {
+    font-size: 10.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted-dim);
+    font-weight: 600;
+    padding: 10px 12px 6px;
+    position: sticky;
+    top: 0;
+    background: #151b22;
+  }
+
+  .prow {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 2px 8px;
+    padding: 6px 12px;
+    border-top: 1px solid #1e262f;
+  }
+
+  .prow > label {
+    font-size: 12px;
+    color: #c6d2de;
+  }
+
+  .prow output {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--turquoise);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .prow input[type='range'] {
+    grid-column: 1 / -1;
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 3px;
+    border-radius: 2px;
+    background: #2b3642;
+    margin: 3px 0 0;
+  }
+
+  .prow input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--blue);
+    border: 2px solid #0f1418;
+  }
+
+  .prow input[type='range']::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--blue);
+    border: 2px solid #0f1418;
+  }
+
+  .prow-swatches {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 5px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  .psw {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .psw.is-on {
+    box-shadow:
+      0 0 0 2px #151b22,
+      0 0 0 3.5px var(--text);
+  }
+
+  .toggle {
+    width: 34px;
+    height: 19px;
+    border-radius: 999px;
+    background: #2b3642;
+    position: relative;
+    transition: 0.15s;
+    flex: none;
+  }
+
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: 0.15s;
+  }
+
+  .toggle.is-on {
+    background: rgba(0, 228, 172, 0.28);
+  }
+
+  .toggle.is-on::after {
+    left: 17px;
+    background: var(--turquoise);
+  }
+
+  .prow-note {
+    padding: 9px 12px;
+    font-size: 11.5px;
+    color: var(--muted-dim);
+    line-height: 1.5;
+  }
+
+  .win-status {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border-top: 1px solid var(--panel-border);
+    background: #1a2129;
+    flex: none;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--muted);
+  }
+
+  .win-status span {
+    padding: 5px 11px;
+    border-right: 1px solid var(--panel-border);
+  }
+
+  .win-status .dirty {
+    margin-left: auto;
+    border-right: 0;
+    border-left: 1px solid var(--panel-border);
+    color: var(--amber);
+  }
+
+  .win-status .clean {
+    margin-left: auto;
+    border-right: 0;
+    border-left: 1px solid var(--panel-border);
+    color: var(--muted-dim);
+  }
+
+  .asset-open {
+    width: 100%;
+    justify-content: center;
+    margin-top: 11px;
+  }
+
+  /* Na wąskim ekranie okno siada na dole jako arkusz, a jego trzy panele
+     stają się jedną przewijaną kolumną — trzy własne paski przewijania
+     obok siebie na telefonie są nie do trafienia. */
+  @media (max-width: 820px) {
+    .win {
+      inset: auto 10px 10px 10px !important;
+      width: auto !important;
+      max-height: 84vh;
+    }
+
+    .win-body {
+      grid-template-columns: 1fr;
+      overflow-y: auto;
+    }
+
+    .win-nav,
+    .win-props,
+    .win-stage {
+      max-height: none;
+      overflow: visible;
+      border-left: 0;
+      border-right: 0;
+    }
+
+    .win-nav {
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .win-props {
+      border-top: 1px solid var(--panel-border);
+    }
+
+    .props-head {
+      position: static;
+    }
+  }
+
   /* ---------- explainer ---------- */
   .explain {
     margin-top: 34px;
@@ -1215,6 +1808,22 @@
     </div>
 
     <div class="card">
+      <h3>Edytor assetu to osobne okno</h3>
+      <p>
+        Klik w kartę assetu otwiera okno, które rozkłada element na warstwy rysowania i funkcje.
+        Korpus, wirniki, sensor i poświata drona mają własne kolory, krycie i przełącznik
+        widoczności; <code>updateDrone()</code> ma prędkość, zasięg i amplitudę patrolu, a
+        <code>onHit()</code> — obrażenia, odrzut i nietykalność. Każde pokrętło rusza uruchomioną
+        scenę od razu.
+      </p>
+      <p style="margin-top: 7px">
+        Kodu się tu nie pisze: podgląd funkcji jest do orientacji, a przycisk obok wstawia ją do
+        promptu. Okno ustawia wartości, agent zmienia kod — granica jest ta sama co w reszcie
+        platformy.
+      </p>
+    </div>
+
+    <div class="card">
       <h3>Zmiana na żywo to jeszcze nie commit</h3>
       <p>
         Suwaki i kolory ruszają uruchomioną grę natychmiast — to jest szkic, nie zapis. Do agenta
@@ -1299,7 +1908,7 @@
 
     var sky = { color: '#131c26', color2: '#0b1018' };
     var stars = { color: '#38bdf8', density: 46 };
-    var skyline = { color: '#1b2733', height: 74 };
+    var skyline = { color: '#1b2733', height: 74, parallax: 0.12 };
     var ground = { color: '#1c242c', height: 46, edge: '#2f3d4a' };
     var player = {
       x: 70,
@@ -1312,11 +1921,68 @@
       color: '#00e4ac',
       jump: 8.4,
       speed: 2.1,
+      gravity: 0.42,
       size: 1,
       squash: 0
     };
-    var drones = { color: '#ff6b6b', speed: 1.1, size: 1, count: 3, items: [] };
+    var drones = {
+      color: '#ff6b6b',
+      speed: 1.1,
+      size: 1,
+      count: 3,
+      range: 47,
+      bob: 3,
+      damage: 1,
+      knock: 6,
+      iframes: 40,
+      items: []
+    };
     var coins = { color: '#ffb443', points: 10, size: 1, count: 6, items: [] };
+
+    /**
+     * Asset rozłożony na części. Prosty panel po prawej ustawia jeden kolor
+     * całego assetu; edytor assetu sięga tutaj i rusza każdą część osobno.
+     */
+    var art = {
+      drone: {
+        body: { color: '#ff6b6b', radius: 3, visible: true },
+        rotor: { color: '#ff6b6b', span: 4, alpha: 0.45, visible: true },
+        sensor: { color: '#0b1018', size: 3, visible: true },
+        glow: { color: '#ff6b6b', alpha: 0, radius: 16, visible: false }
+      },
+      player: {
+        body: { color: '#00e4ac', radius: 3, visible: true },
+        eyes: { color: '#06211a', size: 2.5, visible: true },
+        trail: { color: '#00e4ac', alpha: 0.3, visible: false }
+      },
+      coin: {
+        core: { color: '#ffb443', visible: true },
+        halo: { color: '#ffb443', alpha: 0.22, radius: 0.85, visible: true }
+      },
+      terrain: {
+        surface: { color: '#1c242c', visible: true },
+        edge: { color: '#2f3d4a', size: 2, visible: true },
+        stripes: { color: '#2f3d4a', alpha: 0.35, visible: true }
+      },
+      skyline: { walls: { color: '#1b2733', visible: true }, windows: { color: '#38bdf8', alpha: 0.55, visible: true } },
+      stars: { dots: { color: '#38bdf8', size: 1, visible: true } },
+      sky: { top: { color: '#131c26' }, bottom: { color: '#0b1018' } },
+      hud: { text: { color: '#f0f4f8', size: 1, visible: true }, shadow: { color: '#000000', alpha: 0, visible: false } }
+    };
+
+    var ART_DEFAULTS = JSON.parse(JSON.stringify(art));
+
+    /** Rodzina assetu — po niej idą części, funkcje i miniatury. */
+    function family(id) {
+      if (id === 'player') return 'player';
+      if (id.indexOf('drone') === 0) return 'drone';
+      if (id.indexOf('coin') === 0) return 'coin';
+      if (id === 'ground' || id.indexOf('platform') === 0) return 'terrain';
+      if (id === 'skyline') return 'skyline';
+      if (id === 'stars') return 'stars';
+      if (id === 'sky') return 'sky';
+      return 'hud';
+    }
     var platforms = [
       { x: 120, y: 176, w: 76, h: 8 },
       { x: 250, y: 138, w: 64, h: 8 },
@@ -1341,8 +2007,8 @@
           y: 92 + ((i * 37) % 62),
           w: 20,
           h: 12,
-          from: base - 42,
-          to: base + 52,
+          from: base - drones.range,
+          to: base + drones.range,
           dir: i % 2 ? -1 : 1,
           bob: i * 1.4
         });
@@ -1558,12 +2224,290 @@
       };
     }
 
-    /** Wycinek żywej sceny w granicach elementu — podgląd assetu, nie ikonka. */
-    function previewOf(r) {
-      var pad = 4;
+    // --- model edytora assetu -----------------------------------------
+    // Części to warstwy rysowania, funkcje to miejsca w kodzie. Pola obu są
+    // opisane tak samo, więc host renderuje je jedną siatką właściwości.
+    function f(key, label, type, value, min, max, step, unit) {
+      return { key: key, label: label, type: type, value: value, min: min, max: max, step: step, unit: unit };
+    }
+
+    var PART_LABELS = {
+      body: 'Korpus',
+      rotor: 'Wirniki',
+      sensor: 'Sensor',
+      glow: 'Poświata',
+      eyes: 'Oczy',
+      trail: 'Smuga',
+      core: 'Rdzeń',
+      halo: 'Aura',
+      surface: 'Nawierzchnia',
+      edge: 'Krawędź',
+      stripes: 'Pasy jezdni',
+      walls: 'Bryły',
+      windows: 'Okna',
+      dots: 'Punkty',
+      top: 'Góra',
+      bottom: 'Dół',
+      text: 'Napis',
+      shadow: 'Cień'
+    };
+
+    var PART_FIELDS = {
+      radius: ['Zaokrąglenie', 0, 8, 0.5, 'px'],
+      span: ['Rozpiętość', 1, 12, 0.5, 'px'],
+      alpha: ['Krycie', 0, 1, 0.05, ''],
+      size: ['Rozmiar', 0.5, 6, 0.1, 'px'],
+      radiusF: ['Promień', 0.4, 2, 0.05, '×']
+    };
+
+    /** Części wybranego assetu, z polami wyliczonymi z tego, co część naprawdę ma. */
+    function partsOf(id) {
+      var fam = family(id);
+      var group = art[fam];
+      var out = [];
+      for (var key in group) {
+        if (!Object.prototype.hasOwnProperty.call(group, key)) continue;
+        var part = group[key];
+        var fields = [];
+        if ('color' in part) fields.push(f('color', 'Kolor', 'color', part.color));
+        if ('alpha' in part) fields.push(f('alpha', 'Krycie', 'range', part.alpha, 0, 1, 0.05, ''));
+        if ('radius' in part) {
+          var isFactor = fam === 'coin';
+          fields.push(
+            isFactor
+              ? f('radius', 'Promień', 'range', part.radius, 0.4, 2, 0.05, '×')
+              : f('radius', key === 'glow' ? 'Promień' : 'Zaokrąglenie', 'range', part.radius, 0, key === 'glow' ? 40 : 8, 0.5, 'px'),
+          );
+        }
+        if ('span' in part) fields.push(f('span', 'Rozpiętość', 'range', part.span, 1, 12, 0.5, 'px'));
+        if ('size' in part)
+          fields.push(f('size', 'Rozmiar', 'range', part.size, fam === 'hud' ? 0.7 : 0.5, fam === 'hud' ? 2 : 6, fam === 'hud' ? 0.05 : 0.1, fam === 'hud' ? '×' : 'px'));
+        if ('visible' in part) fields.push(f('visible', 'Widoczna', 'bool', part.visible));
+        out.push({ key: key, label: PART_LABELS[key] || key, fields: fields });
+      }
+      return out;
+    }
+
+    /** Funkcje assetu: podpis, kod dla orientacji i parametry, które da się ruszyć tutaj. */
+    function functionsOf(id) {
+      var fam = family(id);
+      if (fam === 'drone')
+        return [
+          {
+            name: 'drawDrone',
+            sig: 'drawDrone(ctx, drone): void',
+            code: [
+              'if (art.glow.visible) haloAt(ctx, drone, art.glow)',
+              'if (art.rotor.visible) rotors(ctx, drone, art.rotor.span)',
+              'roundRect(ctx, box(drone), art.body.radius)',
+              'sensorAt(ctx, drone, drone.dir)'
+            ],
+            params: []
+          },
+          {
+            name: 'updateDrone',
+            sig: 'updateDrone(drone, dt): void',
+            code: ['drone.x += drone.dir * speed', 'if (drone.x > drone.to) drone.dir = -1', 'drone.y += sin(t) * bob'],
+            params: [
+              f('speed', 'Prędkość patrolu', 'range', drones.speed, 0, 3, 0.05, ''),
+              f('range', 'Zasięg patrolu', 'range', drones.range, 10, 120, 1, 'px'),
+              f('bob', 'Amplituda unoszenia', 'range', drones.bob, 0, 12, 0.5, 'px')
+            ]
+          },
+          {
+            name: 'onHit',
+            sig: 'onHit(drone, player): void',
+            code: ['player.lives -= damage', 'player.vy = -knock', 'player.invuln = iframes'],
+            params: [
+              f('damage', 'Obrażenia', 'range', drones.damage, 0, 3, 1, ' ♥'),
+              f('knock', 'Odrzut', 'range', drones.knock, 0, 14, 0.5, ''),
+              f('iframes', 'Nietykalność', 'range', drones.iframes, 0, 120, 5, ' kl.')
+            ]
+          },
+          {
+            name: 'spawnDrones',
+            sig: 'spawnDrones(level): Drone[]',
+            code: ['for (i of range(count)) push(drone(70 + i * 118))'],
+            params: [f('count', 'Liczba instancji', 'range', drones.count, 0, 6, 1, '')]
+          }
+        ];
+      if (fam === 'player')
+        return [
+          {
+            name: 'drawPlayer',
+            sig: 'drawPlayer(ctx, player): void',
+            code: ['if (art.trail.visible) ghosts(ctx, player, 3)', 'roundRect(ctx, squashed(player), art.body.radius)', 'eyesAt(ctx, player, player.vx)'],
+            params: []
+          },
+          {
+            name: 'updatePlayer',
+            sig: 'updatePlayer(player, input, dt): void',
+            code: ['player.vx += (input.x * speed - player.vx) * 0.22', 'player.vy += gravity', 'if (input.jump && onGround) player.vy = -jump'],
+            params: [
+              f('speed', 'Prędkość biegu', 'range', player.speed, 0.8, 4.5, 0.1, ''),
+              f('jump', 'Siła skoku', 'range', player.jump, 5, 13, 0.1, ''),
+              f('gravity', 'Grawitacja', 'range', player.gravity, 0.15, 0.9, 0.01, '')
+            ]
+          },
+          {
+            name: 'onLand',
+            sig: 'onLand(player, impact): void',
+            code: ['if (impact > 3) player.squash = 1', 'play("land.wav")'],
+            params: [f('size', 'Skala postaci', 'range', player.size, 0.6, 2, 0.05, '×')]
+          }
+        ];
+      if (fam === 'coin')
+        return [
+          {
+            name: 'drawParcel',
+            sig: 'drawParcel(ctx, parcel): void',
+            code: ['halo(ctx, parcel, art.halo)', 'ellipse(ctx, parcel, abs(cos(spin)))'],
+            params: []
+          },
+          {
+            name: 'onPickup',
+            sig: 'onPickup(parcel, player): void',
+            code: ['score += points', 'parcel.taken = true', 'play("pickup.wav")'],
+            params: [f('points', 'Punkty', 'range', coins.points, 1, 50, 1, '')]
+          },
+          {
+            name: 'respawn',
+            sig: 'respawn(level): Parcel[]',
+            code: ['if (remaining === 0) rebuild(count)'],
+            params: [
+              f('count', 'Liczba instancji', 'range', coins.count, 1, 10, 1, ''),
+              f('size', 'Rozmiar', 'range', coins.size, 0.6, 2.4, 0.05, '×')
+            ]
+          }
+        ];
+      if (fam === 'terrain')
+        return [
+          {
+            name: 'drawTerrain',
+            sig: 'drawTerrain(ctx, level): void',
+            code: ['fillRect(0, base, W, height)', 'edgeLine(ctx, base, art.edge.size)', 'stripes(ctx, base + height / 2)'],
+            params: [f('height', 'Wysokość podłoża', 'range', ground.height, 20, 90, 1, 'px')]
+          },
+          {
+            name: 'collide',
+            sig: 'collide(actor, level): boolean',
+            code: ['if (actor.vy >= 0 && actor.y >= top) snapTo(top)'],
+            params: []
+          }
+        ];
+      if (fam === 'skyline')
+        return [
+          {
+            name: 'drawSkyline',
+            sig: 'drawSkyline(ctx, t): void',
+            code: ['for (b of buildings) fillRect(scrolled(b, t))', 'windowsOf(b)'],
+            params: [
+              f('height', 'Wysokość zabudowy', 'range', skyline.height, 20, 140, 1, 'px'),
+              f('parallax', 'Paralaksa', 'range', skyline.parallax, 0, 0.6, 0.01, ' px/kl')
+            ]
+          }
+        ];
+      if (fam === 'stars')
+        return [
+          {
+            name: 'drawStars',
+            sig: 'drawStars(ctx, field): void',
+            code: ['for (s of field.slice(0, density)) fillRect(s, twinkle(t))'],
+            params: [f('density', 'Gęstość', 'range', stars.density, 0, 70, 1, '')]
+          }
+        ];
+      if (fam === 'sky')
+        return [{ name: 'drawSky', sig: 'drawSky(ctx): void', code: ['gradient(top, bottom)', 'fillRect(0, 0, W, H)'], params: [] }];
+      return [
+        {
+          name: 'drawHud',
+          sig: 'drawHud(ctx, score, lives): void',
+          code: ['font = `600 ${11 * size}px ui-monospace`', 'fillText(`PUNKTY ${pad(score)}`, 10, 8)', 'fillText(hearts(lives), W - 46, 8)'],
+          params: [f('size', 'Skala', 'range', hud.size, 0.7, 2, 0.05, '×')]
+        }
+      ];
+    }
+
+    var SOUNDS = {
+      drone: [
+        { file: 'alert.wav', when: 'wejście w pole widzenia', hz: 220 },
+        { file: 'hit.wav', when: 'onHit', hz: 90 }
+      ],
+      player: [
+        { file: 'jump.wav', when: 'skok', hz: 520 },
+        { file: 'land.wav', when: 'onLand', hz: 160 }
+      ],
+      coin: [{ file: 'pickup.wav', when: 'onPickup', hz: 880 }],
+      terrain: [{ file: 'step.wav', when: 'kontakt z podłożem', hz: 140 }],
+      skyline: [],
+      stars: [],
+      sky: [],
+      hud: [{ file: 'tick.wav', when: 'zmiana licznika', hz: 660 }]
+    };
+
+    var FRAMES = { drone: 4, player: 3, coin: 6, terrain: 2, skyline: 3, stars: 4, sky: 1, hud: 2 };
+
+    function editorModel(id) {
+      var fam = family(id);
+      return {
+        family: fam,
+        parts: partsOf(id),
+        functions: functionsOf(id),
+        sounds: SOUNDS[fam] || [],
+        frames: FRAMES[fam] || 1
+      };
+    }
+
+    /** Prostokąt części w układzie logicznym — do obrysu w podglądzie edytora. */
+    function partRect(id, key, r) {
+      var x = r[0],
+        y = r[1],
+        w = r[2],
+        h = r[3];
+      switch (key) {
+        case 'rotor':
+          return [x - 4, y - 2, w + 8, 3];
+        case 'sensor':
+          return [x + w * 0.55, y + h / 2 - 2, 4, 4];
+        case 'glow':
+          return [x - 8, y - 8, w + 16, h + 16];
+        case 'eyes':
+          return [x + w * 0.25, y + 4, w * 0.6, 4];
+        case 'trail':
+          return [x - w, y, w, h];
+        case 'halo':
+          return [x - w * 0.3, y - h * 0.3, w * 1.6, h * 1.6];
+        case 'edge':
+          return [x, y, w, 2.5];
+        case 'stripes':
+          return [x, y + h / 2 - 1.5, w, 3];
+        case 'windows':
+          return [x, y, w, h * 0.5];
+        case 'shadow':
+          return [x + 1.5, y + 1.5, w, h];
+        case 'bottom':
+          return [x, y + h * 0.6, w, h * 0.4];
+        case 'top':
+          return [x, y, w, h * 0.4];
+        default:
+          return [x, y, w, h];
+      }
+    }
+
+    /**
+     * Wycinek żywej sceny w granicach elementu — podgląd assetu, nie ikonka.
+     *
+     * `opts.max` steruje rozdzielczością (miniatura w panelu vs podgląd w edytorze),
+     * `opts.phase` przesuwa fazę animacji na potrzeby paska klatek, a `opts.part`
+     * dorysowuje obrys wybranej części.
+     */
+    function previewOf(r, opts) {
+      opts = opts || {};
+      var pad = opts.pad == null ? 4 : opts.pad;
       var rw = r[2] + pad * 2,
         rh = r[3] + pad * 2;
-      var k = Math.max(0.25, Math.min(10, 132 / Math.max(rw, rh)));
+      var max = opts.max || 132;
+      var k = Math.max(0.25, Math.min(14, max / Math.max(rw, rh)));
       var c = doc.createElement('canvas');
       c.width = Math.max(1, Math.round(rw * k));
       c.height = Math.max(1, Math.round(rh * k));
@@ -1578,7 +2522,16 @@
       ox = -(r[0] - pad) * k;
       oy = -(r[1] - pad) * k;
       try {
-        draw();
+        withPhase(opts.phase || 0, draw);
+        if (opts.partRect) {
+          var pr = opts.partRect;
+          g.save();
+          g.strokeStyle = '#38bdf8';
+          g.lineWidth = Math.max(1, k * 0.18);
+          g.setLineDash([Math.max(3, k), Math.max(2, k * 0.7)]);
+          g.strokeRect(ox + pr[0] * k, oy + pr[1] * k, pr[2] * k, pr[3] * k);
+          g.restore();
+        }
       } catch (err) {
         /* podgląd jest opcjonalny */
       }
@@ -1651,42 +2604,183 @@
       ];
     }
 
+    /**
+     * Zmiana właściwości assetu jako całości.
+     *
+     * Kolor ustawiony tutaj idzie na wszystkie części, które ten kolor nosiły —
+     * bo tak działa jedna próbka w prostym panelu. Rozbicie na części osobno
+     * robi edytor assetu przez {@link setPartProp}.
+     */
     function setProp(id, key, value) {
       var num = typeof value === 'number' ? value : parseFloat(value);
       if (id === 'player') {
-        if (key === 'color') player.color = value;
-        else player[key] = num;
+        if (key === 'color') {
+          player.color = value;
+          art.player.body.color = value;
+          art.player.trail.color = value;
+        } else {
+          player[key] = num;
+          if (key === 'size') player.size = num;
+        }
       } else if (id.indexOf('drone') === 0) {
-        if (key === 'color') drones.color = value;
-        else if (key === 'count') {
+        if (key === 'color') {
+          drones.color = value;
+          art.drone.body.color = value;
+          art.drone.rotor.color = value;
+          art.drone.glow.color = value;
+        } else if (key === 'count') {
           drones.count = Math.round(num);
           buildDrones();
-        } else drones[key] = num;
+        } else {
+          drones[key] = num;
+          if (key === 'range') buildDrones();
+        }
       } else if (id.indexOf('coin') === 0) {
-        if (key === 'color') coins.color = value;
-        else if (key === 'count') {
+        if (key === 'color') {
+          coins.color = value;
+          art.coin.core.color = value;
+          art.coin.halo.color = value;
+        } else if (key === 'count') {
           coins.count = Math.round(num);
           buildCoins();
         } else coins[key] = num;
       } else if (id === 'ground') {
-        if (key === 'color' || key === 'edge') ground[key] = value;
-        else ground.height = num;
+        if (key === 'color') {
+          ground.color = value;
+          art.terrain.surface.color = value;
+        } else if (key === 'edge') {
+          ground.edge = value;
+          art.terrain.edge.color = value;
+          art.terrain.stripes.color = value;
+        } else ground.height = num;
       } else if (id.indexOf('platform') === 0) {
         var p = platforms[Number(id.split('-')[1]) - 1];
         if (p) p[key] = num;
       } else if (id === 'skyline') {
-        if (key === 'color') skyline.color = value;
-        else skyline.height = num;
+        if (key === 'color') {
+          skyline.color = value;
+          art.skyline.walls.color = value;
+        } else skyline[key] = num;
       } else if (id === 'stars') {
-        if (key === 'color') stars.color = value;
-        else stars.density = num;
+        if (key === 'color') {
+          stars.color = value;
+          art.stars.dots.color = value;
+        } else stars.density = num;
       } else if (id === 'sky') {
         sky[key] = value;
+        if (key === 'color') art.sky.top.color = value;
+        else art.sky.bottom.color = value;
       } else {
-        if (key === 'color') hud.color = value;
-        else hud.size = num;
+        if (key === 'color') {
+          hud.color = value;
+          art.hud.text.color = value;
+        } else {
+          hud.size = num;
+          art.hud.text.size = num;
+        }
       }
       if (S.picked) sendPick(S.picked, 'update');
+    }
+
+    /** Zmiana jednej części assetu — to jest to, co robi edytor. */
+    function setPartProp(id, partKey, key, value) {
+      var group = art[family(id)];
+      if (!group || !group[partKey]) return;
+      var part = group[partKey];
+      if (key === 'visible') part.visible = !!value;
+      else if (key === 'color') part.color = String(value);
+      else part[key] = typeof value === 'number' ? value : parseFloat(value);
+      // Prosty panel pokazuje kolor korpusu — trzymaj go w zgodzie z częścią.
+      if (key === 'color' && (partKey === 'body' || partKey === 'core' || partKey === 'surface' || partKey === 'walls' || partKey === 'dots' || partKey === 'text')) {
+        if (family(id) === 'drone') drones.color = value;
+        else if (family(id) === 'player') player.color = value;
+        else if (family(id) === 'coin') coins.color = value;
+        else if (family(id) === 'terrain') ground.color = value;
+        else if (family(id) === 'skyline') skyline.color = value;
+        else if (family(id) === 'stars') stars.color = value;
+        else if (family(id) === 'hud') hud.color = value;
+      }
+      if (key === 'size' && family(id) === 'hud') hud.size = part.size;
+      if (S.picked) sendPick(S.picked, 'update');
+    }
+
+    /** Cofa cały asset do wartości, z jakimi przyszedł z repo gier. */
+    function resetFamily(id) {
+      var fam = family(id);
+      var src = ART_DEFAULTS[fam],
+        dst = art[fam];
+      for (var k in src) {
+        if (!Object.prototype.hasOwnProperty.call(src, k)) continue;
+        for (var key in src[k]) dst[k][key] = src[k][key];
+      }
+      if (fam === 'drone') {
+        drones.speed = 1.1;
+        drones.size = 1;
+        drones.count = 3;
+        drones.range = 47;
+        drones.bob = 3;
+        drones.damage = 1;
+        drones.knock = 6;
+        drones.iframes = 40;
+        drones.color = src.body.color;
+        buildDrones();
+      } else if (fam === 'player') {
+        player.jump = 8.4;
+        player.speed = 2.1;
+        player.gravity = 0.42;
+        player.size = 1;
+        player.color = src.body.color;
+      } else if (fam === 'coin') {
+        coins.points = 10;
+        coins.size = 1;
+        coins.count = 6;
+        coins.color = src.core.color;
+        buildCoins();
+      } else if (fam === 'terrain') {
+        ground.height = 46;
+        ground.color = src.surface.color;
+        ground.edge = src.edge.color;
+      } else if (fam === 'skyline') {
+        skyline.height = 74;
+        skyline.parallax = 0.12;
+        skyline.color = src.walls.color;
+      } else if (fam === 'stars') {
+        stars.density = 46;
+        stars.color = src.dots.color;
+      } else if (fam === 'sky') {
+        sky.color = src.top.color;
+        sky.color2 = src.bottom.color;
+      } else {
+        hud.size = 1;
+        hud.color = src.text.color;
+      }
+    }
+
+    /** Wykonuje rysowanie w innej fazie animacji, nie ruszając stanu gry. */
+    function withPhase(ph, fn) {
+      if (!ph) return fn();
+      var t0 = S.t,
+        sq = player.squash,
+        bobs = [],
+        spins = [];
+      S.t += ph * 7;
+      for (var i = 0; i < drones.items.length; i++) {
+        bobs.push(drones.items[i].bob);
+        drones.items[i].bob += ph * 0.85;
+      }
+      for (var c = 0; c < coins.items.length; c++) {
+        spins.push(coins.items[c].spin);
+        coins.items[c].spin += ph * 0.7;
+      }
+      player.squash = ph % 2 === 1 ? 0.55 : sq;
+      try {
+        return fn();
+      } finally {
+        S.t = t0;
+        player.squash = sq;
+        for (var i2 = 0; i2 < drones.items.length; i2++) drones.items[i2].bob = bobs[i2];
+        for (var c2 = 0; c2 < coins.items.length; c2++) coins.items[c2].spin = spins[c2];
+      }
     }
 
     // --- warstwa podświetleń (w ramce, więc zawsze w osi z canvasem) ----
@@ -1804,6 +2898,7 @@
         props: schema(n.id),
         asset: assetInfo(n.id),
         preview: previewOf(n.r),
+        editor: editorModel(n.id),
         why: why || 'pick'
       });
     }
@@ -1920,7 +3015,7 @@
 
       player.vx += (want * player.speed - player.vx) * 0.22;
       player.x += player.vx;
-      player.vy += 0.42;
+      player.vy += player.gravity;
       player.y += player.vy;
       if (player.x > W + 14) player.x = -12;
       if (player.x < -14) player.x = W + 12;
@@ -1962,9 +3057,9 @@
           Math.abs(dr.x - player.x) < (20 * drones.size + pw) / 2 &&
           Math.abs(dr.y - (player.y - ph / 2)) < (12 * drones.size + ph) / 2
         ) {
-          S.hurt = 40;
-          S.lives = Math.max(0, S.lives - 1);
-          player.vy = -6;
+          S.hurt = drones.iframes;
+          S.lives = Math.max(0, S.lives - drones.damage);
+          player.vy = -drones.knock;
           if (S.lives === 0) {
             S.lives = 3;
             S.score = 0;
@@ -2005,109 +3100,183 @@
       ctx.clearRect(0, 0, W, H);
 
       var g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, sky.color);
-      g.addColorStop(1, sky.color2);
+      g.addColorStop(0, art.sky.top.color);
+      g.addColorStop(1, art.sky.bottom.color);
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
 
       // gwiazdy
       var n = Math.round(stars.density);
-      for (var i = 0; i < n && i < starField.length; i++) {
-        var st = starField[i];
-        ctx.globalAlpha = 0.25 + 0.55 * Math.abs(Math.sin(S.t * 0.02 + i));
-        ctx.fillStyle = stars.color;
-        ctx.fillRect(st.x, st.y, st.s < 0.6 ? 1 : 2, st.s < 0.6 ? 1 : 2);
+      if (art.stars.dots.visible) {
+        for (var i = 0; i < n && i < starField.length; i++) {
+          var st = starField[i];
+          ctx.globalAlpha = 0.25 + 0.55 * Math.abs(Math.sin(S.t * 0.02 + i));
+          ctx.fillStyle = art.stars.dots.color;
+          var ds = art.stars.dots.size * (st.s < 0.6 ? 1 : 2);
+          ctx.fillRect(st.x, st.y, ds, ds);
+        }
+        ctx.globalAlpha = 1;
       }
-      ctx.globalAlpha = 1;
 
       // panorama
       var base = H - ground.height;
-      ctx.fillStyle = skyline.color;
+      var SK = art.skyline;
       for (var b = 0; b < 13; b++) {
         var bw = 20 + ((b * 13) % 22);
         var bh = 18 + ((b * 29) % Math.max(20, skyline.height));
-        var bx = ((b * 41 - S.t * 0.12) % (W + 60)) - 30;
-        ctx.fillRect(bx, base - bh, bw, bh);
-        ctx.globalAlpha = 0.55;
-        ctx.fillStyle = '#38bdf8';
-        for (var wdw = 0; wdw < 3; wdw++) {
-          if ((b + wdw) % 3 === 0) ctx.fillRect(bx + 4 + wdw * 6, base - bh + 6, 2, 3);
+        var bx = ((b * 41 - S.t * skyline.parallax) % (W + 60)) - 30;
+        if (SK.walls.visible) {
+          ctx.fillStyle = SK.walls.color;
+          ctx.fillRect(bx, base - bh, bw, bh);
         }
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = skyline.color;
+        if (SK.windows.visible) {
+          ctx.globalAlpha = SK.windows.alpha;
+          ctx.fillStyle = SK.windows.color;
+          for (var wdw = 0; wdw < 3; wdw++) {
+            if ((b + wdw) % 3 === 0) ctx.fillRect(bx + 4 + wdw * 6, base - bh + 6, 2, 3);
+          }
+          ctx.globalAlpha = 1;
+        }
       }
 
       // podłoże
-      ctx.fillStyle = ground.color;
-      ctx.fillRect(0, base, W, ground.height);
-      ctx.fillStyle = ground.edge;
-      ctx.fillRect(0, base, W, 2);
-      ctx.globalAlpha = 0.35;
-      for (var m = 0; m < 16; m++) ctx.fillRect(((m * 32 - S.t * 0.6) % (W + 32)) - 16, base + ground.height / 2, 14, 1.5);
-      ctx.globalAlpha = 1;
+      var T = art.terrain;
+      if (T.surface.visible) {
+        ctx.fillStyle = T.surface.color;
+        ctx.fillRect(0, base, W, ground.height);
+      }
+      if (T.edge.visible) {
+        ctx.fillStyle = T.edge.color;
+        ctx.fillRect(0, base, W, T.edge.size);
+      }
+      if (T.stripes.visible) {
+        ctx.fillStyle = T.stripes.color;
+        ctx.globalAlpha = T.stripes.alpha;
+        for (var m = 0; m < 16; m++)
+          ctx.fillRect(((m * 32 - S.t * 0.6) % (W + 32)) - 16, base + ground.height / 2, 14, 1.5);
+        ctx.globalAlpha = 1;
+      }
 
       // platformy
       for (var p = 0; p < platforms.length; p++) {
         var pl = platforms[p];
-        ctx.fillStyle = ground.color;
-        rr(pl.x, pl.y, pl.w, pl.h, 3);
-        ctx.fillStyle = ground.edge;
-        ctx.fillRect(pl.x, pl.y, pl.w, 1.5);
+        if (T.surface.visible) {
+          ctx.fillStyle = T.surface.color;
+          rr(pl.x, pl.y, pl.w, pl.h, 3);
+        }
+        if (T.edge.visible) {
+          ctx.fillStyle = T.edge.color;
+          ctx.fillRect(pl.x, pl.y, pl.w, 1.5);
+        }
       }
 
       // monety
+      var C = art.coin;
       for (var c = 0; c < coins.items.length; c++) {
         var cn = coins.items[c];
         if (cn.taken) continue;
         var cs = 10 * coins.size;
         var sw = Math.abs(Math.cos(cn.spin)) * cs;
-        ctx.fillStyle = coins.color;
-        ctx.globalAlpha = 0.22;
-        ctx.beginPath();
-        ctx.arc(cn.x, cn.y, cs * 0.85, 0, 6.284);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.beginPath();
-        ctx.ellipse(cn.x, cn.y, Math.max(1.2, sw / 2), cs / 2, 0, 0, 6.284);
-        ctx.fill();
+        if (C.halo.visible) {
+          ctx.fillStyle = C.halo.color;
+          ctx.globalAlpha = C.halo.alpha;
+          ctx.beginPath();
+          ctx.arc(cn.x, cn.y, cs * C.halo.radius, 0, 6.284);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        if (C.core.visible) {
+          ctx.fillStyle = C.core.color;
+          ctx.beginPath();
+          ctx.ellipse(cn.x, cn.y, Math.max(1.2, sw / 2), cs / 2, 0, 0, 6.284);
+          ctx.fill();
+        }
       }
 
       // drony
+      var D = art.drone;
       for (var d = 0; d < drones.items.length; d++) {
         var dr = drones.items[d];
         var dw = 20 * drones.size,
           dh = 12 * drones.size;
-        var y = dr.y + Math.sin(dr.bob) * 3;
-        ctx.fillStyle = drones.color;
-        rr(dr.x - dw / 2, y - dh / 2, dw, dh, 3);
-        ctx.globalAlpha = 0.45;
-        ctx.fillRect(dr.x - dw / 2 - 3, y - dh / 2 - 1, 4, 1.5);
-        ctx.fillRect(dr.x + dw / 2 - 1, y - dh / 2 - 1, 4, 1.5);
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = '#0b1018';
-        ctx.fillRect(dr.x + (dr.dir > 0 ? 2 : -5) * drones.size, y - 1.5, 3 * drones.size, 3 * drones.size);
+        var y = dr.y + Math.sin(dr.bob) * drones.bob;
+        if (D.glow.visible && D.glow.alpha > 0) {
+          ctx.globalAlpha = D.glow.alpha;
+          ctx.fillStyle = D.glow.color;
+          ctx.beginPath();
+          ctx.arc(dr.x, y, D.glow.radius, 0, 6.284);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        if (D.rotor.visible) {
+          ctx.globalAlpha = D.rotor.alpha;
+          ctx.fillStyle = D.rotor.color;
+          var span = D.rotor.span;
+          ctx.fillRect(dr.x - dw / 2 - span * 0.75, y - dh / 2 - 1, span, 1.5);
+          ctx.fillRect(dr.x + dw / 2 - span * 0.25, y - dh / 2 - 1, span, 1.5);
+          ctx.globalAlpha = 1;
+        }
+        if (D.body.visible) {
+          ctx.fillStyle = D.body.color;
+          rr(dr.x - dw / 2, y - dh / 2, dw, dh, D.body.radius);
+        }
+        if (D.sensor.visible) {
+          ctx.fillStyle = D.sensor.color;
+          var ss = D.sensor.size * drones.size;
+          ctx.fillRect(dr.x + (dr.dir > 0 ? 2 : -2 - ss) * drones.size, y - ss / 2, ss, ss);
+        }
       }
 
       // gracz
+      var P = art.player;
       var pw = player.w * player.size,
         ph = player.h * player.size;
       var sq = player.squash;
       ctx.globalAlpha = S.hurt > 0 && S.hurt % 8 < 4 ? 0.35 : 1;
-      ctx.fillStyle = player.color;
-      rr(player.x - (pw * (1 + sq * 0.3)) / 2, player.y - ph * (1 - sq * 0.22), pw * (1 + sq * 0.3), ph * (1 - sq * 0.22), 3);
-      ctx.fillStyle = '#06211a';
-      ctx.fillRect(player.x - 1 + (player.vx > 0 ? 2 : -4), player.y - ph + 5, 2.5, 3);
-      ctx.fillRect(player.x + 3 + (player.vx > 0 ? 2 : -4), player.y - ph + 5, 2.5, 3);
+      if (P.trail.visible) {
+        ctx.globalAlpha = P.trail.alpha * (S.hurt > 0 && S.hurt % 8 < 4 ? 0.35 : 1);
+        ctx.fillStyle = P.trail.color;
+        for (var g2 = 1; g2 <= 3; g2++)
+          rr(player.x - pw / 2 - player.vx * g2 * 2, player.y - ph, pw, ph, P.body.radius);
+        ctx.globalAlpha = S.hurt > 0 && S.hurt % 8 < 4 ? 0.35 : 1;
+      }
+      if (P.body.visible) {
+        ctx.fillStyle = P.body.color;
+        rr(
+          player.x - (pw * (1 + sq * 0.3)) / 2,
+          player.y - ph * (1 - sq * 0.22),
+          pw * (1 + sq * 0.3),
+          ph * (1 - sq * 0.22),
+          P.body.radius,
+        );
+      }
+      if (P.eyes.visible) {
+        ctx.fillStyle = P.eyes.color;
+        var es = P.eyes.size;
+        ctx.fillRect(player.x - 1 + (player.vx > 0 ? 2 : -4), player.y - ph + 5, es, es + 0.5);
+        ctx.fillRect(player.x + 3 + (player.vx > 0 ? 2 : -4), player.y - ph + 5, es, es + 0.5);
+      }
       ctx.globalAlpha = 1;
 
       // HUD
-      ctx.fillStyle = hud.color;
-      ctx.font = '600 ' + 11 * hud.size + 'px ui-monospace, Menlo, monospace';
+      var Hu = art.hud;
+      ctx.font = '600 ' + 11 * Hu.text.size + 'px ui-monospace, Menlo, monospace';
       ctx.textBaseline = 'top';
-      ctx.fillText('PUNKTY ' + String(S.score).padStart(4, '0'), 10, 8);
       var lifeText = '';
       for (var l = 0; l < 3; l++) lifeText += l < S.lives ? '◆' : '◇';
-      ctx.fillText(lifeText, W - 46, 8);
+      var scoreText = 'PUNKTY ' + String(S.score).padStart(4, '0');
+      if (Hu.shadow.visible && Hu.shadow.alpha > 0) {
+        ctx.globalAlpha = Hu.shadow.alpha;
+        ctx.fillStyle = Hu.shadow.color;
+        ctx.fillText(scoreText, 11.5, 9.5);
+        ctx.fillText(lifeText, W - 44.5, 9.5);
+        ctx.globalAlpha = 1;
+      }
+      if (Hu.text.visible) {
+        ctx.fillStyle = Hu.text.color;
+        ctx.fillText(scoreText, 10, 8);
+        ctx.fillText(lifeText, W - 46, 8);
+      }
 
       ctx.restore();
     }
@@ -2178,8 +3347,46 @@
           sendPick(m.id);
           break;
         case 'set':
-          setProp(m.id, m.key, m.value);
+          if (m.part) setPartProp(m.id, m.part, m.key, m.value);
+          else setProp(m.id, m.key, m.value);
           post({ type: 'tree', nodes: treePayload() });
+          break;
+        case 'preview': {
+          var pn = findNode(m.id);
+          if (!pn) {
+            post({ type: 'preview', id: m.id, png: null, phase: m.phase || 0, part: m.part || null });
+            break;
+          }
+          // Część może wystawać poza obrys elementu (poświata, wirniki, smuga),
+          // więc kadr to suma obu prostokątów — inaczej obrys wypada za kadrem.
+          var prect = m.part ? partRect(m.id, m.part, pn.r) : null;
+          var crop = pn.r;
+          if (prect) {
+            var x0 = Math.min(pn.r[0], prect[0]),
+              y0 = Math.min(pn.r[1], prect[1]),
+              x1 = Math.max(pn.r[0] + pn.r[2], prect[0] + prect[2]),
+              y1 = Math.max(pn.r[1] + pn.r[3], prect[1] + prect[3]);
+            crop = [x0, y0, x1 - x0, y1 - y0];
+          }
+          post({
+            type: 'preview',
+            id: m.id,
+            phase: m.phase || 0,
+            part: m.part || null,
+            token: m.token || null,
+            png: previewOf(crop, {
+              max: m.max || 132,
+              pad: m.pad,
+              phase: m.phase || 0,
+              partRect: prect
+            })
+          });
+          break;
+        }
+        case 'reset-asset':
+          resetFamily(m.id);
+          post({ type: 'tree', nodes: treePayload() });
+          if (S.picked) sendPick(S.picked, 'update');
           break;
         case 'pin':
           S.pins.push({ id: m.id, n: m.n, color: m.color });
@@ -2417,6 +3624,23 @@
         UI.tab = 'element';
         syncTabs();
         renderInspector();
+        // Otwarty edytor idzie za wyborem: kliknięcie innego elementu na
+        // scenie przełącza okno, a zmiana wartości tylko odświeża podgląd,
+        // żeby nie wyrwać suwaka spod palca.
+        if (WIN.open && WIN.node) {
+          var switched = WIN.node.id !== m.id;
+          var newFamily = !WIN.node.editor || WIN.node.editor.family !== m.editor.family;
+          WIN.node = m;
+          if (switched && newFamily) {
+            WIN.sel = { kind: 'part', key: m.editor.parts[0] ? m.editor.parts[0].key : null };
+            WIN.dirty = {};
+            WIN.phase = 0;
+          }
+          if (switched || WIN.pendingRebuild) {
+            WIN.pendingRebuild = false;
+            buildWin();
+          } else refreshStageImage();
+        }
       } else if (m.type === 'key' && m.key === 'i') {
         setInspect(!UI.inspect);
       } else if (m.type === 'shot') {
@@ -2497,7 +3721,10 @@
       if (p.asset) {
         var ga = el('div', 'group');
         ga.appendChild(el('div', 'group-label', 'Asset'));
-        var top = el('div', 'asset-top');
+        var top = el('button', 'asset-top');
+        top.title = 'Otwórz edytor assetu';
+        top.style.cssText = 'width:100%;text-align:left';
+        top.onclick = openWin;
         var thumb = el('div', 'asset-thumb');
         if (p.preview) {
           var pimg = document.createElement('img');
@@ -2530,6 +3757,9 @@
           dl.appendChild(el('dt', null, row[0]));
           dl.appendChild(el('dd', null, row[1]));
         });
+        var open = el('button', 'btn asset-open', '▣ Otwórz edytor assetu');
+        open.onclick = openWin;
+        ga.appendChild(open);
         ga.appendChild(dl);
         host.appendChild(ga);
       }
@@ -2689,6 +3919,633 @@
       g.appendChild(list);
       host.appendChild(g);
     }
+
+    /* =================================================================
+     * Edytor assetu — osobne okno nad sceną.
+     *
+     * Prawa szyna odpowiada „co to jest”. To okno odpowiada „z czego to
+     * jest zrobione”: każda warstwa rysowania i każda funkcja osobno,
+     * z parametrami, które idą prosto do uruchomionej gry.
+     * ================================================================= */
+    var WIN = {
+      open: false,
+      max: false,
+      min: false,
+      sel: null,
+      phase: 0,
+      playing: false,
+      timer: null,
+      checker: true,
+      grid: false,
+      zoom: 1,
+      dirty: {},
+      frames: [],
+      node: null
+    };
+    var winEl = null;
+    var previewCbs = {};
+    var previewSeq = 0;
+
+    function askPreview(id, opts, cb) {
+      var token = 'p' + ++previewSeq;
+      previewCbs[token] = cb;
+      var msg = { type: 'preview', id: id, token: token };
+      for (var k in opts) msg[k] = opts[k];
+      send(msg);
+    }
+    handlers.push(function (m) {
+      if (m.type === 'preview' && m.token && previewCbs[m.token]) {
+        previewCbs[m.token](m.png);
+        delete previewCbs[m.token];
+      }
+    });
+
+    function beep(hz) {
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        var ac = new AC();
+        var osc = ac.createOscillator();
+        var gain = ac.createGain();
+        osc.type = 'square';
+        osc.frequency.value = hz;
+        gain.gain.value = 0.05;
+        osc.connect(gain);
+        gain.connect(ac.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.18);
+        osc.stop(ac.currentTime + 0.2);
+        setTimeout(function () {
+          ac.close();
+        }, 500);
+      } catch (err) {
+        /* dźwięk jest ozdobą, nie warunkiem */
+      }
+    }
+
+    function openWin() {
+      if (!UI.picked || !UI.picked.editor) return;
+      var sameAsset = WIN.node && UI.picked.editor.family === WIN.node.editor.family;
+      WIN.node = UI.picked;
+      WIN.open = true;
+      WIN.min = false;
+      if (!sameAsset || !WIN.sel) {
+        WIN.sel = { kind: 'part', key: UI.picked.editor.parts[0] ? UI.picked.editor.parts[0].key : null };
+        WIN.dirty = {};
+        WIN.phase = 0;
+      }
+      buildWin();
+    }
+    function closeWin() {
+      WIN.open = false;
+      WIN.playing = false;
+      if (WIN.timer) clearInterval(WIN.timer);
+      if (winEl) winEl.hidden = true;
+    }
+
+    /** 1 zmiana, 2–4 zmiany, reszta zmian — inaczej pasek stanu mówi łamaną polszczyzną. */
+    function zmiany(n) {
+      var last = n % 10,
+        teens = n % 100;
+      if (n === 1) return '1 zmiana';
+      if (last >= 2 && last <= 4 && (teens < 12 || teens > 14)) return n + ' zmiany';
+      return n + ' zmian';
+    }
+
+    function winTitle() {
+      var a = WIN.node.asset;
+      return a.file.split('/').pop();
+    }
+
+    function buildWin() {
+      if (!winEl) {
+        winEl = el('div', 'win');
+        winEl.setAttribute('role', 'dialog');
+        winEl.setAttribute('aria-label', 'Edytor assetu');
+        document.body.appendChild(winEl);
+        winEl.style.right = '20px';
+        winEl.style.top = '96px';
+      }
+      winEl.hidden = false;
+      winEl.classList.toggle('win--max', WIN.max);
+      winEl.classList.toggle('win--min', WIN.min);
+      winEl.innerHTML = '';
+
+      var node = WIN.node;
+      var ed = node.editor;
+
+      /* --- pasek tytułu --- */
+      var bar = el('div', 'win-title');
+      bar.appendChild(el('span', 'win-icon', '▣'));
+      var name = el('div', 'win-name');
+      name.appendChild(document.createTextNode(winTitle() + ' — edytor assetu '));
+      name.appendChild(el('span', null, '· ' + node.label));
+      bar.appendChild(name);
+      var btns = el('div', 'win-btns');
+      [
+        ['min', '─', 'Zwiń'],
+        ['max', WIN.max ? '❐' : '▢', WIN.max ? 'Przywróć' : 'Maksymalizuj'],
+        ['close', '✕', 'Zamknij']
+      ].forEach(function (b) {
+        var x = el('button', 'wb' + (b[0] === 'close' ? ' wb--x' : ''), b[1]);
+        x.title = b[2];
+        x.setAttribute('aria-label', b[2]);
+        x.onclick = function () {
+          if (b[0] === 'close') return closeWin();
+          if (b[0] === 'min') WIN.min = !WIN.min;
+          if (b[0] === 'max') {
+            WIN.max = !WIN.max;
+            WIN.min = false;
+          }
+          buildWin();
+        };
+        btns.appendChild(x);
+      });
+      bar.appendChild(btns);
+      dragify(bar);
+      winEl.appendChild(bar);
+
+      /* --- menu --- */
+      var menu = el('div', 'win-menu');
+      var MENUS = [
+        [
+          'Plik',
+          [
+            ['Przywróć domyślne', '↺', function () {
+              send({ type: 'reset-asset', id: node.id });
+              WIN.dirty = {};
+              WIN.pendingRebuild = true;
+            }],
+            ['sep'],
+            ['Zamknij okno', '✕', closeWin]
+          ]
+        ],
+        [
+          'Widok',
+          [
+            ['Szachownica', WIN.checker ? '✓' : '', function () {
+              WIN.checker = !WIN.checker;
+            }],
+            ['Siatka pikseli', WIN.grid ? '✓' : '', function () {
+              WIN.grid = !WIN.grid;
+            }],
+            ['sep'],
+            ['Powiększenie 1×', WIN.zoom === 1 ? '✓' : '', function () {
+              WIN.zoom = 1;
+            }],
+            ['Powiększenie 2×', WIN.zoom === 2 ? '✓' : '', function () {
+              WIN.zoom = 2;
+            }]
+          ]
+        ],
+        [
+          'Uruchom',
+          [
+            [WIN.playing ? 'Zatrzymaj animację' : 'Odtwórz animację', '▶', function () {
+              togglePlay();
+            }],
+            ['Pokaż klatki', '⧉', function () {
+              WIN.sel = { kind: 'frames' };
+            }]
+          ]
+        ]
+      ];
+      MENUS.forEach(function (mn) {
+        var b = el('button', null, mn[0]);
+        b.onclick = function (e) {
+          e.stopPropagation();
+          var open = menu.querySelector('.menu-pop');
+          var wasMine = open && open.dataset.owner === mn[0];
+          if (open) open.remove();
+          document.querySelectorAll('.win-menu > button').forEach(function (x) {
+            x.classList.remove('is-open');
+          });
+          if (wasMine) return;
+          b.classList.add('is-open');
+          var pop = el('div', 'menu-pop');
+          pop.dataset.owner = mn[0];
+          pop.style.left = b.offsetLeft + 'px';
+          mn[1].forEach(function (item) {
+            if (item[0] === 'sep') return pop.appendChild(el('div', 'menu-sep'));
+            var mb = el('button');
+            mb.appendChild(el('i', null, item[1] || ''));
+            mb.appendChild(document.createTextNode(item[0]));
+            mb.onclick = function () {
+              pop.remove();
+              b.classList.remove('is-open');
+              item[2]();
+              buildWin();
+            };
+            pop.appendChild(mb);
+          });
+          menu.appendChild(pop);
+        };
+        menu.appendChild(b);
+      });
+      menu.appendChild(el('span', 'win-menu-right', ed.family + ' · ' + node.asset.type.toLowerCase()));
+      winEl.appendChild(menu);
+
+      /* --- ciało: nawigacja | scena | właściwości --- */
+      var body = el('div', 'win-body');
+      body.appendChild(buildNav(ed));
+      var stage = el('div', 'win-stage');
+      stage.id = 'win-stage';
+      body.appendChild(stage);
+      var props = el('div', 'win-props');
+      props.id = 'win-props';
+      body.appendChild(props);
+      winEl.appendChild(body);
+
+      /* --- pasek stanu --- */
+      var st = el('div', 'win-status');
+      st.appendChild(el('span', null, Math.round(node.w) + '×' + Math.round(node.h) + ' px'));
+      st.appendChild(el('span', null, ed.frames + ' klatki'));
+      st.appendChild(el('span', null, node.asset.instances + ' inst.'));
+      st.appendChild(el('span', null, node.asset.cost));
+      var changed = Object.keys(WIN.dirty).length;
+      st.appendChild(el('span', changed ? 'dirty' : 'clean', changed ? '● ' + zmiany(changed) + ' w szkicu' : 'bez zmian'));
+      winEl.appendChild(st);
+
+      renderStage();
+      renderProps();
+    }
+
+    function buildNav(ed) {
+      var nav = el('div', 'win-nav');
+      function item(kind, key, label, opts) {
+        var b = el('button', 'nav-item' + (WIN.sel && WIN.sel.kind === kind && WIN.sel.key === key ? ' is-on' : ''));
+        if (opts && opts.color) {
+          var d = el('span', 'sw-dot');
+          d.style.background = opts.color;
+          b.appendChild(d);
+        }
+        var t = el('span', opts && opts.mono ? 'mono' : null, label);
+        b.appendChild(t);
+        if (opts && opts.off) b.appendChild(el('span', 'off', 'ukryta'));
+        b.onclick = function () {
+          WIN.sel = { kind: kind, key: key };
+          buildWin();
+        };
+        nav.appendChild(b);
+      }
+
+      nav.appendChild(el('div', 'nav-group', 'Części'));
+      ed.parts.forEach(function (p) {
+        var colorField = p.fields.filter(function (x) {
+          return x.type === 'color';
+        })[0];
+        var vis = p.fields.filter(function (x) {
+          return x.key === 'visible';
+        })[0];
+        item('part', p.key, p.label, {
+          color: colorField ? colorField.value : '#334',
+          off: vis && vis.value === false
+        });
+      });
+
+      nav.appendChild(el('div', 'nav-group', 'Funkcje'));
+      ed.functions.forEach(function (fn) {
+        item('fn', fn.name, fn.name + '()', { mono: true });
+      });
+
+      if (ed.sounds.length) {
+        nav.appendChild(el('div', 'nav-group', 'Dźwięki'));
+        ed.sounds.forEach(function (s) {
+          item('sound', s.file, s.file, { mono: true });
+        });
+      }
+
+      nav.appendChild(el('div', 'nav-group', 'Animacja'));
+      item('frames', undefined, ed.frames + ' klatki');
+      return nav;
+    }
+
+    function stageImage(partKey, phase, cb) {
+      askPreview(
+        WIN.node.id,
+        { max: 210 * WIN.zoom, pad: 6, phase: phase || 0, part: partKey || null },
+        cb,
+      );
+    }
+
+    function renderStage() {
+      var stage = $('win-stage');
+      if (!stage) return;
+      var node = WIN.node,
+        ed = node.editor,
+        sel = WIN.sel || {};
+      stage.innerHTML = '';
+
+      var box = el('div', 'stage-canvas' + (WIN.checker ? ' is-checker' : '') + (WIN.grid ? ' is-grid' : ''));
+      var img = document.createElement('img');
+      img.alt = 'Podgląd assetu ' + node.label;
+      box.appendChild(img);
+      stage.appendChild(box);
+      stageImage(sel.kind === 'part' ? sel.key : null, WIN.phase, function (png) {
+        if (png) img.src = png;
+      });
+
+      var capText =
+        sel.kind === 'part'
+          ? 'obrys: ' + (ed.parts.filter(function (p) { return p.key === sel.key; })[0] || {}).label
+          : sel.kind === 'fn'
+            ? sel.key + '() — podgląd bez obrysu'
+            : node.path;
+      stage.appendChild(el('div', 'stage-cap', capText + ' · klatka ' + (WIN.phase + 1) + '/' + ed.frames));
+
+      if (sel.kind === 'fn') {
+        var fn = ed.functions.filter(function (x) {
+          return x.name === sel.key;
+        })[0];
+        if (fn) {
+          var pre = el('div', 'code');
+          pre.appendChild(codeLine(0, fn.sig, true));
+          fn.code.forEach(function (line, i) {
+            pre.appendChild(codeLine(i + 1, '  ' + line));
+          });
+          stage.appendChild(pre);
+          var ask = el('button', 'btn btn--sm', '✎ Poproś agenta o zmianę tej funkcji');
+          ask.onclick = function () {
+            $('prompt').value =
+              ($('prompt').value + ' Zmień ' + fn.name + '() w ' + node.asset.file + ': ').replace(/^\s+/, '');
+            $('prompt').focus();
+          };
+          stage.appendChild(ask);
+        }
+      }
+
+      if (sel.kind === 'sound') {
+        var snd = ed.sounds.filter(function (s) {
+          return s.file === sel.key;
+        })[0];
+        if (snd) {
+          var wave = el('div', 'wave');
+          for (var i = 0; i < 46; i++) {
+            var bar = el('i');
+            var amp = Math.abs(Math.sin(i * 0.7 + snd.hz * 0.01)) * Math.exp(-i / 26);
+            bar.style.height = Math.max(6, amp * 100) + '%';
+            wave.appendChild(bar);
+          }
+          stage.appendChild(wave);
+          var play = el('button', 'btn btn--sm', '▶ Odsłuchaj ' + snd.file);
+          play.onclick = function () {
+            beep(snd.hz);
+          };
+          stage.appendChild(play);
+        }
+      }
+
+      if (sel.kind === 'frames' || ed.frames > 1) {
+        var strip = el('div', 'frames');
+        for (var fr = 0; fr < ed.frames; fr++) {
+          (function (index) {
+            var tile = el('button', 'frame' + (WIN.phase === index ? ' is-on' : ''));
+            var fimg = document.createElement('img');
+            fimg.alt = 'Klatka ' + (index + 1);
+            tile.appendChild(fimg);
+            tile.appendChild(el('span', null, '#' + (index + 1)));
+            tile.onclick = function () {
+              WIN.phase = index;
+              renderStage();
+            };
+            strip.appendChild(tile);
+            askPreview(WIN.node.id, { max: 56, pad: 5, phase: index }, function (png) {
+              if (png) fimg.src = png;
+            });
+          })(fr);
+        }
+        var pl = el('button', 'btn btn--sm', WIN.playing ? '⏸ Stop' : '▶ Odtwórz');
+        pl.onclick = togglePlay;
+        strip.appendChild(pl);
+        stage.appendChild(strip);
+      }
+    }
+
+    function codeLine(n, text, isSig) {
+      var line = document.createElement('div');
+      var num = el('span', 'ln', n === 0 ? '' : String(n));
+      line.appendChild(num);
+      // Kolejność ma znaczenie: łańcuchy najpierw, dopóki jedyne cudzysłowy w
+      // tekście są te z kodu — potem w treści są już cudzysłowy z atrybutów class.
+      var html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"([^"]*)"/g, '<span class="str">"$1"</span>')
+        .replace(/\b(if|for|of|return|const|let|void|boolean)\b/g, '<span class="kw">$1</span>')
+        .replace(/(^|[^\w$."])([a-zA-Z_$][\w$]*)\(/g, '$1<span class="fn">$2</span>(')
+        .replace(/(^|[^\w$.#"])(\d+\.?\d*)\b/g, '$1<span class="num">$2</span>');
+      var code = document.createElement('span');
+      code.innerHTML = html;
+      if (isSig) code.style.color = '#dbe4ee';
+      line.appendChild(code);
+      return line;
+    }
+
+    function togglePlay() {
+      WIN.playing = !WIN.playing;
+      if (WIN.timer) clearInterval(WIN.timer);
+      if (WIN.playing) {
+        WIN.timer = setInterval(function () {
+          if (!WIN.open) return clearInterval(WIN.timer);
+          WIN.phase = (WIN.phase + 1) % Math.max(1, WIN.node.editor.frames);
+          renderStage();
+        }, 220);
+      }
+      renderStage();
+    }
+
+    function renderProps() {
+      var host = $('win-props');
+      if (!host) return;
+      var node = WIN.node,
+        ed = node.editor,
+        sel = WIN.sel || {};
+      host.innerHTML = '';
+
+      if (sel.kind === 'part') {
+        var part = ed.parts.filter(function (p) {
+          return p.key === sel.key;
+        })[0];
+        if (!part) return;
+        host.appendChild(el('div', 'props-head', 'Część · ' + part.label));
+        part.fields.forEach(function (fld) {
+          host.appendChild(fieldRow(fld, { part: part.key }));
+        });
+        host.appendChild(
+          el(
+            'div',
+            'prow-note',
+            'Zmiany idą prosto do uruchomionej sceny. Do repo trafią dopiero, gdy agent zamknie je w rewizji.',
+          ),
+        );
+        return;
+      }
+
+      if (sel.kind === 'fn') {
+        var fn = ed.functions.filter(function (x) {
+          return x.name === sel.key;
+        })[0];
+        if (!fn) return;
+        host.appendChild(el('div', 'props-head', 'Funkcja · ' + fn.name));
+        if (!fn.params.length) {
+          host.appendChild(
+            el('div', 'prow-note', 'Ta funkcja nie ma parametrów do nastawienia — rysuje to, co ustawisz w częściach.'),
+          );
+        }
+        fn.params.forEach(function (fld) {
+          host.appendChild(fieldRow(fld, {}));
+        });
+        return;
+      }
+
+      if (sel.kind === 'sound') {
+        var snd = ed.sounds.filter(function (s) {
+          return s.file === sel.key;
+        })[0];
+        if (!snd) return;
+        host.appendChild(el('div', 'props-head', 'Dźwięk · ' + snd.file));
+        var dl = document.createElement('dl');
+        dl.className = 'asset-meta';
+        dl.style.padding = '0 12px';
+        [
+          ['Wyzwalacz', snd.when],
+          ['Ton', snd.hz + ' Hz'],
+          ['Format', 'wav · mono'],
+          ['Ścieżka', 'sfx/' + snd.file]
+        ].forEach(function (row) {
+          dl.appendChild(el('dt', null, row[0]));
+          dl.appendChild(el('dd', null, row[1]));
+        });
+        host.appendChild(dl);
+        return;
+      }
+
+      host.appendChild(el('div', 'props-head', 'Animacja'));
+      host.appendChild(
+        el('div', 'prow-note', ed.frames + ' klatki składane w locie z parametrów assetu — nie ma tu atlasu do podmiany.'),
+      );
+    }
+
+    /** Jedna kontrolka właściwości — kolor, liczba albo przełącznik. */
+    function fieldRow(fld, scope) {
+      var row = el('div', 'prow');
+      var lab = el('label', null, fld.label);
+      row.appendChild(lab);
+
+      function push(value) {
+        var msg = { type: 'set', id: WIN.node.id, key: fld.key, value: value };
+        if (scope.part) msg.part = scope.part;
+        send(msg);
+        WIN.dirty[(scope.part || 'fn') + '.' + fld.key] = true;
+        var st = winEl.querySelector('.win-status .clean, .win-status .dirty');
+        if (st) {
+          st.className = 'dirty';
+          st.textContent = '● ' + zmiany(Object.keys(WIN.dirty).length) + ' w szkicu';
+        }
+      }
+
+      if (fld.type === 'color') {
+        row.appendChild(el('output', null, String(fld.value)));
+        var sw = el('div', 'prow-swatches');
+        PALETTE.forEach(function (hex) {
+          var b = el('button', 'psw' + (hex.toLowerCase() === String(fld.value).toLowerCase() ? ' is-on' : ''));
+          b.style.background = hex;
+          b.title = hex;
+          b.setAttribute('aria-label', fld.label + ' ' + hex);
+          b.onclick = function () {
+            fld.value = hex;
+            push(hex);
+            buildWin();
+          };
+          sw.appendChild(b);
+        });
+        row.appendChild(sw);
+        return row;
+      }
+
+      if (fld.type === 'bool') {
+        var tg = el('button', 'toggle' + (fld.value ? ' is-on' : ''));
+        tg.setAttribute('role', 'switch');
+        tg.setAttribute('aria-checked', String(!!fld.value));
+        tg.setAttribute('aria-label', fld.label);
+        tg.onclick = function () {
+          fld.value = !fld.value;
+          push(fld.value);
+          buildWin();
+        };
+        row.appendChild(tg);
+        return row;
+      }
+
+      var out = el('output', null, fmt(fld.value) + (fld.unit || ''));
+      row.appendChild(out);
+      var inp = document.createElement('input');
+      inp.type = 'range';
+      inp.min = fld.min;
+      inp.max = fld.max;
+      inp.step = fld.step;
+      inp.value = fld.value;
+      inp.setAttribute('aria-label', fld.label);
+      inp.oninput = function () {
+        fld.value = parseFloat(inp.value);
+        out.textContent = fmt(inp.value) + (fld.unit || '');
+        push(parseFloat(inp.value));
+        if (WIN.sel && WIN.sel.kind === 'part') refreshStageImage();
+      };
+      row.appendChild(inp);
+      return row;
+    }
+
+    var stageRefreshTimer = null;
+    function refreshStageImage() {
+      if (stageRefreshTimer) return;
+      stageRefreshTimer = setTimeout(function () {
+        stageRefreshTimer = null;
+        var img = winEl && winEl.querySelector('.stage-canvas img');
+        if (!img) return;
+        stageImage(WIN.sel && WIN.sel.kind === 'part' ? WIN.sel.key : null, WIN.phase, function (png) {
+          if (png) img.src = png;
+        });
+      }, 90);
+    }
+
+    /** Przeciąganie okna za pasek tytułu. */
+    function dragify(bar) {
+      bar.addEventListener('pointerdown', function (e) {
+        if (e.target.closest('.wb') || WIN.max) return;
+        var rect = winEl.getBoundingClientRect();
+        var dx = e.clientX - rect.left,
+          dy = e.clientY - rect.top;
+        bar.setPointerCapture(e.pointerId);
+        function move(ev) {
+          var x = Math.max(6, Math.min(window.innerWidth - rect.width - 6, ev.clientX - dx));
+          var y = Math.max(6, Math.min(window.innerHeight - 60, ev.clientY - dy));
+          winEl.style.left = x + 'px';
+          winEl.style.top = y + 'px';
+          winEl.style.right = 'auto';
+        }
+        function up() {
+          bar.removeEventListener('pointermove', move);
+          bar.removeEventListener('pointerup', up);
+        }
+        bar.addEventListener('pointermove', move);
+        bar.addEventListener('pointerup', up);
+      });
+    }
+
+    document.addEventListener('click', function (e) {
+      var pop = winEl && winEl.querySelector('.menu-pop');
+      if (pop && !e.target.closest('.win-menu')) {
+        pop.remove();
+        winEl.querySelectorAll('.win-menu > button').forEach(function (x) {
+          x.classList.remove('is-open');
+        });
+      }
+    });
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && WIN.open) closeWin();
+    });
 
     /* ---------------- pinezki + załączniki ---------------- */
     function pin(p, note) {
