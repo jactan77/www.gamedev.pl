@@ -1268,6 +1268,84 @@
     background: linear-gradient(180deg, transparent, rgba(6, 10, 15, 0.8) 60%);
   }
 
+  .mode-switch {
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 8px;
+    background: rgba(12, 17, 23, 0.82);
+    border: 1px solid var(--panel-border);
+    backdrop-filter: blur(6px);
+    pointer-events: auto;
+  }
+
+  .mode-switch button {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    padding: 3px 9px;
+    border-radius: 6px;
+    color: var(--muted);
+  }
+
+  .mode-switch button.is-on {
+    background: var(--blue);
+    color: #04202e;
+    font-weight: 700;
+  }
+
+  .explode-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 9px 12px;
+    border-radius: 10px;
+    background: var(--card);
+    border: 1px solid var(--panel-border);
+  }
+
+  .explode-label {
+    font-size: 12px;
+    color: #c6d2de;
+    white-space: nowrap;
+  }
+
+  .explode-row input[type='range'] {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 3px;
+    border-radius: 2px;
+    background: #2b3642;
+  }
+
+  .explode-row input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--blue);
+    border: 2px solid #0f1418;
+    cursor: grab;
+  }
+
+  .explode-row input[type='range']::-moz-range-thumb {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--blue);
+    border: 2px solid #0f1418;
+  }
+
+  .explode-row output {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--blue);
+    font-variant-numeric: tabular-nums;
+  }
+
   .playing-chip {
     color: var(--turquoise);
     border-color: rgba(0, 228, 172, 0.45);
@@ -2191,6 +2269,12 @@
         komunikatem i chodzą lokalnie, bo prośba o każdą z osobna to kilkanaście przelotów przez
         most na sekundę.
       </p>
+      <p style="margin-top: 7px">
+        <b>Warstwy 3D</b> obracają model przeciągnięciem. To nie jest model 3D — gra rysuje płaskie
+        kształty i to cała prawda o tym assecie. Głębokość bierze się z kolejności rysowania, więc
+        obrót pokazuje coś, co asset naprawdę ma: co jest nad czym i jak daleko. Wachlarz kończy się
+        na ±60°, bo płaska warstwa oglądana z boku znika.
+      </p>
     </div>
 
     <div class="card">
@@ -2897,8 +2981,9 @@
 
     // --- render studyjny -----------------------------------------------
     // Asset sam, bez sceny wokół, na przezroczystym tle: widok „na stole
-    // warsztatowym”. Rysowany w lokalnych jednostkach z tych samych wartości
-    // `art`, z których rysuje scena, więc pokazuje prawdę o assecie.
+    // warsztatowym”. Rozbity na warstwy z głębokością — nie po to, żeby udawać
+    // model 3D, którego w grze nie ma, tylko żeby dało się obejrzeć kolejność
+    // rysowania, którą asset naprawdę ma.
     function rrIn(g, x, y, w, h, r) {
       g.beginPath();
       if (g.roundRect) g.roundRect(x, y, w, h, r || 0);
@@ -2916,65 +3001,82 @@
           span = A.rotor.span,
           ss = A.sensor.size,
           R = A.glow.radius;
-        var dparts = {
-          body: [-dw / 2, -dh / 2, dw, dh],
-          rotor: [-dw / 2 - span * 0.75, -dh / 2 - 2, dw + span * 1.5, 3],
-          sensor: [2, -ss / 2, ss, ss]
-        };
-        dparts.glow = [-R, -R, R * 2, R * 2];
         return {
-          parts: dparts,
+          parts: {
+            glow: [-R, -R, R * 2, R * 2],
+            rotor: [-dw / 2 - span * 0.75, -dh / 2 - 2, dw + span * 1.5, 3],
+            body: [-dw / 2, -dh / 2, dw, dh],
+            sensor: [2, -ss / 2, ss, ss]
+          },
           anims: [
             { key: 'bob', label: 'Unoszenie' },
             { key: 'patrol', label: 'Patrol' },
             { key: 'rotors', label: 'Rozruch wirników' },
             { key: 'hit', label: 'Trafienie gracza' }
           ],
-          draw: function (g, t, anim) {
-            var dx = 0,
-              dy = 0,
-              alpha = 1,
-              rs = span,
-              dir = 1;
-            if (anim === 'bob' || !anim) dy = Math.sin(t * 6.283) * 2.5;
+          state: function (t, anim) {
+            var s = { dx: 0, dy: 0, alpha: 1, rs: span, dir: 1 };
+            if (anim === 'bob' || !anim) s.dy = Math.sin(t * 6.283) * 2.5;
             if (anim === 'patrol') {
-              dx = Math.sin(t * 6.283) * 9;
-              dir = Math.cos(t * 6.283) >= 0 ? 1 : -1;
-              dy = Math.sin(t * 12.57) * 1.2;
+              s.dx = Math.sin(t * 6.283) * 9;
+              s.dir = Math.cos(t * 6.283) >= 0 ? 1 : -1;
+              s.dy = Math.sin(t * 12.57) * 1.2;
             }
-            if (anim === 'rotors') rs = span * (1 + 0.55 * Math.abs(Math.sin(t * 12.57)));
+            if (anim === 'rotors') s.rs = span * (1 + 0.55 * Math.abs(Math.sin(t * 12.57)));
             if (anim === 'hit') {
-              dx = Math.sin(t * 37.7) * 2 * (1 - t);
-              alpha = Math.floor(t * 10) % 2 ? 0.35 : 1;
+              s.dx = Math.sin(t * 37.7) * 2 * (1 - t);
+              s.alpha = Math.floor(t * 10) % 2 ? 0.35 : 1;
             }
-            g.save();
-            g.translate(dx, dy);
-            g.globalAlpha = alpha;
-            if (A.glow.visible && A.glow.alpha > 0) {
-              g.globalAlpha = alpha * A.glow.alpha;
-              g.fillStyle = A.glow.color;
-              g.beginPath();
-              g.arc(0, 0, R, 0, 6.283);
-              g.fill();
-              g.globalAlpha = alpha;
+            return s;
+          },
+          layers: [
+            {
+              key: 'glow',
+              z: -14,
+              draw: function (g) {
+                if (!A.glow.visible || A.glow.alpha <= 0) return;
+                var a0 = g.globalAlpha;
+                g.globalAlpha = a0 * A.glow.alpha;
+                g.fillStyle = A.glow.color;
+                g.beginPath();
+                g.arc(0, 0, R, 0, 6.283);
+                g.fill();
+                g.globalAlpha = a0;
+              }
+            },
+            {
+              key: 'rotor',
+              z: -6,
+              draw: function (g, s) {
+                if (!A.rotor.visible) return;
+                var a0 = g.globalAlpha;
+                g.globalAlpha = a0 * A.rotor.alpha;
+                g.fillStyle = A.rotor.color;
+                var rs = s.rs;
+                g.fillRect(-dw / 2 - rs * 0.75, -dh / 2 - 1, rs, 1.5);
+                g.fillRect(dw / 2 - rs * 0.25, -dh / 2 - 1, rs, 1.5);
+                g.globalAlpha = a0;
+              }
+            },
+            {
+              key: 'body',
+              z: 0,
+              draw: function (g) {
+                if (!A.body.visible) return;
+                g.fillStyle = A.body.color;
+                rrIn(g, -dw / 2, -dh / 2, dw, dh, A.body.radius);
+              }
+            },
+            {
+              key: 'sensor',
+              z: 7,
+              draw: function (g, s) {
+                if (!A.sensor.visible) return;
+                g.fillStyle = A.sensor.color;
+                g.fillRect(s.dir > 0 ? 2 : -2 - ss, -ss / 2, ss, ss);
+              }
             }
-            if (A.rotor.visible) {
-              g.globalAlpha = alpha * A.rotor.alpha;
-              g.fillStyle = A.rotor.color;
-              g.fillRect(-dw / 2 - rs * 0.75, -dh / 2 - 1, rs, 1.5);
-              g.fillRect(dw / 2 - rs * 0.25, -dh / 2 - 1, rs, 1.5);
-              g.globalAlpha = alpha;
-            }
-            if (A.body.visible) {
-              g.fillStyle = A.body.color;
-              rrIn(g, -dw / 2, -dh / 2, dw, dh, A.body.radius);
-            }
-            if (A.sensor.visible) {
-              g.fillStyle = A.sensor.color;
-              g.fillRect(dir > 0 ? 2 : -2 - ss, -ss / 2, ss, ss);
-            }
-            g.restore();
-          }
+          ]
         };
       }
 
@@ -2984,9 +3086,9 @@
           es = A.eyes.size;
         return {
           parts: {
+            trail: [-pw / 2 - 13, -ph / 2, pw, ph],
             body: [-pw / 2, -ph / 2, pw, ph],
-            eyes: [-pw / 2 + 2, -ph / 2 + 3.5, es * 2 + 5, es + 2],
-            trail: [-pw / 2 - 13, -ph / 2, pw, ph]
+            eyes: [-pw / 2 + 2, -ph / 2 + 3.5, es * 2 + 5, es + 2]
           },
           anims: [
             { key: 'run', label: 'Bieg' },
@@ -2994,43 +3096,55 @@
             { key: 'land', label: 'Lądowanie' },
             { key: 'hit', label: 'Trafienie' }
           ],
-          draw: function (g, t, anim) {
-            var dy = 0,
-              sq = 0,
-              alpha = 1,
-              dx = 0;
+          state: function (t, anim) {
+            var s = { dx: 0, dy: 0, alpha: 1, sq: 0 };
             if (anim === 'run' || !anim) {
-              dy = -Math.abs(Math.sin(t * 6.283)) * 1.6;
-              sq = Math.abs(Math.sin(t * 6.283)) * 0.12;
+              s.dy = -Math.abs(Math.sin(t * 6.283)) * 1.6;
+              s.sq = Math.abs(Math.sin(t * 6.283)) * 0.12;
             }
-            if (anim === 'jump') dy = -Math.sin(t * 3.14) * 13;
-            if (anim === 'land') sq = Math.max(0, 1 - t * 2.6) * 0.5;
+            if (anim === 'jump') s.dy = -Math.sin(t * 3.14) * 13;
+            if (anim === 'land') s.sq = Math.max(0, 1 - t * 2.6) * 0.5;
             if (anim === 'hit') {
-              dx = Math.sin(t * 37.7) * 2 * (1 - t);
-              alpha = Math.floor(t * 10) % 2 ? 0.35 : 1;
+              s.dx = Math.sin(t * 37.7) * 2 * (1 - t);
+              s.alpha = Math.floor(t * 10) % 2 ? 0.35 : 1;
             }
-            g.save();
-            g.translate(dx, dy);
-            g.globalAlpha = alpha;
-            if (A.trail.visible) {
-              g.globalAlpha = alpha * A.trail.alpha;
-              g.fillStyle = A.trail.color;
-              for (var i = 1; i <= 3; i++) rrIn(g, -pw / 2 - i * 4, -ph / 2, pw, ph, A.body.radius);
-              g.globalAlpha = alpha;
+            return s;
+          },
+          layers: [
+            {
+              key: 'trail',
+              z: -10,
+              draw: function (g) {
+                if (!A.trail.visible) return;
+                var a0 = g.globalAlpha;
+                g.globalAlpha = a0 * A.trail.alpha;
+                g.fillStyle = A.trail.color;
+                for (var i = 1; i <= 3; i++) rrIn(g, -pw / 2 - i * 4, -ph / 2, pw, ph, A.body.radius);
+                g.globalAlpha = a0;
+              }
+            },
+            {
+              key: 'body',
+              z: 0,
+              draw: function (g, s) {
+                if (!A.body.visible) return;
+                g.fillStyle = A.body.color;
+                var w2 = pw * (1 + s.sq * 0.35),
+                  h2 = ph * (1 - s.sq * 0.3);
+                rrIn(g, -w2 / 2, ph / 2 - h2, w2, h2, A.body.radius);
+              }
+            },
+            {
+              key: 'eyes',
+              z: 7,
+              draw: function (g) {
+                if (!A.eyes.visible) return;
+                g.fillStyle = A.eyes.color;
+                g.fillRect(-1, -ph / 2 + 4, es, es + 0.5);
+                g.fillRect(3, -ph / 2 + 4, es, es + 0.5);
+              }
             }
-            if (A.body.visible) {
-              g.fillStyle = A.body.color;
-              var w2 = pw * (1 + sq * 0.35),
-                h2 = ph * (1 - sq * 0.3);
-              rrIn(g, -w2 / 2, ph / 2 - h2, w2, h2, A.body.radius);
-            }
-            if (A.eyes.visible) {
-              g.fillStyle = A.eyes.color;
-              g.fillRect(-1, -ph / 2 + 4, es, es + 0.5);
-              g.fillRect(3, -ph / 2 + 4, es, es + 0.5);
-            }
-            g.restore();
-          }
+          ]
         };
       }
 
@@ -3038,41 +3152,49 @@
         var cs = 10;
         var hr = cs * A.halo.radius;
         return {
-          parts: { core: [-cs / 2, -cs / 2, cs, cs], halo: [-hr, -hr, hr * 2, hr * 2] },
+          parts: { halo: [-hr, -hr, hr * 2, hr * 2], core: [-cs / 2, -cs / 2, cs, cs] },
           anims: [
             { key: 'spin', label: 'Obrót' },
             { key: 'pickup', label: 'Zebranie' },
             { key: 'idle', label: 'Spoczynek' }
           ],
-          draw: function (g, t, anim) {
-            var sc = 1,
-              alpha = 1,
-              spin = t * 6.283;
+          state: function (t, anim) {
+            var s = { dx: 0, dy: 0, alpha: 1, sc: 1, spin: t * 6.283 };
             if (anim === 'pickup') {
-              sc = 1 + t * 0.8;
-              alpha = 1 - t;
-              spin = t * 12.57;
+              s.sc = 1 + t * 0.8;
+              s.alpha = 1 - t;
+              s.spin = t * 12.57;
             }
-            if (anim === 'idle') spin = 0;
-            g.save();
-            g.globalAlpha = alpha;
-            g.scale(sc, sc);
-            if (A.halo.visible) {
-              g.globalAlpha = alpha * A.halo.alpha;
-              g.fillStyle = A.halo.color;
-              g.beginPath();
-              g.arc(0, 0, hr, 0, 6.283);
-              g.fill();
-              g.globalAlpha = alpha;
+            if (anim === 'idle') s.spin = 0;
+            return s;
+          },
+          layers: [
+            {
+              key: 'halo',
+              z: -8,
+              draw: function (g, s) {
+                if (!A.halo.visible) return;
+                var a0 = g.globalAlpha;
+                g.globalAlpha = a0 * A.halo.alpha;
+                g.fillStyle = A.halo.color;
+                g.beginPath();
+                g.arc(0, 0, hr * s.sc, 0, 6.283);
+                g.fill();
+                g.globalAlpha = a0;
+              }
+            },
+            {
+              key: 'core',
+              z: 4,
+              draw: function (g, s) {
+                if (!A.core.visible) return;
+                g.fillStyle = A.core.color;
+                g.beginPath();
+                g.ellipse(0, 0, Math.max(1, Math.abs(Math.cos(s.spin)) * cs * 0.5 * s.sc), (cs / 2) * s.sc, 0, 0, 6.283);
+                g.fill();
+              }
             }
-            if (A.core.visible) {
-              g.fillStyle = A.core.color;
-              g.beginPath();
-              g.ellipse(0, 0, Math.max(1, Math.abs(Math.cos(spin)) * cs * 0.5), cs / 2, 0, 0, 6.283);
-              g.fill();
-            }
-            g.restore();
-          }
+          ]
         };
       }
 
@@ -3089,54 +3211,93 @@
             { key: 'scroll', label: 'Przewijanie pasów' },
             { key: 'idle', label: 'Bez ruchu' }
           ],
-          draw: function (g, t, anim) {
-            var off = anim === 'scroll' ? t * 12 : 0;
-            if (A.surface.visible) {
-              g.fillStyle = A.surface.color;
-              rrIn(g, -tw / 2, -th / 2, tw, th, 2);
+          state: function (t, anim) {
+            return { dx: 0, dy: 0, alpha: 1, off: anim === 'scroll' ? t * 12 : 0 };
+          },
+          layers: [
+            {
+              key: 'surface',
+              z: 0,
+              draw: function (g) {
+                if (!A.surface.visible) return;
+                g.fillStyle = A.surface.color;
+                rrIn(g, -tw / 2, -th / 2, tw, th, 2);
+              }
+            },
+            {
+              key: 'edge',
+              z: 5,
+              draw: function (g) {
+                if (!A.edge.visible) return;
+                g.fillStyle = A.edge.color;
+                g.fillRect(-tw / 2, -th / 2, tw, A.edge.size);
+              }
+            },
+            {
+              key: 'stripes',
+              z: 9,
+              draw: function (g, s) {
+                if (!A.stripes.visible) return;
+                var a0 = g.globalAlpha;
+                g.globalAlpha = a0 * A.stripes.alpha;
+                g.fillStyle = A.stripes.color;
+                for (var i = 0; i < 5; i++)
+                  g.fillRect(-tw / 2 + ((((i * 12 - s.off) % (tw + 12)) + tw + 12) % (tw + 12)), -0.75, 7, 1.5);
+                g.globalAlpha = a0;
+              }
             }
-            if (A.edge.visible) {
-              g.fillStyle = A.edge.color;
-              g.fillRect(-tw / 2, -th / 2, tw, A.edge.size);
-            }
-            if (A.stripes.visible) {
-              g.globalAlpha = A.stripes.alpha;
-              g.fillStyle = A.stripes.color;
-              for (var i = 0; i < 5; i++) g.fillRect(-tw / 2 + (((i * 12 - off) % (tw + 12)) + tw + 12) % (tw + 12), -0.75, 7, 1.5);
-              g.globalAlpha = 1;
-            }
-          }
+          ]
         };
       }
 
       if (fam === 'skyline') {
         var sw = 46,
           sh = 26;
+        function buildings(g, off, cb) {
+          for (var b = 0; b < 5; b++) {
+            var bw = 7 + ((b * 5) % 6),
+              bh = 10 + ((b * 9) % 16);
+            var bx = -sw / 2 + ((((b * 11 - off) % (sw + 12)) + sw + 12) % (sw + 12));
+            cb(bx, bw, bh);
+          }
+        }
         return {
           parts: { walls: [-sw / 2, -sh / 2, sw, sh], windows: [-sw / 2, -sh / 2, sw, sh * 0.6] },
           anims: [
             { key: 'parallax', label: 'Paralaksa' },
             { key: 'idle', label: 'Bez ruchu' }
           ],
-          draw: function (g, t, anim) {
-            var off = anim === 'parallax' ? t * 16 : 0;
-            for (var b = 0; b < 5; b++) {
-              var bw = 7 + ((b * 5) % 6),
-                bh = 10 + ((b * 9) % 16);
-              var bx = -sw / 2 + ((((b * 11 - off) % (sw + 12)) + sw + 12) % (sw + 12));
-              if (A.walls.visible) {
+          state: function (t, anim) {
+            return { dx: 0, dy: 0, alpha: 1, off: anim === 'parallax' ? t * 16 : 0 };
+          },
+          layers: [
+            {
+              key: 'walls',
+              z: 0,
+              draw: function (g, s) {
+                if (!A.walls.visible) return;
                 g.fillStyle = A.walls.color;
-                g.fillRect(bx, sh / 2 - bh, bw, bh);
+                buildings(g, s.off, function (bx, bw, bh) {
+                  g.fillRect(bx, sh / 2 - bh, bw, bh);
+                });
               }
-              if (A.windows.visible) {
-                g.globalAlpha = A.windows.alpha;
+            },
+            {
+              key: 'windows',
+              z: 6,
+              draw: function (g, s) {
+                if (!A.windows.visible) return;
+                var a0 = g.globalAlpha;
+                g.globalAlpha = a0 * A.windows.alpha;
                 g.fillStyle = A.windows.color;
-                g.fillRect(bx + 2, sh / 2 - bh + 3, 1.5, 2);
-                g.fillRect(bx + bw - 3, sh / 2 - bh + 6, 1.5, 2);
-                g.globalAlpha = 1;
+                buildings(g, s.off, function (bx, bw, bh) {
+                  g.fillRect(bx + 2, sh / 2 - bh + 3, 1.5, 2);
+                  g.fillRect(bx + bw - 3, sh / 2 - bh + 6, 1.5, 2);
+                });
+                g.globalAlpha = a0;
               }
             }
-          }
+          ]
         };
       }
 
@@ -3149,16 +3310,27 @@
             { key: 'twinkle', label: 'Migotanie' },
             { key: 'idle', label: 'Bez ruchu' }
           ],
-          draw: function (g, t, anim) {
-            g.fillStyle = A.dots.color;
-            for (var i = 0; i < 26; i++) {
-              var rx = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
-              var ry = Math.abs(Math.sin(i * 78.233) * 43758.5453) % 1;
-              g.globalAlpha = anim === 'twinkle' ? 0.25 + 0.7 * Math.abs(Math.sin(t * 6.283 + i)) : 0.7;
-              g.fillRect(rx * vw - vw / 2, ry * vh - vh / 2, A.dots.size, A.dots.size);
+          state: function (t, anim) {
+            return { dx: 0, dy: 0, alpha: 1, t: t, anim: anim };
+          },
+          layers: [
+            {
+              key: 'dots',
+              z: 0,
+              draw: function (g, s) {
+                if (!A.dots.visible) return;
+                var a0 = g.globalAlpha;
+                g.fillStyle = A.dots.color;
+                for (var i = 0; i < 26; i++) {
+                  var rx = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+                  var ry = Math.abs(Math.sin(i * 78.233) * 43758.5453) % 1;
+                  g.globalAlpha = a0 * (s.anim === 'twinkle' ? 0.25 + 0.7 * Math.abs(Math.sin(s.t * 6.283 + i)) : 0.7);
+                  g.fillRect(rx * vw - vw / 2, ry * vh - vh / 2, A.dots.size, A.dots.size);
+                }
+                g.globalAlpha = a0;
+              }
             }
-            g.globalAlpha = 1;
-          }
+          ]
         };
       }
 
@@ -3168,60 +3340,96 @@
         return {
           parts: { top: [-gw / 2, -gh / 2, gw, gh / 2], bottom: [-gw / 2, 0, gw, gh / 2] },
           anims: [{ key: 'idle', label: 'Statyczny gradient' }],
-          draw: function (g) {
-            var lg = g.createLinearGradient(0, -gh / 2, 0, gh / 2);
-            lg.addColorStop(0, A.top.color);
-            lg.addColorStop(1, A.bottom.color);
-            g.fillStyle = lg;
-            rrIn(g, -gw / 2, -gh / 2, gw, gh, 2);
-          }
+          state: function () {
+            return { dx: 0, dy: 0, alpha: 1 };
+          },
+          layers: [
+            {
+              key: 'bottom',
+              z: 0,
+              draw: function (g) {
+                g.fillStyle = A.bottom.color;
+                rrIn(g, -gw / 2, -gh / 2, gw, gh, 2);
+              }
+            },
+            {
+              key: 'top',
+              z: 6,
+              draw: function (g) {
+                var lg = g.createLinearGradient(0, -gh / 2, 0, gh / 2);
+                lg.addColorStop(0, A.top.color);
+                lg.addColorStop(1, 'rgba(0,0,0,0)');
+                g.fillStyle = lg;
+                rrIn(g, -gw / 2, -gh / 2, gw, gh, 2);
+              }
+            }
+          ]
         };
       }
 
       var hw = 46,
         hh = 12;
+      function hudText(s) {
+        return s.anim === 'tick' ? String(Math.floor(s.t * 42) * 10).padStart(4, '0') : '0420';
+      }
       return {
-        parts: { text: [-hw / 2, -hh / 2, hw, hh], shadow: [-hw / 2 + 1, -hh / 2 + 1, hw, hh] },
+        parts: { shadow: [-hw / 2 + 1, -hh / 2 + 1, hw, hh], text: [-hw / 2, -hh / 2, hw, hh] },
         anims: [
           { key: 'tick', label: 'Zmiana licznika' },
           { key: 'idle', label: 'Bez ruchu' }
         ],
-        draw: function (g, t, anim) {
-          var val = anim === 'tick' ? String(Math.floor(t * 42) * 10).padStart(4, '0') : '0420';
-          g.font = '600 ' + 9 * A.text.size + 'px ui-monospace, Menlo, monospace';
-          g.textBaseline = 'middle';
-          g.textAlign = 'center';
-          if (A.shadow.visible && A.shadow.alpha > 0) {
-            g.globalAlpha = A.shadow.alpha;
-            g.fillStyle = A.shadow.color;
-            g.fillText('PUNKTY ' + val, 1, 1);
-            g.globalAlpha = 1;
+        state: function (t, anim) {
+          return { dx: 0, dy: 0, alpha: 1, t: t, anim: anim };
+        },
+        layers: [
+          {
+            key: 'shadow',
+            z: -5,
+            draw: function (g, s) {
+              if (!A.shadow.visible || A.shadow.alpha <= 0) return;
+              var a0 = g.globalAlpha;
+              g.globalAlpha = a0 * A.shadow.alpha;
+              g.fillStyle = A.shadow.color;
+              g.font = '600 ' + 9 * A.text.size + 'px ui-monospace, Menlo, monospace';
+              g.textBaseline = 'middle';
+              g.textAlign = 'center';
+              g.fillText('PUNKTY ' + hudText(s), 1, 1);
+              g.globalAlpha = a0;
+            }
+          },
+          {
+            key: 'text',
+            z: 0,
+            draw: function (g, s) {
+              if (!A.text.visible) return;
+              g.fillStyle = A.text.color;
+              g.font = '600 ' + 9 * A.text.size + 'px ui-monospace, Menlo, monospace';
+              g.textBaseline = 'middle';
+              g.textAlign = 'center';
+              g.fillText('PUNKTY ' + hudText(s), 0, 0);
+            }
           }
-          if (A.text.visible) {
-            g.fillStyle = A.text.color;
-            g.fillText('PUNKTY ' + val, 0, 0);
-          }
-        }
+        ]
       };
     }
 
-    /** Klatki animacji assetu na przezroczystym tle + obszary subassetów. */
-    function studioFrames(id, count, max, anim) {
-      var spec = studioSpec(id);
+    /** Które subassety są w tym assecie wyłączone (nie rysują nic, ale są). */
+    function hiddenParts(id, keys) {
       var group = art[family(id)];
-      var keys = Object.keys(spec.parts);
-      // Wyłączony subasset nadal ma swój obszar (inaczej nie byłoby jak go
-      // kliknąć), ale nie rozpycha kadru — schowana poświata o promieniu 16 px
-      // zmniejszyłaby model dwukrotnie.
       var hidden = {};
       keys.forEach(function (k) {
         if (group[k] && group[k].visible === false) hidden[k] = true;
       });
+      return hidden;
+    }
+
+    /** Wspólny kadr dla wszystkich klatek — model nie może skakać między nimi. */
+    function studioExtent(spec, hidden, padScale) {
       var x0 = Infinity,
         y0 = Infinity,
         x1 = -Infinity,
         y1 = -Infinity;
-      keys.forEach(function (k) {
+      Object.keys(spec.parts).forEach(function (k) {
         if (hidden[k]) return;
         var p = spec.parts[k];
         x0 = Math.min(x0, p[0]);
@@ -3229,18 +3437,19 @@
         x1 = Math.max(x1, p[0] + p[2]);
         y1 = Math.max(y1, p[1] + p[3]);
       });
-      // Zapas na ruch — animacje wychodzą poza spoczynkową sylwetkę (patrol
-      // odjeżdża o 9 px, skok podnosi o 13), a przycięta łopata wygląda jak błąd.
-      var pad = Math.max(11, (x1 - x0) * 0.3);
-      x0 -= pad;
-      y0 -= pad;
-      x1 += pad;
-      y1 += pad;
-      var lw = x1 - x0,
-        lh = y1 - y0;
-      var k = Math.min(max / lw, max / lh);
-      var cw = Math.max(1, Math.round(lw * k)),
-        ch = Math.max(1, Math.round(lh * k));
+      var pad = Math.max(11, (x1 - x0) * (padScale || 0.3));
+      return [x0 - pad, y0 - pad, x1 - x0 + pad * 2, y1 - y0 + pad * 2];
+    }
+
+    /** Klatki animacji assetu na przezroczystym tle + obszary subassetów. */
+    function studioFrames(id, count, max, anim) {
+      var spec = studioSpec(id);
+      var keys = Object.keys(spec.parts);
+      var hidden = hiddenParts(id, keys);
+      var ext = studioExtent(spec, hidden);
+      var k = Math.min(max / ext[2], max / ext[3]);
+      var cw = Math.max(1, Math.round(ext[2] * k)),
+        ch = Math.max(1, Math.round(ext[3] * k));
 
       var frames = [];
       for (var f = 0; f < count; f++) {
@@ -3249,13 +3458,18 @@
         c.height = ch;
         var g = c.getContext('2d');
         if (!g) break;
+        var st = spec.state(count === 1 ? 0 : f / count, anim || null);
         g.save();
-        g.translate(-x0 * k, -y0 * k);
+        g.translate(-ext[0] * k, -ext[1] * k);
         g.scale(k, k);
-        try {
-          spec.draw(g, count === 1 ? 0 : f / count, anim || null);
-        } catch (err) {
-          /* pojedyncza klatka może paść, reszta i tak leci */
+        g.translate(st.dx, st.dy);
+        g.globalAlpha = st.alpha;
+        for (var l = 0; l < spec.layers.length; l++) {
+          try {
+            spec.layers[l].draw(g, st);
+          } catch (err) {
+            /* jedna warstwa może paść, reszta i tak leci */
+          }
         }
         g.restore();
         try {
@@ -3268,18 +3482,212 @@
       var boxes = {};
       keys.forEach(function (key) {
         var p = spec.parts[key];
-        // Obszar ducha może wystawać poza kadr — przycinamy go, żeby dało się
-        // w niego trafić kursorem.
-        var bx = Math.max(0, (p[0] - x0) * k),
-          by = Math.max(0, (p[1] - y0) * k);
-        var bw = Math.min(cw, (p[0] + p[2] - x0) * k) - bx,
-          bh = Math.min(ch, (p[1] + p[3] - y0) * k) - by;
+        var bx = Math.max(0, (p[0] - ext[0]) * k),
+          by = Math.max(0, (p[1] - ext[1]) * k);
+        var bw = Math.min(cw, (p[0] + p[2] - ext[0]) * k) - bx,
+          bh = Math.min(ch, (p[1] + p[3] - ext[1]) * k) - by;
         if (bw <= 2 || bh <= 2) return;
         boxes[key] = [bx, by, bw, bh];
       });
       return { frames: frames, boxes: boxes, hidden: hidden, size: [cw, ch], anims: spec.anims };
     }
 
+    /**
+     * Obrót assetu — warstwy jako płaskie wycinki w przestrzeni.
+     *
+     * Nie udajemy modelu 3D: gra rysuje płaskie kształty i to jest cała prawda
+     * o tym assecie. Głębokość bierze się z kolejności rysowania, więc obrót
+     * pokazuje coś, co asset naprawdę ma — co jest nad czym i jak daleko.
+     *
+     * Rzut równoległy, bez perspektywy: każda warstwa to obrazek z afinicznym
+     * przekształceniem, więc jedno `setTransform` wystarcza. Warstwa nie zmienia
+     * się przy obrocie, więc rysujemy ją raz i używamy we wszystkich ujęciach.
+     */
+    function orbitFrames(id, steps, pitchDeg, explode, max) {
+      var spec = studioSpec(id);
+      var keys = Object.keys(spec.parts);
+      var hidden = hiddenParts(id, keys);
+      var ext = studioExtent(spec, hidden, 0.16);
+      var b = (pitchDeg * Math.PI) / 180;
+      var sinB = Math.sin(b),
+        cosB = Math.cos(b);
+
+      var layers = spec.layers.filter(function (l) {
+        return !hidden[l.key];
+      });
+      // Rozstaw liczony względem szerokości modelu: sztywny mnożnik rozrzucał
+      // małego drona po całym kadrze, a wielką panoramę zostawiał sklejoną.
+      var zSpan = 1;
+      layers.forEach(function (l) {
+        zSpan = Math.max(zSpan, Math.abs(l.z));
+      });
+      var spread = 1 + (explode * (ext[2] * 0.22)) / zSpan;
+      var zOf = {};
+      layers.forEach(function (l) {
+        zOf[l.key] = l.z * spread;
+      });
+
+      /**
+       * Obrót ograniczony do ±60°.
+       *
+       * Płaska warstwa oglądana z boku znika — to prawda o tym assecie, ale
+       * bezużyteczna: pełne 360° oddawałoby połowę ujęć na nitki. Wachlarz
+       * pokazuje układ warstw i zostawia model czytelnym.
+       */
+      var SWING = (60 * Math.PI) / 180;
+      function yawAt(step) {
+        return steps < 2 ? 0 : -SWING + (step / (steps - 1)) * SWING * 2;
+      }
+
+      // Wspólny kadr: rzutujemy narożniki wszystkich warstw we wszystkich ujęciach.
+      var px0 = Infinity,
+        py0 = Infinity,
+        px1 = -Infinity,
+        py1 = -Infinity;
+      function project(x, y, z, sinA, cosA) {
+        return [x * cosA + z * sinA, x * sinA * sinB + y * cosB - z * cosA * sinB];
+      }
+      for (var s = 0; s < steps; s++) {
+        var aa = yawAt(s),
+          sA = Math.sin(aa),
+          cA = Math.cos(aa);
+        layers.forEach(function (l) {
+          var p = spec.parts[l.key];
+          if (!p) return;
+          [
+            [p[0], p[1]],
+            [p[0] + p[2], p[1]],
+            [p[0], p[1] + p[3]],
+            [p[0] + p[2], p[1] + p[3]]
+          ].forEach(function (c2) {
+            var q = project(c2[0], c2[1], zOf[l.key], sA, cA);
+            px0 = Math.min(px0, q[0]);
+            py0 = Math.min(py0, q[1]);
+            px1 = Math.max(px1, q[0]);
+            py1 = Math.max(py1, q[1]);
+          });
+        });
+      }
+      var mp = 4;
+      px0 -= mp;
+      py0 -= mp;
+      px1 += mp;
+      py1 += mp;
+      var k = Math.min(max / (px1 - px0), max / (py1 - py0));
+      var cw = Math.max(1, Math.round((px1 - px0) * k)),
+        ch = Math.max(1, Math.round((py1 - py0) * k));
+
+      // Każda warstwa raz, w lokalnym kadrze — potem tylko przekształcana.
+      var tiles = {};
+      var st0 = spec.state(0, null);
+      layers.forEach(function (l) {
+        var c = doc.createElement('canvas');
+        c.width = Math.max(1, Math.round(ext[2] * k));
+        c.height = Math.max(1, Math.round(ext[3] * k));
+        var g = c.getContext('2d');
+        if (!g) return;
+        g.translate(-ext[0] * k, -ext[1] * k);
+        g.scale(k, k);
+        try {
+          l.draw(g, st0);
+        } catch (err) {
+          /* pusta warstwa jest dopuszczalna */
+        }
+        tiles[l.key] = c;
+      });
+
+      var frames = [],
+        boxesPerFrame = [];
+      for (var f = 0; f < steps; f++) {
+        var a = yawAt(f),
+          sinA = Math.sin(a),
+          cosA = Math.cos(a);
+        var c3 = doc.createElement('canvas');
+        c3.width = cw;
+        c3.height = ch;
+        var g3 = c3.getContext('2d');
+        if (!g3) break;
+
+        // Od najdalszej do najbliższej — po obrocie kolejność potrafi się odwrócić.
+        var order = layers.slice().sort(function (l1, l2) {
+          return zOf[l1.key] * cosA - zOf[l2.key] * cosA;
+        });
+        order.forEach(function (l) {
+          var tile = tiles[l.key];
+          if (!tile) return;
+          var z = zOf[l.key];
+
+          // Obrys płaszczyzny warstwy — bez niego rzadka warstwa (dwie łopaty)
+          // wisi w powietrzu i nie widać, że to osobna kartka w stosie.
+          var pr = spec.parts[l.key];
+          if (pr) {
+            g3.setTransform(1, 0, 0, 1, 0, 0);
+            g3.beginPath();
+            [
+              [pr[0], pr[1]],
+              [pr[0] + pr[2], pr[1]],
+              [pr[0] + pr[2], pr[1] + pr[3]],
+              [pr[0], pr[1] + pr[3]]
+            ].forEach(function (c5, i) {
+              var q2 = project(c5[0], c5[1], z, sinA, cosA);
+              var X = (q2[0] - px0) * k,
+                Y = (q2[1] - py0) * k;
+              if (i) g3.lineTo(X, Y);
+              else g3.moveTo(X, Y);
+            });
+            g3.closePath();
+            g3.strokeStyle = 'rgba(148, 163, 184, 0.17)';
+            g3.lineWidth = 1;
+            g3.stroke();
+          }
+
+          var A11 = cosA,
+            A12 = sinA * sinB,
+            A21 = 0,
+            A22 = cosB;
+          var E = k * (cosA * ext[0] + z * sinA - px0);
+          var F = k * (sinA * sinB * ext[0] + cosB * ext[1] - z * cosA * sinB - py0);
+          g3.save();
+          g3.setTransform(A11, A12, A21, A22, E, F);
+          g3.drawImage(tile, 0, 0);
+          g3.restore();
+        });
+        g3.setTransform(1, 0, 0, 1, 0, 0);
+
+        var fb = {};
+        layers.forEach(function (l) {
+          var p = spec.parts[l.key];
+          if (!p) return;
+          var z = zOf[l.key];
+          var xs = [],
+            ys = [];
+          [
+            [p[0], p[1]],
+            [p[0] + p[2], p[1]],
+            [p[0], p[1] + p[3]],
+            [p[0] + p[2], p[1] + p[3]]
+          ].forEach(function (c4) {
+            var q = project(c4[0], c4[1], z, sinA, cosA);
+            xs.push((q[0] - px0) * k);
+            ys.push((q[1] - py0) * k);
+          });
+          var bx = Math.max(0, Math.min.apply(null, xs)),
+            by = Math.max(0, Math.min.apply(null, ys));
+          var bw = Math.min(cw, Math.max.apply(null, xs)) - bx,
+            bh = Math.min(ch, Math.max.apply(null, ys)) - by;
+          if (bw > 2 && bh > 2) fb[l.key] = [bx, by, bw, bh];
+        });
+        boxesPerFrame.push(fb);
+
+        try {
+          frames.push(c3.toDataURL('image/png'));
+        } catch (err) {
+          break;
+        }
+      }
+
+      return { frames: frames, boxesPerFrame: boxesPerFrame, hidden: hidden, size: [cw, ch], anims: spec.anims };
+    }
 
     /**
      * Wycinek żywej sceny w granicach elementu — podgląd assetu, nie ikonka.
@@ -4148,6 +4556,19 @@
           else setProp(m.id, m.key, m.value);
           post({ type: 'tree', nodes: treePayload() });
           break;
+        case 'orbit': {
+          var ores = orbitFrames(m.id, m.steps || 24, m.pitch == null ? 22 : m.pitch, m.explode || 0, m.max || 420);
+          post({
+            type: 'orbit',
+            id: m.id,
+            token: m.token || null,
+            frames: ores.frames,
+            boxesPerFrame: ores.boxesPerFrame,
+            hidden: ores.hidden,
+            size: ores.size
+          });
+          break;
+        }
         case 'studio': {
           var sres = studioFrames(m.id, m.count || 1, m.max || 420, m.anim || null);
           post({
@@ -4787,7 +5208,12 @@
       frames: [],
       frame: 0,
       playing: false,
-      timer: null
+      timer: null,
+      /** Tryb obrotu: warstwy assetu rozstawione w głąb. */
+      orbit: false,
+      explode: 1,
+      boxesPerFrame: [],
+      hidden: {}
     };
     var previewCbs = {};
     var previewSeq = 0;
@@ -4972,11 +5398,129 @@
       send({ type: 'studio', id: id, token: token, anim: anim || null, count: count, max: 420 });
     }
     handlers.push(function (m) {
-      if (m.type === 'studio' && m.token && previewCbs[m.token]) {
+      if ((m.type === 'studio' || m.type === 'orbit') && m.token && previewCbs[m.token]) {
         previewCbs[m.token](m);
         delete previewCbs[m.token];
       }
     });
+
+    /**
+     * Obrót jako obrotówka: 24 ujęcia przychodzą jednym komunikatem, a
+     * przeciąganie myszą przelicza się na numer ujęcia. Renderowanie na żywo
+     * przy każdym ruchu kursora to kilkadziesiąt przelotów przez most na sekundę.
+     */
+    function askOrbit(id, explode, cb) {
+      var key = id + '|orbit|' + explode;
+      if (studioCache[key]) return cb(studioCache[key]);
+      var token = 'p' + ++previewSeq;
+      previewCbs[token] = function (m) {
+        var data = {
+          frames: m.frames || [],
+          boxesPerFrame: m.boxesPerFrame || [],
+          hidden: m.hidden || {},
+          size: m.size || [1, 1]
+        };
+        studioCache[key] = data;
+        cb(data);
+      };
+      send({ type: 'orbit', id: id, token: token, steps: 24, pitch: 22, explode: explode, max: 420 });
+    }
+
+    function loadOrbit() {
+      if (!ASSET.node) return;
+      stopAnim();
+      ASSET.anim = null;
+      askOrbit(ASSET.node.id, ASSET.explode, function (data) {
+        if (!ASSET.open || !ASSET.orbit) return;
+        ASSET.frames = data.frames;
+        ASSET.boxesPerFrame = data.boxesPerFrame;
+        ASSET.hidden = data.hidden;
+        ASSET.size = data.size;
+        // Start na wprost, nie na skraju wachlarza.
+        if (!ASSET.frames.length || ASSET.frame === 0) ASSET.frame = Math.floor(data.frames.length / 2);
+        ASSET.frame = Math.min(ASSET.frame, Math.max(0, data.frames.length - 1));
+        ASSET.boxes = data.boxesPerFrame[ASSET.frame] || {};
+        renderAsset();
+      });
+    }
+
+    /** Przeciąganie po modelu obraca go — jak w edytorze CAD, tylko płasko. */
+    function orbitDrag(stage) {
+      var startX = 0,
+        startFrame = 0,
+        moved = 0,
+        dragging = false,
+        captured = false,
+        swallowClick = false;
+
+      // Obszary subassetów pokrywają model, więc przeciąganie musi startować
+      // także z nich — o tym, czy to był obrót czy wskazanie, decyduje dystans.
+      stage.addEventListener(
+        'click',
+        function (e) {
+          if (!swallowClick) return;
+          swallowClick = false;
+          e.stopPropagation();
+          e.preventDefault();
+        },
+        true,
+      );
+      stage.addEventListener('pointerdown', function (e) {
+        // Każde nowe wciśnięcie zaczyna od zera: inaczej „połknięcie” kliknięcia
+        // po obrocie czekałoby i zjadało pierwszy klik zupełnie gdzie indziej.
+        swallowClick = false;
+        if (!ASSET.orbit) return;
+        dragging = true;
+        moved = 0;
+        startX = e.clientX;
+        startFrame = ASSET.frame;
+        captured = false;
+      });
+      stage.addEventListener('pointermove', function (e) {
+        if (!dragging || !ASSET.frames.length) return;
+        moved = Math.max(moved, Math.abs(e.clientX - startX));
+        // Wskaźnik przechwytujemy dopiero, gdy to naprawdę jest obrót:
+        // przechwycony od razu przekierowuje też kliknięcie, więc wskazanie
+        // subassetu trafiałoby w scenę zamiast w obszar subassetu.
+        if (moved > 4 && !captured) {
+          captured = true;
+          stage.style.cursor = 'grabbing';
+          try {
+            stage.setPointerCapture(e.pointerId);
+          } catch (err) {
+            /* bez przechwycenia obrót działa, dopóki kursor jest nad sceną */
+          }
+        }
+        if (!captured) return;
+        var perStep = Math.max(6, stage.clientWidth / ASSET.frames.length / 1.6);
+        var delta = Math.round((e.clientX - startX) / perStep);
+        var next = ((startFrame - delta) % ASSET.frames.length + ASSET.frames.length) % ASSET.frames.length;
+        if (next === ASSET.frame) return;
+        ASSET.frame = next;
+        ASSET.boxes = ASSET.boxesPerFrame[next] || {};
+        var img = stage.querySelector('.shot-wrap img');
+        if (img) img.src = ASSET.frames[next];
+        var wrap = stage.querySelector('.shot-wrap');
+        if (wrap && ASSET.node) drawHotspots(wrap, ASSET.node.editor);
+        var counter = $('shot-counter');
+        if (counter) counter.textContent = 'obrót ' + orbitAngle(next) + '°';
+      });
+      function end(e) {
+        if (!dragging) return;
+        dragging = false;
+        if (moved > 4) swallowClick = true;
+        stage.style.cursor = ASSET.orbit ? 'grab' : '';
+        if (!captured) return;
+        captured = false;
+        try {
+          stage.releasePointerCapture(e.pointerId);
+        } catch (err) {
+          /* przeglądarka mogła już zwolnić wskaźnik */
+        }
+      }
+      stage.addEventListener('pointerup', end);
+      stage.addEventListener('pointercancel', end);
+    }
 
     function stopAnim() {
       if (ASSET.timer) clearInterval(ASSET.timer);
@@ -5165,7 +5709,22 @@
       if (!ASSET.playing) drawHotspots(shot, ed);
 
       var topBar = el('div', 'stage3d-top');
-      topBar.appendChild(el('span', 'fig-badge fig-badge--live', 'SPRITE / 2D'));
+      var modeSwitch = el('div', 'mode-switch');
+      [
+        ['2D', false],
+        ['Warstwy 3D', true]
+      ].forEach(function (row) {
+        var b = el('button', ASSET.orbit === row[1] ? 'is-on' : null, row[0]);
+        b.onclick = function () {
+          if (ASSET.orbit === row[1]) return;
+          ASSET.orbit = row[1];
+          ASSET.frame = 0;
+          if (row[1]) loadOrbit();
+          else loadShot(null);
+        };
+        modeSwitch.appendChild(b);
+      });
+      topBar.appendChild(modeSwitch);
       topBar.appendChild(el('span', 'fig-badge', 'v' + ASSET.rev + ' · szkic'));
       if (ASSET.anim) {
         var playingChip = el(
@@ -5179,7 +5738,15 @@
 
       var foot = el('div', 'stage3d-foot');
       foot.appendChild(el('span', null, node.asset.file.split('/').pop() + ' · ' + node.asset.cost));
-      var counter = el('span', null, ASSET.frames.length > 1 ? 'klatka ' + (ASSET.frame + 1) + ' z ' + ASSET.frames.length : 'ujęcie spoczynkowe');
+      var counter = el(
+        'span',
+        null,
+        ASSET.orbit
+          ? 'obrót ' + orbitAngle(ASSET.frame) + '°'
+          : ASSET.frames.length > 1
+            ? 'klatka ' + (ASSET.frame + 1) + ' z ' + ASSET.frames.length
+            : 'ujęcie spoczynkowe',
+      );
       counter.id = 'shot-counter';
       counter.style.marginLeft = 'auto';
       counter.style.textTransform = 'none';
@@ -5189,6 +5756,10 @@
 
       wrapOuter.appendChild(stage);
       host.appendChild(wrapOuter);
+      if (ASSET.orbit) {
+        stage.style.cursor = 'grab';
+        orbitDrag(stage);
+      }
 
       host.appendChild(
         el(
@@ -5196,9 +5767,30 @@
           'asset-hint',
           ASSET.playing
             ? 'Animacja leci — zatrzymaj ją, żeby wskazywać subassety na modelu.'
-            : 'Kliknij część modelu, żeby dopiąć ją do wiadomości jako załącznik.',
+            : ASSET.orbit
+              ? 'Przeciągnij po modelu, żeby go obrócić. Subassety klikasz tak samo jak na płasko.'
+              : 'Kliknij część modelu, żeby dopiąć ją do wiadomości jako załącznik.',
         ),
       );
+
+      if (ASSET.orbit) {
+        var exRow = el('div', 'explode-row');
+        exRow.appendChild(el('span', 'explode-label', 'Rozstrzelenie warstw'));
+        var ex = document.createElement('input');
+        ex.type = 'range';
+        ex.min = '0';
+        ex.max = '3';
+        ex.step = '1';
+        ex.value = String(ASSET.explode);
+        ex.setAttribute('aria-label', 'Rozstrzelenie warstw');
+        ex.onchange = function () {
+          ASSET.explode = parseInt(ex.value, 10);
+          loadOrbit();
+        };
+        exRow.appendChild(ex);
+        exRow.appendChild(el('output', null, ASSET.explode + ' / 3'));
+        host.appendChild(exRow);
+      }
 
       /* --- animacje --- */
       var ah = el('div', 'sub-head');
@@ -5254,6 +5846,13 @@
       host.appendChild(tiles);
 
       syncChatContext();
+    }
+
+    /** Kąt ujęcia w stopniach — wachlarz idzie od −60° do +60°. */
+    function orbitAngle(frame) {
+      var n = ASSET.frames.length;
+      if (n < 2) return 0;
+      return Math.round(-60 + (frame / (n - 1)) * 120);
     }
 
     function animLabel(ed, key) {
