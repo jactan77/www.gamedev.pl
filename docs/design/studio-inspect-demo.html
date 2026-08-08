@@ -1167,52 +1167,6 @@
     flex: none;
   }
 
-  /* Dwa podglądy obok siebie: ta sama konsola, dwa silniki. */
-  .stage-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    width: 100%;
-    height: 100%;
-    align-items: center;
-  }
-
-  .preview {
-    position: relative;
-    display: grid;
-    place-items: center;
-    min-width: 0;
-  }
-
-  .preview-tag {
-    position: absolute;
-    top: -22px;
-    left: 2px;
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted-dim);
-  }
-
-  .preview .holder {
-    width: 100%;
-    max-width: none;
-  }
-
-  @supports (container-type: size) {
-    .preview .holder {
-      width: min(100%, calc(100cqh * 16 / 9));
-    }
-  }
-
-  @media (max-width: 1240px) {
-    .stage-grid {
-      grid-template-columns: 1fr;
-      gap: 26px;
-    }
-  }
-
   /* ---- viewer: cały komponent, jak stół w 3daistudio ---- */
   .rail--asset {
     overflow: hidden;
@@ -1696,7 +1650,7 @@
 
   /* Ledwo widoczny, dopóki nie szukasz — pełny obrys dopiero, gdy kursor jest
      na modelu, żeby wyłączony subasset nie zaśmiecał ujęcia. */
-  .stage3d:hover .hot--ghost {
+  .asset-body:hover .hot--ghost {
     border-color: rgba(148, 163, 184, 0.4);
   }
 
@@ -2218,17 +2172,8 @@
       </div>
 
       <div class="viewport">
-        <div class="stage-grid">
-          <div class="preview">
-            <span class="preview-tag">Gra 2D · canvas2d</span>
-            <div class="holder" id="holder">
-              <div class="rec" id="rec"><i></i> Nagrywam klip <b id="rec-time">4.0s</b></div>
-            </div>
-          </div>
-          <div class="preview">
-            <span class="preview-tag">Gra 3D · webgl3d</span>
-            <div class="holder" id="holder3d"></div>
-          </div>
+        <div class="holder" id="holder">
+          <div class="rec" id="rec"><i></i> Nagrywam klip <b id="rec-time">4.0s</b></div>
         </div>
         <div class="hint-strip" id="hint">
           Naciśnij <kbd>I</kbd> i najedź kursorem na grę — elementy podświetlą się jak w Claude
@@ -2310,18 +2255,16 @@
     </div>
 
     <div class="card">
-      <h3>Dwie gry, jeden most</h3>
+      <h3>Wskazywanie działa na żywym obiekcie</h3>
       <p>
-        Konsola pokazuje dwa podglądy naraz: <b>Neonowy Kurier</b> na canvasie 2D i <b>Kurierzy
-        DX</b> — grę 3D z bryłami, cieniowaniem i sortowaniem malarskim. Każda leci we własnej
-        piaskownicy, obie gadają tym samym mostem <code>gdpl-host</code> / <code>gdpl-player</code>,
-        tylko komunikaty są adresowane sceną.
+        Nie na DOM-ie i nie na zrzucie. Most w ramce gry trzyma rejestr encji sceny i odpowiada na
+        pytanie „co jest pod tym punktem” prostokątem w układzie logicznym gry. Dlatego działa też
+        wtedy, gdy cała gra to jeden <code>&lt;canvas&gt;</code>.
       </p>
       <p style="margin-top: 7px">
-        Wskazywanie działa w obu tak samo. Encje sceny 3D oddają prostokąt policzony z rzutu ich
-        bryły, więc najazd, pinezki, klatka i klip nie wiedzą nawet, że patrzą na coś innego. Klik w
-        drona na scenie 3D otwiera ten sam model, który leży w drzewie projektu — bo to ten sam
-        asset.
+        Pauza sama otwiera wskazywanie — zatrzymanej gry nie trzeba przełączać w żaden tryb, żeby w
+        nią kliknąć. Wybrany element pokazuje metryczkę assetu: typ, plik i funkcję rysującą,
+        warstwę, kolider, animację, dźwięk, liczbę instancji i koszt klatki.
       </p>
     </div>
 
@@ -2354,10 +2297,9 @@
         dopasowania do warstw; bez dopasowania część zostaje numerem.
       </p>
       <p style="margin-top: 7px">
-        <b>Animacje</b> odtwarzają demo na modelu. <b>Obrót</b> jest zablokowany na assetach 2D:
-        płaski sprite nie ma bryły, więc kręcenie nim udawałoby model, którego w grze nie ma.
-        Zakładkę otwiera dopiero asset 3D — w drzewie jest jeden, <code>Dron kurierski DX-4</code>,
-        z prawdziwą geometrią, cieniowaniem i pełną orbitą 360°.
+        <b>Animacje</b> odtwarzają demo na modelu: patrol drona naprawdę przejeżdża, skok kuriera
+        naprawdę podskakuje. Klatki lecą jednym komunikatem i chodzą lokalnie, bo prośba o każdą z
+        osobna to kilkanaście przelotów przez most na sekundę.
       </p>
     </div>
 
@@ -2389,8 +2331,7 @@
    * ta sama warstwa komunikatów.
    * ===================================================================== */
 
-  function GAME_MAIN(root, post, listen, sceneKind) {
-    var IS3D = sceneKind === '3d';
+  function GAME_MAIN(root, post, listen) {
     var W = 480,
       H = 270;
     var doc = root.ownerDocument;
@@ -2513,9 +2454,6 @@
 
     /** Rodzina assetu — po niej idą części, funkcje i miniatury. */
     function family(id) {
-      // Niebo i HUD są płaskie także w grze 3D — rysuje je ten sam rodzaj kodu.
-      if (id === 'sky3d') return 'sky';
-      if (id === 'hud3d') return 'hud';
       if (id === 'player') return 'player';
       if (id.indexOf('drone') === 0) return 'drone';
       if (id.indexOf('coin') === 0) return 'coin';
@@ -2577,7 +2515,6 @@
     // Jedna lista, od tła do wierzchu. Trafienie liczymy od końca, więc
     // HUD wygrywa z graczem, gracz z terenem, teren z warstwami tła.
     function nodes() {
-      if (IS3D) return nodes3d();
       var out = [];
       out.push({ id: 'sky', label: 'Niebo', kind: 'warstwa', path: 'Scena / Tło', r: [0, 0, W, H], o: sky });
       out.push({ id: 'stars', label: 'Gwiazdy', kind: 'warstwa', path: 'Scena / Tło', r: [0, 0, W, 150], o: stars });
@@ -3068,717 +3005,6 @@
       }
     }
 
-    // --- gra 3D --------------------------------------------------------
-    // Druga gra w tym samym studiu: ten sam most, inny silnik rysowania.
-    // Świat jest bryłowy, więc encje mają pozycję w przestrzeni, a prostokąty
-    // do wskazywania powstają z rzutu ich brył — dzięki temu cała reszta
-    // (najazd, pinezki, klatki, prompt) działa bez zmian.
-    var W3 = {
-      t: 0,
-      score: 0,
-      lives: 3,
-      yaw: 0.5,
-      drone: { x: 0, y: 6, z: 0, vx: 0, vz: 0, tilt: 0 },
-      parcels: [],
-      towers: [],
-      pads: []
-    };
-
-    function build3dWorld() {
-      W3.parcels = [];
-      for (var i = 0; i < 5; i++) {
-        W3.parcels.push({
-          id: 'parcel3d-' + (i + 1),
-          x: Math.cos(i * 1.9) * 44,
-          z: Math.sin(i * 2.7) * 44,
-          y: 4 + (i % 3) * 5,
-          taken: false,
-          spin: i
-        });
-      }
-      W3.towers = [];
-      for (var t = 0; t < 6; t++) {
-        var ang = (t / 6) * 6.283;
-        W3.towers.push({
-          id: 'tower3d-' + (t + 1),
-          x: Math.cos(ang) * 62,
-          z: Math.sin(ang) * 62,
-          h: 22 + ((t * 13) % 26),
-          w: 12 + ((t * 7) % 8)
-        });
-      }
-      W3.pads = [{ id: 'pad3d', x: 0, z: 0 }];
-    }
-    build3dWorld();
-
-    var CAM = { dist: 210, height: 0.42, zoom: 3.1 };
-
-    /** Rzut świata 3D na logiczny ekran 480×270 — ten sam układ co gra 2D. */
-    function proj3(x, y, z) {
-      var sinA = Math.sin(W3.yaw),
-        cosA = Math.cos(W3.yaw);
-      var vx = x * cosA + z * sinA;
-      var vz = -x * sinA + z * cosA;
-      var vy = y * Math.cos(CAM.height) - vz * Math.sin(CAM.height);
-      var vz2 = y * Math.sin(CAM.height) + vz * Math.cos(CAM.height);
-      var f = CAM.dist / (CAM.dist + vz2 + 120);
-      return [W / 2 + vx * f * CAM.zoom, H * 0.56 - vy * f * CAM.zoom, vz2];
-    }
-
-    function boxScreenRect(x, y, z, w, h, d) {
-      var minX = Infinity,
-        minY = Infinity,
-        maxX = -Infinity,
-        maxY = -Infinity;
-      for (var i = 0; i < 8; i++) {
-        var px = x + (i & 1 ? w / 2 : -w / 2),
-          py = y + (i & 2 ? h : 0),
-          pz = z + (i & 4 ? d / 2 : -d / 2);
-        var q = proj3(px, py, pz);
-        if (q[0] < minX) minX = q[0];
-        if (q[0] > maxX) maxX = q[0];
-        if (q[1] < minY) minY = q[1];
-        if (q[1] > maxY) maxY = q[1];
-      }
-      return [minX, minY, maxX - minX, maxY - minY];
-    }
-
-    function nodes3d() {
-      var out = [];
-      out.push({ id: 'sky3d', label: 'Niebo', kind: 'warstwa', path: 'Scena 3D / Tło', r: [0, 0, W, H] });
-      out.push({ id: 'ground3d', label: 'Płyta miasta', kind: 'teren', path: 'Scena 3D / Teren', r: boxScreenRect(0, -2, 0, 190, 2, 190) });
-      for (var t = 0; t < W3.towers.length; t++) {
-        var tw = W3.towers[t];
-        out.push({
-          id: tw.id,
-          label: 'Wieżowiec ' + (t + 1),
-          kind: 'teren',
-          path: 'Scena 3D / Miasto',
-          r: boxScreenRect(tw.x, 0, tw.z, tw.w, tw.h, tw.w)
-        });
-      }
-      for (var p = 0; p < W3.parcels.length; p++) {
-        var pc = W3.parcels[p];
-        if (pc.taken) continue;
-        out.push({
-          id: pc.id,
-          label: 'Paczka ' + (p + 1),
-          kind: 'przedmiot',
-          path: 'Scena 3D / Przedmioty',
-          r: boxScreenRect(pc.x, pc.y, pc.z, 7, 7, 7)
-        });
-      }
-      out.push({
-        id: 'model:drone3d',
-        label: 'Dron kurierski DX-4',
-        kind: 'model 3d',
-        path: 'Scena 3D / Aktorzy',
-        r: boxScreenRect(W3.drone.x, W3.drone.y, W3.drone.z, 46, 14, 46)
-      });
-      out.push({ id: 'hud3d', label: 'Licznik dostaw', kind: 'hud', path: 'Scena 3D / HUD', r: [10, 8, 108, 16] });
-      return out;
-    }
-
-    function update3d() {
-      W3.t++;
-      var d = W3.drone;
-      var manual = S.t < S.manualUntil;
-      var ax = 0,
-        az = 0;
-      if (manual) {
-        if (S.keys.ArrowLeft) ax -= 1;
-        if (S.keys.ArrowRight) ax += 1;
-        if (S.keys.ArrowUp) az -= 1;
-        if (S.keys.ArrowDown) az += 1;
-      } else {
-        // Autopilot leci do najbliższej paczki — podgląd ma żyć bez klawiatury.
-        var target = null,
-          best = 1e9;
-        for (var i = 0; i < W3.parcels.length; i++) {
-          var pc = W3.parcels[i];
-          if (pc.taken) continue;
-          var dd = (pc.x - d.x) * (pc.x - d.x) + (pc.z - d.z) * (pc.z - d.z);
-          if (dd < best) {
-            best = dd;
-            target = pc;
-          }
-        }
-        if (!target) {
-          build3dWorld();
-        } else {
-          ax = Math.max(-1, Math.min(1, (target.x - d.x) / 18));
-          az = Math.max(-1, Math.min(1, (target.z - d.z) / 18));
-        }
-      }
-      d.vx += (ax * 0.9 - d.vx) * 0.09;
-      d.vz += (az * 0.9 - d.vz) * 0.09;
-      d.x += d.vx;
-      d.z += d.vz;
-      d.y = 8 + Math.sin(W3.t * 0.045) * 1.8;
-      d.tilt += (d.vx * 0.05 - d.tilt) * 0.1;
-      W3.yaw += 0.0016;
-
-      for (var p = 0; p < W3.parcels.length; p++) {
-        var q = W3.parcels[p];
-        if (q.taken) continue;
-        q.spin += 0.05;
-        if (Math.abs(q.x - d.x) < 9 && Math.abs(q.z - d.z) < 9 && Math.abs(q.y - d.y) < 12) {
-          q.taken = true;
-          W3.score += 25;
-        }
-      }
-    }
-
-    function faceShade(hex, amount) {
-      var r = parseInt(hex.slice(1, 3), 16),
-        g2 = parseInt(hex.slice(3, 5), 16),
-        b2 = parseInt(hex.slice(5, 7), 16);
-      return 'rgb(' + Math.round(Math.min(255, r * amount)) + ',' + Math.round(Math.min(255, g2 * amount)) + ',' + Math.round(Math.min(255, b2 * amount)) + ')';
-    }
-
-    /** Zbiera bryły sceny, sortuje malarsko i rysuje — bez WebGL w piaskownicy. */
-    function draw3d() {
-      ctx.save();
-      ctx.translate(ox, oy);
-      ctx.scale(scale, scale);
-      ctx.clearRect(0, 0, W, H);
-
-      var g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, '#131c26');
-      g.addColorStop(1, '#080b10');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
-
-      // siatka płyty
-      ctx.strokeStyle = 'rgba(56,189,248,0.16)';
-      ctx.lineWidth = 0.4;
-      for (var i = -5; i <= 5; i++) {
-        var a1 = proj3(i * 19, 0, -95),
-          a2 = proj3(i * 19, 0, 95);
-        ctx.beginPath();
-        ctx.moveTo(a1[0], a1[1]);
-        ctx.lineTo(a2[0], a2[1]);
-        ctx.stroke();
-        var b1 = proj3(-95, 0, i * 19),
-          b2 = proj3(95, 0, i * 19);
-        ctx.beginPath();
-        ctx.moveTo(b1[0], b1[1]);
-        ctx.lineTo(b2[0], b2[1]);
-        ctx.stroke();
-      }
-
-      var polys = [];
-      function pushBox(x, y, z, w, h, d, color) {
-        var fs = boxFaces(x - w / 2, y, z - d / 2, w, h, d);
-        for (var f = 0; f < fs.length; f++) {
-          var pts = [],
-            depth = 0,
-            ok = true;
-          for (var v = 0; v < fs[f].length; v++) {
-            var q = proj3(fs[f][v][0], fs[f][v][1], fs[f][v][2]);
-            pts.push([q[0], q[1]]);
-            depth += q[2];
-          }
-          var axx = pts[1][0] - pts[0][0],
-            ayy = pts[1][1] - pts[0][1];
-          var bxx = pts[2][0] - pts[1][0],
-            byy = pts[2][1] - pts[1][1];
-          if (axx * byy - ayy * bxx <= 0) ok = false;
-          if (!ok) continue;
-          polys.push({ pts: pts, depth: depth / 4, fill: faceShade(color, 0.5 + 0.5 * ((f + 1) / 6)) });
-        }
-      }
-
-      for (var t = 0; t < W3.towers.length; t++) {
-        var tw = W3.towers[t];
-        pushBox(tw.x, 0, tw.z, tw.w, tw.h, tw.w, '#1b2733');
-      }
-      pushBox(0, -2, 0, 26, 2, 26, '#1c242c');
-      for (var p = 0; p < W3.parcels.length; p++) {
-        var pc = W3.parcels[p];
-        if (pc.taken) continue;
-        pushBox(pc.x, pc.y, pc.z, 7, 7, 7, '#ffb443');
-      }
-      var d0 = W3.drone;
-      pushBox(d0.x, d0.y, d0.z, 26, 7, 16, '#dbe4ee');
-      pushBox(d0.x - 19, d0.y + 3, d0.z, 16, 1.2, 4, '#38bdf8');
-      pushBox(d0.x + 19, d0.y + 3, d0.z, 16, 1.2, 4, '#38bdf8');
-      pushBox(d0.x, d0.y + 3, d0.z - 15, 4, 1.2, 16, '#38bdf8');
-      pushBox(d0.x, d0.y + 3, d0.z + 15, 4, 1.2, 16, '#38bdf8');
-      pushBox(d0.x, d0.y - 6, d0.z - 6, 8, 5, 6, '#0f1418');
-      pushBox(d0.x, d0.y - 14, d0.z, 12, 8, 10, '#ffb443');
-
-      polys.sort(function (m1, m2) {
-        return m2.depth - m1.depth;
-      });
-      for (var i2 = 0; i2 < polys.length; i2++) {
-        var poly = polys[i2];
-        ctx.beginPath();
-        ctx.moveTo(poly.pts[0][0], poly.pts[0][1]);
-        for (var v2 = 1; v2 < poly.pts.length; v2++) ctx.lineTo(poly.pts[v2][0], poly.pts[v2][1]);
-        ctx.closePath();
-        ctx.fillStyle = poly.fill;
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(8,12,16,0.4)';
-        ctx.lineWidth = 0.25;
-        ctx.stroke();
-      }
-
-      ctx.fillStyle = '#f0f4f8';
-      ctx.font = '600 11px ui-monospace, Menlo, monospace';
-      ctx.textBaseline = 'top';
-      ctx.textAlign = 'left';
-      ctx.fillText('DOSTAWY ' + String(W3.score).padStart(4, '0'), 10, 8);
-      ctx.restore();
-    }
-
-    // --- modele 3D -----------------------------------------------------
-    // Prawdziwa geometria, nie warstwy udające głębokość: ściany w przestrzeni,
-    // sortowanie malarskie, płaskie cieniowanie z normalnej. Asset 3D obraca się
-    // w pełnym zakresie, bo ma czym — asset 2D nie ma i tam obrót jest zablokowany.
-    function boxFaces(x, y, z, w, h, d) {
-      var x1 = x + w,
-        y1 = y + h,
-        z1 = z + d;
-      return [
-        [[x, y, z], [x1, y, z], [x1, y1, z], [x, y1, z]],
-        [[x1, y, z1], [x, y, z1], [x, y1, z1], [x1, y1, z1]],
-        [[x, y, z1], [x, y, z], [x, y1, z], [x, y1, z1]],
-        [[x1, y, z], [x1, y, z1], [x1, y1, z1], [x1, y1, z]],
-        [[x, y, z1], [x1, y, z1], [x1, y, z], [x, y, z]],
-        [[x, y1, z], [x1, y1, z], [x1, y1, z1], [x, y1, z1]]
-      ];
-    }
-
-    /** Płaski wielokąt w poziomie — śmigło albo talerz. */
-    function discFaces(cx, cy, cz, r, sides) {
-      var top = [],
-        bottom = [];
-      for (var i = 0; i < sides; i++) {
-        var a = (i / sides) * 6.283185;
-        top.push([cx + Math.cos(a) * r, cy, cz + Math.sin(a) * r]);
-        bottom.unshift([cx + Math.cos(a) * r, cy - 0.6, cz + Math.sin(a) * r]);
-      }
-      return [top, bottom];
-    }
-
-    var MODELS_3D = {
-      'model:ground3d': {
-        label: 'Płyta miasta',
-        path: 'Projekt / Modele 3D',
-        file: 'src/models/ground3d.ts',
-        type: 'Model 3D · low-poly',
-        symbol: 'buildPlate(): Mesh',
-        layer: 'terrain · z 0',
-        instances: 1,
-        cost: '0.4 ms/klatkę',
-        sounds: [{ file: 'land3d.wav', when: 'lądowanie', hz: 120 }],
-        anims: [{ key: 'idle', label: 'Bez ruchu' }],
-        parts: [
-          { key: 'plate', label: 'Płyta', color: '#1c242c', faces: boxFaces(-30, -3, -30, 60, 3, 60) },
-          { key: 'rim', label: 'Krawędź', color: '#2f3d4a', faces: boxFaces(-31, -3.6, -31, 62, 1.2, 62) },
-          { key: 'pad', label: 'Lądowisko', color: '#00e4ac', faces: boxFaces(-9, 0.1, -9, 18, 0.4, 18) }
-        ]
-      },
-      'model:parcel3d': {
-        label: 'Paczka kurierska',
-        path: 'Projekt / Modele 3D',
-        file: 'src/models/parcel3d.ts',
-        type: 'Model 3D · low-poly',
-        symbol: 'buildParcel(): Mesh',
-        layer: 'pickups · z 20',
-        instances: 5,
-        cost: '0.3 ms/klatkę',
-        sounds: [{ file: 'pickup3d.wav', when: 'odbiór', hz: 760 }],
-        anims: [
-          { key: 'hover', label: 'Unoszenie' },
-          { key: 'spin', label: 'Obrót' },
-          { key: 'drop', label: 'Upadek' }
-        ],
-        parts: [
-          { key: 'box', label: 'Karton', color: '#ffb443', faces: boxFaces(-9, -9, -9, 18, 18, 18) },
-          {
-            key: 'tape',
-            label: 'Taśma',
-            color: '#e2e8f0',
-            spin: true,
-            faces: [].concat(boxFaces(-9.4, -2, -9.4, 18.8, 4, 18.8))
-          },
-          { key: 'label', label: 'Etykieta', color: '#0f1418', faces: boxFaces(-4, -1, -9.8, 8, 6, 0.6) }
-        ]
-      },
-      'model:tower3d': {
-        label: 'Wieżowiec',
-        path: 'Projekt / Modele 3D',
-        file: 'src/models/tower3d.ts',
-        type: 'Model 3D · low-poly',
-        symbol: 'buildTower(h): Mesh',
-        layer: 'city · z 5',
-        instances: 6,
-        cost: '0.2 ms/klatkę',
-        sounds: [],
-        anims: [
-          { key: 'idle', label: 'Bez ruchu' },
-          { key: 'hover', label: 'Kołysanie' }
-        ],
-        parts: [
-          { key: 'shaft', label: 'Bryła', color: '#1b2733', faces: boxFaces(-9, -22, -9, 18, 44, 18) },
-          {
-            key: 'windows',
-            label: 'Okna',
-            color: '#38bdf8',
-            faces: [].concat(
-              boxFaces(-6, -14, -9.4, 3, 4, 0.6),
-              boxFaces(2, -6, -9.4, 3, 4, 0.6),
-              boxFaces(-6, 4, -9.4, 3, 4, 0.6),
-              boxFaces(-9.4, -10, -4, 0.6, 4, 3),
-            )
-          },
-          { key: 'roof', label: 'Dach', color: '#64748b', faces: boxFaces(-10, 22, -10, 20, 3, 20) }
-        ]
-      },
-      'model:drone3d': {
-        label: 'Dron kurierski DX-4',
-        path: 'Projekt / Modele 3D',
-        file: 'src/models/drone3d.ts',
-        type: 'Model 3D · low-poly',
-        symbol: 'buildDroneDX4(): Mesh',
-        layer: 'props · z 40',
-        instances: 1,
-        cost: '1.8 ms/klatkę',
-        sounds: [
-          { file: 'rotor-loop.wav', when: 'zawis', hz: 180 },
-          { file: 'drop.wav', when: 'zrzut paczki', hz: 320 }
-        ],
-        anims: [
-          { key: 'hover', label: 'Zawis' },
-          { key: 'spin', label: 'Obrót śmigieł' },
-          { key: 'bank', label: 'Przechył' },
-          { key: 'drop', label: 'Zrzut paczki' }
-        ],
-        parts: [
-          {
-            key: 'hull',
-            label: 'Kadłub',
-            color: '#dbe4ee',
-            faces: boxFaces(-13, -3, -8, 26, 7, 16)
-          },
-          {
-            key: 'arms',
-            label: 'Ramiona',
-            color: '#94a3b8',
-            faces: [].concat(
-              boxFaces(-22, -1, -2, 12, 2.5, 4),
-              boxFaces(10, -1, -2, 12, 2.5, 4),
-              boxFaces(-3, -1, -18, 6, 2.5, 11),
-              boxFaces(-3, -1, 7, 6, 2.5, 11),
-            )
-          },
-          {
-            key: 'rotors',
-            label: 'Śmigła',
-            color: '#38bdf8',
-            spin: true,
-            faces: [].concat(
-              discFaces(-19, 2.5, 0, 8, 8),
-              discFaces(19, 2.5, 0, 8, 8),
-              discFaces(0, 2.5, -15, 8, 8),
-              discFaces(0, 2.5, 15, 8, 8),
-            )
-          },
-          {
-            key: 'gimbal',
-            label: 'Gimbal kamery',
-            color: '#0f1418',
-            faces: [].concat(boxFaces(-4, -8, -9, 8, 6, 7), discFaces(0, -5, -10, 3, 8))
-          },
-          {
-            key: 'skids',
-            label: 'Płozy',
-            color: '#64748b',
-            faces: [].concat(boxFaces(-12, -11, -7, 2.5, 8, 15), boxFaces(9.5, -11, -7, 2.5, 8, 15))
-          },
-          {
-            key: 'cargo',
-            label: 'Paczka',
-            color: '#ffb443',
-            drop: true,
-            faces: boxFaces(-7, -19, -6, 14, 9, 12)
-          }
-        ]
-      }
-    };
-
-    function isModel3d(id) {
-      return Object.prototype.hasOwnProperty.call(MODELS_3D, id);
-    }
-
-    /** Byt sceny 3D → jego model. Paczka 3 i paczka 5 to ten sam asset. */
-    function modelKeyFor(id) {
-      if (isModel3d(id)) return id;
-      if (id.indexOf('parcel3d') === 0) return 'model:parcel3d';
-      if (id.indexOf('tower3d') === 0) return 'model:tower3d';
-      if (id === 'ground3d') return 'model:ground3d';
-      return null;
-    }
-
-    /**
-     * Klatki modelu 3D dla obrotówki.
-     *
-     * Rzut perspektywiczny, sortowanie malarskie po średniej głębokości ściany,
-     * płaskie cieniowanie z normalnej. Wystarczy na low-poly i nie wymaga WebGL
-     * w ramce, która i tak jest piaskownicą.
-     */
-    function model3dFrames(id, steps, pitchDeg, anim, max, fixedYaw) {
-      var M = MODELS_3D[id];
-      if (!M) return { frames: [], boxesPerFrame: [], size: [1, 1] };
-      var pitch = (pitchDeg * Math.PI) / 180;
-      var sinP = Math.sin(pitch),
-        cosP = Math.cos(pitch);
-      var DIST = 130;
-      var light = [0.42, 0.78, 0.46];
-
-      function partTransform(part, t) {
-        var tr = { rot: 0, dy: 0, roll: 0 };
-        if (anim === 'spin' && part.spin) tr.rot = t * 6.283185 * 3;
-        if (anim === 'hover') tr.dy = Math.sin(t * 6.283185) * 2.4;
-        if (anim === 'bank') tr.roll = Math.sin(t * 6.283185) * 0.26;
-        if (anim === 'drop' && part.drop) {
-          tr.dy = -t * t * 46;
-        }
-        if (anim === 'spin' && !part.spin) tr.dy = Math.sin(t * 6.283185) * 0.8;
-        return tr;
-      }
-
-      function place(v, part, tr) {
-        var x = v[0],
-          y = v[1] + tr.dy,
-          z = v[2];
-        if (tr.rot) {
-          // Śmigła kręcą się wokół własnej osi, nie wokół środka drona.
-          var cx = part.key === 'rotors' ? (Math.abs(x) > Math.abs(z) ? (x > 0 ? 19 : -19) : 0) : 0;
-          var cz = part.key === 'rotors' ? (Math.abs(x) > Math.abs(z) ? 0 : z > 0 ? 15 : -15) : 0;
-          var dx = x - cx,
-            dz = z - cz;
-          var cs = Math.cos(tr.rot),
-            sn = Math.sin(tr.rot);
-          x = cx + dx * cs - dz * sn;
-          z = cz + dx * sn + dz * cs;
-        }
-        if (tr.roll) {
-          var cr = Math.cos(tr.roll),
-            sr = Math.sin(tr.roll);
-          var nx = x * cr - y * sr;
-          y = x * sr + y * cr;
-          x = nx;
-        }
-        return [x, y, z];
-      }
-
-      function view(v, sinA, cosA) {
-        var x = v[0] * cosA + v[2] * sinA;
-        var zz = -v[0] * sinA + v[2] * cosA;
-        var y = v[1] * cosP - zz * sinP;
-        var z2 = v[1] * sinP + zz * cosP;
-        return [x, y, z2];
-      }
-
-      // Wspólny kadr dla wszystkich ujęć — model nie może skakać przy obrocie.
-      var minX = Infinity,
-        minY = Infinity,
-        maxX = -Infinity,
-        maxY = -Infinity;
-      for (var s = 0; s < steps; s++) {
-        var a0 = fixedYaw == null ? (s / steps) * 6.283185 : fixedYaw;
-        var sA0 = Math.sin(a0),
-          cA0 = Math.cos(a0);
-        for (var pi = 0; pi < M.parts.length; pi++) {
-          var prt = M.parts[pi];
-          for (var q = 0; q < 3; q++) {
-            var tr0 = partTransform(prt, q / 3);
-            for (var f0 = 0; f0 < prt.faces.length; f0++) {
-              for (var vi = 0; vi < prt.faces[f0].length; vi++) {
-                var pv = view(place(prt.faces[f0][vi], prt, tr0), sA0, cA0);
-                var ff = DIST / (DIST + pv[2]);
-                var px = pv[0] * ff,
-                  py = -pv[1] * ff;
-                if (px < minX) minX = px;
-                if (px > maxX) maxX = px;
-                if (py < minY) minY = py;
-                if (py > maxY) maxY = py;
-              }
-            }
-          }
-        }
-      }
-      var pad = 4;
-      minX -= pad;
-      minY -= pad;
-      maxX += pad;
-      maxY += pad;
-      var k = Math.min(max / (maxX - minX), max / (maxY - minY));
-      var cw = Math.max(1, Math.round((maxX - minX) * k)),
-        ch = Math.max(1, Math.round((maxY - minY) * k));
-
-      function shade(hex, amount) {
-        var r = parseInt(hex.slice(1, 3), 16),
-          g2 = parseInt(hex.slice(3, 5), 16),
-          b2 = parseInt(hex.slice(5, 7), 16);
-        return (
-          'rgb(' +
-          Math.round(Math.min(255, r * amount)) +
-          ',' +
-          Math.round(Math.min(255, g2 * amount)) +
-          ',' +
-          Math.round(Math.min(255, b2 * amount)) +
-          ')'
-        );
-      }
-
-      var frames = [],
-        boxesPerFrame = [];
-      for (var fi = 0; fi < steps; fi++) {
-        // Obrót zamraża pozę, animacja zamraża kąt — inaczej „zrzut paczki”
-        // kręciłby modelem, a obrót gubiłby to, co animacja właśnie pokazuje.
-        var a = fixedYaw == null ? (fi / steps) * 6.283185 : fixedYaw;
-        var sinA = Math.sin(a),
-          cosA = Math.cos(a);
-        var t = fixedYaw == null ? 0.12 : steps > 1 ? fi / steps : 0;
-        var c = doc.createElement('canvas');
-        c.width = cw;
-        c.height = ch;
-        var g = c.getContext('2d');
-        if (!g) break;
-
-        var polys = [];
-        var boxes = {};
-        M.parts.forEach(function (part) {
-          var tr = partTransform(part, t);
-          var bx0 = Infinity,
-            by0 = Infinity,
-            bx1 = -Infinity,
-            by1 = -Infinity;
-          part.faces.forEach(function (face) {
-            var pts = [],
-              depth = 0;
-            for (var i = 0; i < face.length; i++) {
-              var pv2 = view(place(face[i], part, tr), sinA, cosA);
-              var ff2 = DIST / (DIST + pv2[2]);
-              var X = (pv2[0] * ff2 - minX) * k,
-                Y = (-pv2[1] * ff2 - minY) * k;
-              pts.push([X, Y]);
-              depth += pv2[2];
-              if (X < bx0) bx0 = X;
-              if (X > bx1) bx1 = X;
-              if (Y < by0) by0 = Y;
-              if (Y > by1) by1 = Y;
-            }
-            // Odrzucamy ściany tyłem do kamery — bez tego wnętrze bryły
-            // prześwituje przez ścianę przednią.
-            var ax = pts[1][0] - pts[0][0],
-              ay = pts[1][1] - pts[0][1];
-            var bxv = pts[2][0] - pts[1][0],
-              byv = pts[2][1] - pts[1][1];
-            if (ax * byv - ay * bxv <= 0) return;
-            var n = faceNormal(face, part, tr, sinA, cosA);
-            var lam = Math.max(0, n[0] * light[0] + n[1] * light[1] + n[2] * light[2]);
-            polys.push({
-              pts: pts,
-              depth: depth / face.length,
-              fill: shade(part.color, 0.42 + 0.68 * lam)
-            });
-          });
-          if (bx1 > bx0) boxes[part.key] = [bx0, by0, bx1 - bx0, by1 - by0];
-        });
-
-        polys.sort(function (p1, p2) {
-          return p2.depth - p1.depth;
-        });
-        polys.forEach(function (poly) {
-          g.beginPath();
-          g.moveTo(poly.pts[0][0], poly.pts[0][1]);
-          for (var i = 1; i < poly.pts.length; i++) g.lineTo(poly.pts[i][0], poly.pts[i][1]);
-          g.closePath();
-          g.fillStyle = poly.fill;
-          g.fill();
-          g.strokeStyle = 'rgba(8, 12, 16, 0.35)';
-          g.lineWidth = 0.7;
-          g.stroke();
-        });
-
-        boxesPerFrame.push(boxes);
-        try {
-          frames.push(c.toDataURL('image/png'));
-        } catch (err) {
-          break;
-        }
-      }
-      return { frames: frames, boxesPerFrame: boxesPerFrame, size: [cw, ch] };
-
-      function faceNormal(face, part, tr, sinA, cosA) {
-        var p0 = view(place(face[0], part, tr), sinA, cosA);
-        var p1 = view(place(face[1], part, tr), sinA, cosA);
-        var p2 = view(place(face[2], part, tr), sinA, cosA);
-        var ux = p1[0] - p0[0],
-          uy = p1[1] - p0[1],
-          uz = p1[2] - p0[2];
-        var vx = p2[0] - p1[0],
-          vy = p2[1] - p1[1],
-          vz = p2[2] - p1[2];
-        var nx = uy * vz - uz * vy,
-          ny = uz * vx - ux * vz,
-          nz = ux * vy - uy * vx;
-        var len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
-        return [nx / len, ny / len, -nz / len];
-      }
-    }
-
-    /** Opis assetu 3D w formacie, którego oczekuje karta i viewer. */
-    function model3dPick(id) {
-      var M = MODELS_3D[id];
-      return {
-        type: 'pick',
-        id: id,
-        label: M.label,
-        kind: 'model 3d',
-        path: M.path,
-        group: null,
-        w: 26,
-        h: 20,
-        x: 0,
-        y: 0,
-        is3d: true,
-        props: [],
-        asset: {
-          type: M.type,
-          file: M.file,
-          symbol: M.symbol,
-          layer: M.layer,
-          collider: 'mesh · 6 brył',
-          anim: M.anims.length + ' klipy',
-          sfx: M.sounds
-            .map(function (s) {
-              return s.file;
-            })
-            .join(' · '),
-          instances: M.instances,
-          cost: M.cost
-        },
-        preview: null,
-        editor: {
-          family: 'model3d',
-          parts: M.parts.map(function (p) {
-            return { key: p.key, label: p.label, fields: [{ key: 'color', label: 'Kolor', type: 'color', value: p.color }] };
-          }),
-          functions: [],
-          sounds: M.sounds,
-          frames: 1,
-          anims: M.anims
-        },
-        why: 'pick'
-      };
-    }
-
     // --- render studyjny -----------------------------------------------
     // Asset sam, bez sceny wokół, na przezroczystym tle: widok „na stole
     // warsztatowym”. Rozbity na warstwy z głębokością — nie po to, żeby udawać
@@ -4226,7 +3452,6 @@
      * jest uczciwa granica metody, nie błąd implementacji.
      */
     function segmentAsset(id, max) {
-      if (isModel3d(id)) return segmentModel3d(id, max);
       var spec = studioSpec(id);
       var keys = Object.keys(spec.parts);
       var hidden = hiddenParts(id, keys);
@@ -4386,48 +3611,6 @@
       })() };
     }
 
-    /**
-     * Auto-podział modelu 3D.
-     *
-     * Ta sama analiza co dla assetu 2D — patrzy na wyrenderowaną bryłę, nie na
-     * listę części. Cieniowanie daje każdej ścianie inny odcień, więc kolory
-     * kwantyzujemy grubiej i sklejamy wyspy jednej bryły z powrotem w część.
-     */
-    function segmentModel3d(id, max) {
-      var res = model3dFrames(id, 1, 18, null, max || 620, 0.62);
-      if (!res.frames.length) return { segments: [], size: [1, 1] };
-      var M = MODELS_3D[id];
-      var boxes = res.boxesPerFrame[0] || {};
-      var size = res.size;
-      var area = {};
-      var total = 0;
-      // Powierzchnię liczymy z rzutu części: bryły zasłaniają się nawzajem, więc
-      // liczenie pikseli po kolorze zaniżałoby to, co jest z tyłu.
-      M.parts.forEach(function (part) {
-        var b = boxes[part.key];
-        if (!b) return;
-        area[part.key] = b[2] * b[3];
-        total += area[part.key];
-      });
-      var segments = M.parts
-        .filter(function (part) {
-          return boxes[part.key];
-        })
-        .map(function (part) {
-          return {
-            id: 'seg-' + part.key,
-            box: boxes[part.key],
-            islands: part.key === 'rotors' ? 4 : part.key === 'skids' ? 2 : 1,
-            share: total ? area[part.key] / total : 0,
-            color: part.color
-          };
-        })
-        .sort(function (a, b) {
-          return b.share - a.share;
-        });
-      return { segments: segments, size: size, png: res.frames[0] };
-    }
-
     /** Które subassety są w tym assecie wyłączone (nie rysują nic, ale są). */
     function hiddenParts(id, keys) {
       var group = art[family(id)];
@@ -4514,203 +3697,6 @@
         boxes[key] = [Math.max(0, Math.min(cw - MIN, cxp)), Math.max(0, Math.min(ch - MIN, cyp)), MIN, MIN];
       });
       return { frames: frames, boxes: boxes, hidden: hidden, size: [cw, ch], anims: spec.anims };
-    }
-
-    /**
-     * Obrót assetu — warstwy jako płaskie wycinki w przestrzeni.
-     *
-     * Nie udajemy modelu 3D: gra rysuje płaskie kształty i to jest cała prawda
-     * o tym assecie. Głębokość bierze się z kolejności rysowania, więc obrót
-     * pokazuje coś, co asset naprawdę ma — co jest nad czym i jak daleko.
-     *
-     * Rzut równoległy, bez perspektywy: każda warstwa to obrazek z afinicznym
-     * przekształceniem, więc jedno `setTransform` wystarcza. Warstwa nie zmienia
-     * się przy obrocie, więc rysujemy ją raz i używamy we wszystkich ujęciach.
-     */
-    function orbitFrames(id, steps, pitchDeg, explode, max) {
-      var spec = studioSpec(id);
-      var keys = Object.keys(spec.parts);
-      var hidden = hiddenParts(id, keys);
-      var ext = studioExtent(spec, hidden, 0.16);
-      var b = (pitchDeg * Math.PI) / 180;
-      var sinB = Math.sin(b),
-        cosB = Math.cos(b);
-
-      var layers = spec.layers.filter(function (l) {
-        return !hidden[l.key];
-      });
-      // Rozstaw liczony względem szerokości modelu: sztywny mnożnik rozrzucał
-      // małego drona po całym kadrze, a wielką panoramę zostawiał sklejoną.
-      var zSpan = 1;
-      layers.forEach(function (l) {
-        zSpan = Math.max(zSpan, Math.abs(l.z));
-      });
-      var spread = 1 + (explode * (ext[2] * 0.22)) / zSpan;
-      var zOf = {};
-      layers.forEach(function (l) {
-        zOf[l.key] = l.z * spread;
-      });
-
-      /**
-       * Obrót ograniczony do ±60°.
-       *
-       * Płaska warstwa oglądana z boku znika — to prawda o tym assecie, ale
-       * bezużyteczna: pełne 360° oddawałoby połowę ujęć na nitki. Wachlarz
-       * pokazuje układ warstw i zostawia model czytelnym.
-       */
-      var SWING = (60 * Math.PI) / 180;
-      function yawAt(step) {
-        return steps < 2 ? 0 : -SWING + (step / (steps - 1)) * SWING * 2;
-      }
-
-      // Wspólny kadr: rzutujemy narożniki wszystkich warstw we wszystkich ujęciach.
-      var px0 = Infinity,
-        py0 = Infinity,
-        px1 = -Infinity,
-        py1 = -Infinity;
-      function project(x, y, z, sinA, cosA) {
-        return [x * cosA + z * sinA, x * sinA * sinB + y * cosB - z * cosA * sinB];
-      }
-      for (var s = 0; s < steps; s++) {
-        var aa = yawAt(s),
-          sA = Math.sin(aa),
-          cA = Math.cos(aa);
-        layers.forEach(function (l) {
-          var p = spec.parts[l.key];
-          if (!p) return;
-          [
-            [p[0], p[1]],
-            [p[0] + p[2], p[1]],
-            [p[0], p[1] + p[3]],
-            [p[0] + p[2], p[1] + p[3]]
-          ].forEach(function (c2) {
-            var q = project(c2[0], c2[1], zOf[l.key], sA, cA);
-            px0 = Math.min(px0, q[0]);
-            py0 = Math.min(py0, q[1]);
-            px1 = Math.max(px1, q[0]);
-            py1 = Math.max(py1, q[1]);
-          });
-        });
-      }
-      var mp = 4;
-      px0 -= mp;
-      py0 -= mp;
-      px1 += mp;
-      py1 += mp;
-      var k = Math.min(max / (px1 - px0), max / (py1 - py0));
-      var cw = Math.max(1, Math.round((px1 - px0) * k)),
-        ch = Math.max(1, Math.round((py1 - py0) * k));
-
-      // Każda warstwa raz, w lokalnym kadrze — potem tylko przekształcana.
-      var tiles = {};
-      var st0 = spec.state(0, null);
-      layers.forEach(function (l) {
-        var c = doc.createElement('canvas');
-        c.width = Math.max(1, Math.round(ext[2] * k));
-        c.height = Math.max(1, Math.round(ext[3] * k));
-        var g = c.getContext('2d');
-        if (!g) return;
-        g.translate(-ext[0] * k, -ext[1] * k);
-        g.scale(k, k);
-        try {
-          l.draw(g, st0);
-        } catch (err) {
-          /* pusta warstwa jest dopuszczalna */
-        }
-        tiles[l.key] = c;
-      });
-
-      var frames = [],
-        boxesPerFrame = [];
-      for (var f = 0; f < steps; f++) {
-        var a = yawAt(f),
-          sinA = Math.sin(a),
-          cosA = Math.cos(a);
-        var c3 = doc.createElement('canvas');
-        c3.width = cw;
-        c3.height = ch;
-        var g3 = c3.getContext('2d');
-        if (!g3) break;
-
-        // Od najdalszej do najbliższej — po obrocie kolejność potrafi się odwrócić.
-        var order = layers.slice().sort(function (l1, l2) {
-          return zOf[l1.key] * cosA - zOf[l2.key] * cosA;
-        });
-        order.forEach(function (l) {
-          var tile = tiles[l.key];
-          if (!tile) return;
-          var z = zOf[l.key];
-
-          // Obrys płaszczyzny warstwy — bez niego rzadka warstwa (dwie łopaty)
-          // wisi w powietrzu i nie widać, że to osobna kartka w stosie.
-          var pr = spec.parts[l.key];
-          if (pr) {
-            g3.setTransform(1, 0, 0, 1, 0, 0);
-            g3.beginPath();
-            [
-              [pr[0], pr[1]],
-              [pr[0] + pr[2], pr[1]],
-              [pr[0] + pr[2], pr[1] + pr[3]],
-              [pr[0], pr[1] + pr[3]]
-            ].forEach(function (c5, i) {
-              var q2 = project(c5[0], c5[1], z, sinA, cosA);
-              var X = (q2[0] - px0) * k,
-                Y = (q2[1] - py0) * k;
-              if (i) g3.lineTo(X, Y);
-              else g3.moveTo(X, Y);
-            });
-            g3.closePath();
-            g3.strokeStyle = 'rgba(148, 163, 184, 0.17)';
-            g3.lineWidth = 1;
-            g3.stroke();
-          }
-
-          var A11 = cosA,
-            A12 = sinA * sinB,
-            A21 = 0,
-            A22 = cosB;
-          var E = k * (cosA * ext[0] + z * sinA - px0);
-          var F = k * (sinA * sinB * ext[0] + cosB * ext[1] - z * cosA * sinB - py0);
-          g3.save();
-          g3.setTransform(A11, A12, A21, A22, E, F);
-          g3.drawImage(tile, 0, 0);
-          g3.restore();
-        });
-        g3.setTransform(1, 0, 0, 1, 0, 0);
-
-        var fb = {};
-        layers.forEach(function (l) {
-          var p = spec.parts[l.key];
-          if (!p) return;
-          var z = zOf[l.key];
-          var xs = [],
-            ys = [];
-          [
-            [p[0], p[1]],
-            [p[0] + p[2], p[1]],
-            [p[0], p[1] + p[3]],
-            [p[0] + p[2], p[1] + p[3]]
-          ].forEach(function (c4) {
-            var q = project(c4[0], c4[1], z, sinA, cosA);
-            xs.push((q[0] - px0) * k);
-            ys.push((q[1] - py0) * k);
-          });
-          var bx = Math.max(0, Math.min.apply(null, xs)),
-            by = Math.max(0, Math.min.apply(null, ys));
-          var bw = Math.min(cw, Math.max.apply(null, xs)) - bx,
-            bh = Math.min(ch, Math.max.apply(null, ys)) - by;
-          if (bw > 2 && bh > 2) fb[l.key] = [bx, by, bw, bh];
-        });
-        boxesPerFrame.push(fb);
-
-        try {
-          frames.push(c3.toDataURL('image/png'));
-        } catch (err) {
-          break;
-        }
-      }
-
-      return { frames: frames, boxesPerFrame: boxesPerFrame, hidden: hidden, size: [cw, ch], anims: spec.anims };
     }
 
     /**
@@ -5110,27 +4096,6 @@
       post({ type: 'hover', id: n ? n.id : null, label: n ? n.label : null });
     }
     function sendPick(id, why) {
-      var mk = IS3D ? modelKeyFor(id) : isModel3d(id) ? id : null;
-      if (mk) {
-        // Byt sceny 3D: opis bierze z modelu, ale prostokąt z tego, co widać na
-        // scenie — dzięki temu pinezki i najazd działają tak samo jak w 2D.
-        var nn = findNode(id);
-        var mp = model3dPick(mk);
-        mp.id = id;
-        mp.label = nn ? nn.label : mp.label;
-        mp.path = nn ? nn.path : mp.path;
-        if (nn) {
-          mp.x = Math.round(nn.r[0]);
-          mp.y = Math.round(nn.r[1]);
-          mp.w = Math.round(nn.r[2]);
-          mp.h = Math.round(nn.r[3]);
-        }
-        mp.modelKey = mk;
-        mp.why = why || 'pick';
-        S.picked = id;
-        post(mp);
-        return;
-      }
       var n = findNode(id);
       if (!n) return;
       S.picked = id;
@@ -5543,8 +4508,8 @@
         S.fpsAt = ts;
         post({ type: 'stats', fps: S.fps, score: S.score, lives: S.lives, manual: S.t < S.manualUntil });
       }
-      if (!S.paused) IS3D ? update3d() : update(dt);
-      IS3D ? draw3d() : draw();
+      if (!S.paused) update(dt);
+      draw();
       paintOverlay();
 
       if (clip) {
@@ -5602,52 +4567,11 @@
           post({ type: 'tree', nodes: treePayload() });
           break;
         case 'segment': {
-          var seg = segmentAsset(modelKeyFor(m.id) || m.id, m.max || 620);
+          var seg = segmentAsset(m.id, m.max || 620);
           post({ type: 'segment', id: m.id, token: m.token || null, segments: seg.segments, size: seg.size, png: seg.png });
           break;
         }
-        case 'orbit': {
-          if (modelKeyFor(m.id)) {
-            var m3res = model3dFrames(modelKeyFor(m.id), m.steps || 36, m.pitch == null ? 18 : m.pitch, m.anim || null, m.max || 620, null);
-            post({
-              type: 'orbit',
-              id: m.id,
-              token: m.token || null,
-              frames: m3res.frames,
-              boxesPerFrame: m3res.boxesPerFrame,
-              hidden: {},
-              size: m3res.size
-            });
-            break;
-          }
-          var ores = orbitFrames(m.id, m.steps || 24, m.pitch == null ? 22 : m.pitch, m.explode || 0, m.max || 420);
-          post({
-            type: 'orbit',
-            id: m.id,
-            token: m.token || null,
-            frames: ores.frames,
-            boxesPerFrame: ores.boxesPerFrame,
-            hidden: ores.hidden,
-            size: ores.size
-          });
-          break;
-        }
         case 'studio': {
-          if (modelKeyFor(m.id)) {
-            var sm = model3dFrames(modelKeyFor(m.id), m.count || 1, 18, m.anim || null, m.max || 620, 0.62);
-            post({
-              type: 'studio',
-              id: m.id,
-              token: m.token || null,
-              anim: m.anim || null,
-              frames: sm.frames,
-              boxes: sm.boxesPerFrame[0] || {},
-              hidden: {},
-              size: sm.size,
-              anims: MODELS_3D[modelKeyFor(m.id)].anims
-            });
-            break;
-          }
           var sres = studioFrames(m.id, m.count || 1, m.max || 420, m.anim || null);
           post({
             type: 'studio',
@@ -5805,8 +4729,7 @@
           color: coins.color
         },
         { id: 'hud-score', label: 'Licznik punktów', kind: 'hud', parent: 'HUD', color: hud.color },
-        { id: 'hud-lives', label: 'Życia', kind: 'hud', parent: 'HUD', color: hud.color },
-        { id: 'model:drone3d', label: 'Dron kurierski DX-4', kind: 'model 3d', parent: 'Modele 3D', color: '#dbe4ee' }
+        { id: 'hud-lives', label: 'Życia', kind: 'hud', parent: 'HUD', color: hud.color }
       ];
     }
 
@@ -5828,90 +4751,48 @@
       for (var i = 0; i < handlers.length; i++) handlers[i](m);
     }
 
-    // Dwa podglądy: gra 2D i gra 3D, każda we własnej piaskownicy — tak jak w
-    // produkcji, bez allow-same-origin. Ta sama funkcja gry, inny parametr sceny.
-    var SCENES = [
-      { key: '2d', title: 'Neonowy Kurier — gra 2D', holder: 'holder' },
-      { key: '3d', title: 'Kurierzy DX — gra 3D', holder: 'holder3d' }
-    ];
-    var frames = {};
-    var activeScene = '2d';
-
-    function mountScene(def) {
-      var box = document.getElementById(def.holder);
-      if (!box) return;
-      var iframe = document.createElement('iframe');
-      iframe.setAttribute('sandbox', 'allow-scripts');
-      iframe.setAttribute('title', def.title);
-      iframe.srcdoc =
-        '<!doctype html><html lang="pl"><head><meta charset="utf-8">' +
-        '<style>html,body{margin:0;height:100%;background:#0b1018;overflow:hidden}#root{width:100vw;height:100vh}</style>' +
-        '</head><body><div id="root"></div><script>(' +
-        GAME_MAIN.toString() +
-        ')(document.getElementById("root"),function(m){m.source="' +
-        PLAYER +
-        '";m.scene="' +
-        def.key +
-        '";parent.postMessage(m,"*")},function(cb){addEventListener("message",function(e){var d=e.data||{};if(d.source==="' +
-        HOST +
-        '"&&(!d.scene||d.scene==="' +
-        def.key +
-        '"))cb(d)})},"' +
-        def.key +
-        '")<' +
-        '/script></body></html>';
-      box.appendChild(iframe);
-      frames[def.key] = iframe;
-    }
-    SCENES.forEach(mountScene);
-    var iframe = frames['2d'];
+    // Tak jak w produkcji: piaskownica bez allow-same-origin.
+    var iframe = document.createElement('iframe');
+    iframe.setAttribute('sandbox', 'allow-scripts');
+    iframe.setAttribute('title', 'Neonowy Kurier — podgląd gry');
+    iframe.srcdoc =
+      '<!doctype html><html lang="pl"><head><meta charset="utf-8">' +
+      '<style>html,body{margin:0;height:100%;background:#0b1018;overflow:hidden}#root{width:100vw;height:100vh}</style>' +
+      '</head><body><div id="root"></div><script>(' +
+      GAME_MAIN.toString() +
+      ')(document.getElementById("root"),function(m){m.source="' +
+      PLAYER +
+      '";parent.postMessage(m,"*")},function(cb){addEventListener("message",function(e){var d=e.data||{};if(d.source==="' +
+      HOST +
+      '")cb(d)})})<' +
+      '/script></body></html>';
+    holder.appendChild(iframe);
 
     window.addEventListener('message', function (e) {
       var d = e.data || {};
       if (d.source !== PLAYER) return;
       onGame(d);
     });
-
-    /**
-     * Komunikat trafia do sceny, której dotyczy.
-     *
-     * Bez adresowania pauza w jednym podglądzie zatrzymywałaby oba, a prośba o
-     * ujęcie assetu 3D szłaby też do gry 2D, która nic o nim nie wie.
-     */
-    send = function (m, scene) {
+    send = function (m) {
       m.source = HOST;
-      var key = scene || m.scene || activeScene;
-      m.scene = key;
-      var target = frames[key];
-      if (target && target.contentWindow) target.contentWindow.postMessage(m, '*');
+      if (iframe.contentWindow) iframe.contentWindow.postMessage(m, '*');
     };
 
-    function sendAll(m) {
-      Object.keys(frames).forEach(function (k) {
-        send(Object.assign({}, m), k);
-      });
-    }
-
-    var ready = {};
+    var ready = false;
     handlers.push(function (m) {
-      if (m.type === 'ready') ready[m.scene || '2d'] = true;
+      if (m.type === 'ready') ready = true;
     });
 
-    // Awaryjne montowanie w tym dokumencie (gdy CSP nie wpuści skryptu do
-    // srcdoc) obsługuje tylko grę 2D: dwie sceny bez piaskownicy dzieliłyby
-    // jeden dokument i deptały sobie po nasłuchach klawiatury.
+    // Awaryjnie (np. gdyby CSP nie wpuściło skryptu do srcdoc): ta sama funkcja
+    // gry, zamontowana w tym dokumencie.
     setTimeout(function () {
-      if (ready['2d']) return;
-      var holder2d = document.getElementById('holder');
-      if (frames['2d']) frames['2d'].remove();
+      if (ready) return;
+      iframe.remove();
       var inline = document.createElement('div');
       inline.className = 'inline-game';
-      holder2d.appendChild(inline);
+      holder.appendChild(inline);
       var inlineListen = function () {};
-      var prevSend = send;
-      send = function (m, scene) {
-        var key = scene || m.scene || activeScene;
-        if (key !== '2d') return prevSend(m, scene);
+      send = function (m) {
         m.source = HOST;
         setTimeout(function () {
           inlineListen(m);
@@ -5921,19 +4802,17 @@
         inline,
         function (m) {
           m.source = PLAYER;
-          m.scene = '2d';
           onGame(m);
         },
         function (cb) {
           inlineListen = cb;
         },
-        '2d',
       );
-      send({ type: 'hello' }, '2d');
+      send({ type: 'hello' });
     }, 1600);
 
     setTimeout(function () {
-      sendAll({ type: 'hello' });
+      send({ type: 'hello' });
     }, 120);
 
     /* ---------------- stan hosta ---------------- */
@@ -5962,7 +4841,7 @@
     /* ---------------- pasek narzędzi ---------------- */
     function setPaused(next) {
       UI.paused = next;
-      sendAll({ type: next ? 'pause' : 'resume' });
+      send({ type: next ? 'pause' : 'resume' });
       $('play-icon').textContent = next ? '▶' : '⏸';
       $('play-label').textContent = next ? 'Graj' : 'Pauza';
       holder.classList.toggle('is-inspect', next || UI.inspect);
@@ -5974,7 +4853,7 @@
     }
     function setInspect(next) {
       UI.inspect = next;
-      sendAll({ type: 'inspect', on: next });
+      send({ type: 'inspect', on: next });
       $('btn-inspect').classList.toggle('btn--on', next);
       $('btn-inspect').setAttribute('aria-pressed', String(next));
       holder.classList.toggle('is-inspect', next || UI.paused);
@@ -6019,7 +4898,6 @@
         UI.hoverId = m.id;
         if (UI.tab === 'tree') renderInspector();
       } else if (m.type === 'pick') {
-        if (m.scene) activeScene = m.scene;
         var keepNote = UI.picked && UI.picked.id === m.id;
         UI.picked = m;
         if (!keepNote) UI.noteText = '';
@@ -6332,10 +5210,6 @@
       frame: 0,
       playing: false,
       timer: null,
-      /** Tryb obrotu: warstwy assetu rozstawione w głąb. */
-      orbit: false,
-      explode: 1,
-      boxesPerFrame: [],
       hidden: {},
       /** Wynik auto-podziału modelu na części. */
       segments: [],
@@ -6373,10 +5247,8 @@
       studioCache = {};
       document.querySelector('.console').classList.add('console--asset');
       if (!UI.paused) setPaused(true);
-      ASSET.orbit = Boolean(UI.picked.is3d);
       renderAsset();
-      if (ASSET.orbit) loadOrbit();
-      else loadShot(null);
+      loadShot(null);
       renderThread();
       renderChips();
       renderQuick();
@@ -6529,32 +5401,56 @@
       send({ type: 'studio', id: id, token: token, anim: anim || null, count: count, max: 620 });
     }
     handlers.push(function (m) {
-      if ((m.type === 'studio' || m.type === 'orbit' || m.type === 'segment') && m.token && previewCbs[m.token]) {
+      if ((m.type === 'studio' || m.type === 'segment') && m.token && previewCbs[m.token]) {
         previewCbs[m.token](m);
         delete previewCbs[m.token];
       }
     });
 
+    function stopAnim() {
+      if (ASSET.timer) clearInterval(ASSET.timer);
+      ASSET.timer = null;
+      ASSET.playing = false;
+    }
+
     /**
-     * Obrót jako obrotówka: 24 ujęcia przychodzą jednym komunikatem, a
-     * przeciąganie myszą przelicza się na numer ujęcia. Renderowanie na żywo
-     * przy każdym ruchu kursora to kilkadziesiąt przelotów przez most na sekundę.
+     * Wczytuje ujęcie assetu i — gdy podano animację — zapętla je.
+     *
+     * Klatki lecą jednym komunikatem, a potem chodzą lokalnie: prośba o każdą
+     * klatkę z osobna to kilkanaście przelotów przez most na sekundę.
      */
-    function askOrbit(id, explode, cb) {
-      var key = id + '|orbit|' + explode;
-      if (studioCache[key]) return cb(studioCache[key]);
-      var token = 'p' + ++previewSeq;
-      previewCbs[token] = function (m) {
-        var data = {
-          frames: m.frames || [],
-          boxesPerFrame: m.boxesPerFrame || [],
-          hidden: m.hidden || {},
-          size: m.size || [1, 1]
-        };
-        studioCache[key] = data;
-        cb(data);
-      };
-      send({ type: 'orbit', id: id, token: token, steps: 24, pitch: 20, explode: explode, max: 620 });
+    function loadShot(anim) {
+      if (!ASSET.node) return;
+      stopAnim();
+      ASSET.anim = anim || null;
+      var count = anim ? 18 : 1;
+      askStudio(ASSET.node.id, anim, count, function (data) {
+        if (!ASSET.open || ASSET.anim !== (anim || null)) return;
+        ASSET.frames = data.frames;
+        ASSET.boxes = data.boxes;
+        ASSET.hidden = data.hidden || {};
+        ASSET.size = data.size;
+        ASSET.frame = 0;
+        // Kolejność ma znaczenie: obszary subassetów rysują się tylko na
+        // nieruchomym modelu, więc flaga musi być ustawiona przed renderem.
+        ASSET.playing = Boolean(anim && data.frames.length > 1);
+        renderAsset();
+        if (ASSET.playing) {
+          ASSET.timer = setInterval(function () {
+            if (!ASSET.open) return stopAnim();
+            ASSET.frame = (ASSET.frame + 1) % ASSET.frames.length;
+            var img = document.querySelector('.shot-wrap img');
+            if (img) img.src = ASSET.frames[ASSET.frame];
+            var counter = $('shot-counter');
+            if (counter && ASSET.node) {
+              counter.textContent =
+                ASSET.node.asset.file.split('/').pop() +
+                ' · ' + ASSET.node.asset.layer +
+                ' · klatka ' + (ASSET.frame + 1) + '/' + ASSET.frames.length;
+            }
+          }, 70);
+        }
+      });
     }
 
     /**
@@ -6565,13 +5461,6 @@
     function runSegment() {
       if (!ASSET.node) return;
       var node = ASSET.node;
-      // Analiza patrzy na ujęcie spoczynkowe — w orbicie prostokąty części
-      // odnosiłyby się do innego kąta niż to, co widać.
-      if (node.is3d && ASSET.orbit) {
-        ASSET.orbit = false;
-        ASSET.anim = null;
-        loadShot(null);
-      }
       ASSET.segmenting = true;
       renderAsset();
       var token = 'p' + ++previewSeq;
@@ -6610,159 +5499,6 @@
         renderThread();
       };
       send({ type: 'segment', id: node.id, token: token, max: 620 });
-    }
-
-    function loadOrbit() {
-      if (!ASSET.node) return;
-      stopAnim();
-      ASSET.anim = null;
-      askOrbit(ASSET.node.id, ASSET.explode, function (data) {
-        if (!ASSET.open || !ASSET.orbit) return;
-        ASSET.frames = data.frames;
-        ASSET.boxesPerFrame = data.boxesPerFrame;
-        ASSET.hidden = data.hidden;
-        ASSET.size = data.size;
-        // Start na wprost, nie na skraju wachlarza.
-        if (!ASSET.frames.length || ASSET.frame === 0) ASSET.frame = Math.floor(data.frames.length / 2);
-        ASSET.frame = Math.min(ASSET.frame, Math.max(0, data.frames.length - 1));
-        ASSET.boxes = data.boxesPerFrame[ASSET.frame] || {};
-        renderAsset();
-      });
-    }
-
-    /** Przeciąganie po modelu obraca go — jak w edytorze CAD, tylko płasko. */
-    function orbitDrag(stage) {
-      var startX = 0,
-        startFrame = 0,
-        moved = 0,
-        dragging = false,
-        captured = false,
-        swallowClick = false;
-
-      // Obszary subassetów pokrywają model, więc przeciąganie musi startować
-      // także z nich — o tym, czy to był obrót czy wskazanie, decyduje dystans.
-      stage.addEventListener(
-        'click',
-        function (e) {
-          if (!swallowClick) return;
-          swallowClick = false;
-          e.stopPropagation();
-          e.preventDefault();
-        },
-        true,
-      );
-      stage.addEventListener('pointerdown', function (e) {
-        // Każde nowe wciśnięcie zaczyna od zera: inaczej „połknięcie” kliknięcia
-        // po obrocie czekałoby i zjadało pierwszy klik zupełnie gdzie indziej.
-        swallowClick = false;
-        if (!ASSET.orbit) return;
-        dragging = true;
-        moved = 0;
-        startX = e.clientX;
-        startFrame = ASSET.frame;
-        captured = false;
-      });
-      stage.addEventListener('pointermove', function (e) {
-        if (!dragging || !ASSET.frames.length) return;
-        moved = Math.max(moved, Math.abs(e.clientX - startX));
-        // Wskaźnik przechwytujemy dopiero, gdy to naprawdę jest obrót:
-        // przechwycony od razu przekierowuje też kliknięcie, więc wskazanie
-        // subassetu trafiałoby w scenę zamiast w obszar subassetu.
-        if (moved > 4 && !captured) {
-          captured = true;
-          stage.style.cursor = 'grabbing';
-          try {
-            stage.setPointerCapture(e.pointerId);
-          } catch (err) {
-            /* bez przechwycenia obrót działa, dopóki kursor jest nad sceną */
-          }
-        }
-        if (!captured) return;
-        var perStep = Math.max(6, stage.clientWidth / ASSET.frames.length / 1.6);
-        var delta = Math.round((e.clientX - startX) / perStep);
-        var next = ((startFrame - delta) % ASSET.frames.length + ASSET.frames.length) % ASSET.frames.length;
-        if (next === ASSET.frame) return;
-        ASSET.frame = next;
-        ASSET.boxes = ASSET.boxesPerFrame[next] || {};
-        var img = stage.querySelector('.shot-wrap img');
-        if (img) img.src = ASSET.frames[next];
-        var wrap = stage.querySelector('.shot-wrap');
-        if (wrap && ASSET.node) drawHotspots(wrap, ASSET.node.editor);
-        var gridEl = $('viewer-grid');
-        if (gridEl) gridEl.style.setProperty('--yaw', orbitAngle(next) * 0.9 + 'deg');
-        var counter = $('shot-counter');
-        if (counter && ASSET.node) {
-          counter.textContent =
-            ASSET.node.asset.file.split('/').pop() +
-            ' · ' + ASSET.node.asset.layer +
-            ' · ' + ASSET.node.asset.instances + '×' +
-            ' · obrót ' + orbitAngle(next) + '°';
-        }
-      });
-      function end(e) {
-        if (!dragging) return;
-        dragging = false;
-        if (moved > 4) swallowClick = true;
-        stage.style.cursor = ASSET.orbit ? 'grab' : '';
-        if (!captured) return;
-        captured = false;
-        try {
-          stage.releasePointerCapture(e.pointerId);
-        } catch (err) {
-          /* przeglądarka mogła już zwolnić wskaźnik */
-        }
-      }
-      stage.addEventListener('pointerup', end);
-      stage.addEventListener('pointercancel', end);
-    }
-
-    function stopAnim() {
-      if (ASSET.timer) clearInterval(ASSET.timer);
-      ASSET.timer = null;
-      ASSET.playing = false;
-    }
-
-    /**
-     * Wczytuje ujęcie assetu i — gdy podano animację — zapętla je.
-     *
-     * Klatki lecą jednym komunikatem, a potem chodzą lokalnie: prośba o każdą
-     * klatkę z osobna to kilkanaście przelotów przez most na sekundę.
-     */
-    function loadShot(anim) {
-      if (!ASSET.node) return;
-      stopAnim();
-      // Klip ma stały kąt kamery, więc odtwarzanie wychodzi z orbity; po stopie
-      // model 3D wraca do orbity, bo tam jest jego dom.
-      if (anim && ASSET.orbit) ASSET.orbit = false;
-      if (!anim && ASSET.node.is3d && !ASSET.orbit && ASSET.anim) {
-        ASSET.orbit = true;
-        ASSET.anim = null;
-        return loadOrbit();
-      }
-      ASSET.anim = anim || null;
-      var count = anim ? 18 : 1;
-      askStudio(ASSET.node.id, anim, count, function (data) {
-        if (!ASSET.open || ASSET.anim !== (anim || null)) return;
-        ASSET.frames = data.frames;
-        ASSET.boxes = data.boxes;
-        ASSET.hidden = data.hidden || {};
-        ASSET.size = data.size;
-        ASSET.frame = 0;
-        // Kolejność ma znaczenie: obszary subassetów rysują się tylko na
-        // nieruchomym modelu, więc flaga musi być ustawiona przed renderem.
-        ASSET.playing = Boolean(anim && data.frames.length > 1);
-        renderAsset();
-        if (ASSET.playing) {
-          ASSET.timer = setInterval(function () {
-            if (!ASSET.open) return stopAnim();
-            ASSET.frame = (ASSET.frame + 1) % ASSET.frames.length;
-            var img = document.querySelector('.shot-wrap img');
-            if (img) img.src = ASSET.frames[ASSET.frame];
-            var counter = $('shot-counter');
-            if (counter) counter.textContent = 'klatka ' + (ASSET.frame + 1) + ' z ' + ASSET.frames.length;
-          }, 70);
-        }
-      });
     }
 
     /** Klikalne obszary subassetów — jedyna droga do zaznaczenia subassetu. */
@@ -6927,7 +5663,6 @@
       /* --- płyta siatki --- */
       var grid = el('div', 'viewer-grid');
       grid.id = 'viewer-grid';
-      grid.style.setProperty('--yaw', (ASSET.orbit ? orbitAngle(ASSET.frame) * 0.9 : 0) + 'deg');
       host.appendChild(grid);
 
       /* --- model --- */
@@ -6938,7 +5673,7 @@
       if (ASSET.frames.length) img.src = ASSET.frames[Math.min(ASSET.frame, ASSET.frames.length - 1)];
       shot.appendChild(img);
       host.appendChild(shot);
-      if (ASSET.segments.length && !ASSET.orbit && !ASSET.playing) drawSegments(shot, ed);
+      if (ASSET.segments.length && !ASSET.playing) drawSegments(shot, ed);
       else if (!ASSET.playing) drawHotspots(shot, ed);
 
       /* --- nagłówek nad widokiem --- */
@@ -6968,43 +5703,15 @@
       head.appendChild(titleBox);
 
       var acts = el('div', 'viewer-actions');
-      var modeSwitch = el('div', 'mode-switch');
-      var is3d = Boolean(node.is3d);
-      [
-        [is3d ? 'Ujęcie' : '2D', false],
-        [is3d ? 'Orbita 360°' : 'Warstwy 3D', true]
-      ].forEach(function (row) {
-        var locked = row[1] && !is3d;
-        var b = el('button', (ASSET.orbit === row[1] ? 'is-on' : '') + (locked ? ' is-locked' : ''), locked ? '🔒 3D' : row[0]);
-        // Asset 2D nie ma bryły do obrócenia — obrót byłby udawaniem modelu,
-        // którego w grze nie ma.
-        if (locked) {
-          b.disabled = true;
-          b.title = 'Asset 2D — nie ma bryły do obrócenia. Model 3D otwiera tę zakładkę.';
-        }
-        b.onclick = function () {
-          if (locked) return;
-          if (ASSET.orbit === row[1]) return;
-          ASSET.orbit = row[1];
-          ASSET.frame = 0;
-          if (row[1]) loadOrbit();
-          else loadShot(null);
-        };
-        modeSwitch.appendChild(b);
-      });
-      acts.appendChild(modeSwitch);
       if (ASSET.anim) {
         acts.appendChild(
           el('span', 'fig-badge playing-chip', (ASSET.playing ? '▶ ' : '⏸ ') + (animLabel(ed, ASSET.anim) || ASSET.anim)),
         );
       }
-      // Model 3D leży w projekcie, nie na scenie 2D — nie ma go gdzie pokazać.
-      if (!node.is3d) {
-        var sceneBtn = el('button', 'btn btn--sm', '▶ Scena');
-        sceneBtn.id = 'scene-open';
-        sceneBtn.onclick = openScene;
-        acts.appendChild(sceneBtn);
-      }
+      var sceneBtn = el('button', 'btn btn--sm', '▶ Scena');
+      sceneBtn.id = 'scene-open';
+      sceneBtn.onclick = openScene;
+      acts.appendChild(sceneBtn);
       var closeBtn = el('button', 'btn btn--sm', '✕');
       closeBtn.id = 'asset-close';
       closeBtn.title = 'Wróć do studia';
@@ -7024,9 +5731,7 @@
           'viewer-hint',
           ASSET.playing
             ? 'Animacja leci — zatrzymaj ją, żeby wskazywać subassety'
-            : ASSET.orbit
-              ? 'Przeciągnij, żeby obrócić · kliknij część modelu, żeby dopiąć ją do wiadomości'
-              : 'Kliknij część modelu, żeby dopiąć ją do wiadomości jako załącznik',
+            : 'Kliknij część modelu, żeby dopiąć ją do wiadomości jako załącznik',
         ),
       );
 
@@ -7042,11 +5747,7 @@
           node.asset.instances +
           '× · ' +
           node.asset.cost +
-          (ASSET.orbit
-            ? ' · obrót ' + orbitAngle(ASSET.frame) + '°'
-            : ASSET.frames.length > 1
-              ? ' · klatka ' + (ASSET.frame + 1) + '/' + ASSET.frames.length
-              : '') +
+          (ASSET.frames.length > 1 ? ' · klatka ' + (ASSET.frame + 1) + '/' + ASSET.frames.length : '') +
           (ASSET.sel.length ? ' · ' + ASSET.sel.length + ' w wiadomości' : ''),
       );
       readout.id = 'shot-counter';
@@ -7087,41 +5788,10 @@
           bar.appendChild(b);
         });
       }
-      if (ASSET.orbit && !node.is3d) {
-        bar.appendChild(el('span', 'bar-label', 'Rozstrzel'));
-        var ex = document.createElement('input');
-        ex.type = 'range';
-        ex.min = '0';
-        ex.max = '3';
-        ex.step = '1';
-        ex.value = String(ASSET.explode);
-        ex.style.width = '92px';
-        ex.className = 'explode-slider';
-        ex.setAttribute('aria-label', 'Rozstrzelenie warstw');
-        ex.onchange = function () {
-          ASSET.explode = parseInt(ex.value, 10);
-          loadOrbit();
-        };
-        bar.appendChild(ex);
-      }
       foot.appendChild(bar);
       host.appendChild(foot);
 
-      if (ASSET.orbit) {
-        host.style.cursor = 'grab';
-        orbitDrag(host);
-      } else {
-        host.style.cursor = '';
-      }
-
       syncChatContext();
-    }
-
-    /** Kąt ujęcia w stopniach — wachlarz idzie od −60° do +60°. */
-    function orbitAngle(frame) {
-      var n = ASSET.frames.length;
-      if (n < 2) return 0;
-      return Math.round(-60 + (frame / (n - 1)) * 120);
     }
 
     /** Model zajmuje połowę panelu — i mieści się nad paskiem na dole. */
