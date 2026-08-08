@@ -1167,6 +1167,52 @@
     flex: none;
   }
 
+  /* Dwa podglądy obok siebie: ta sama konsola, dwa silniki. */
+  .stage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+  }
+
+  .preview {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-width: 0;
+  }
+
+  .preview-tag {
+    position: absolute;
+    top: -22px;
+    left: 2px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-dim);
+  }
+
+  .preview .holder {
+    width: 100%;
+    max-width: none;
+  }
+
+  @supports (container-type: size) {
+    .preview .holder {
+      width: min(100%, calc(100cqh * 16 / 9));
+    }
+  }
+
+  @media (max-width: 1240px) {
+    .stage-grid {
+      grid-template-columns: 1fr;
+      gap: 26px;
+    }
+  }
+
   /* ---- viewer: cały komponent, jak stół w 3daistudio ---- */
   .rail--asset {
     overflow: hidden;
@@ -2172,8 +2218,17 @@
       </div>
 
       <div class="viewport">
-        <div class="holder" id="holder">
-          <div class="rec" id="rec"><i></i> Nagrywam klip <b id="rec-time">4.0s</b></div>
+        <div class="stage-grid">
+          <div class="preview">
+            <span class="preview-tag">Gra 2D · canvas2d</span>
+            <div class="holder" id="holder">
+              <div class="rec" id="rec"><i></i> Nagrywam klip <b id="rec-time">4.0s</b></div>
+            </div>
+          </div>
+          <div class="preview">
+            <span class="preview-tag">Gra 3D · webgl3d</span>
+            <div class="holder" id="holder3d"></div>
+          </div>
         </div>
         <div class="hint-strip" id="hint">
           Naciśnij <kbd>I</kbd> i najedź kursorem na grę — elementy podświetlą się jak w Claude
@@ -2255,17 +2310,18 @@
     </div>
 
     <div class="card">
-      <h3>Wskazywanie działa na żywym obiekcie</h3>
+      <h3>Dwie gry, jeden most</h3>
       <p>
-        Nie na DOM-ie i nie na zrzucie. Most w ramce gry trzyma rejestr encji sceny i odpowiada na
-        pytanie „co jest pod tym punktem” prostokątem w układzie logicznym gry. Dlatego działa też
-        wtedy, gdy cała gra to jeden <code>&lt;canvas&gt;</code>.
+        Konsola pokazuje dwa podglądy naraz: <b>Neonowy Kurier</b> na canvasie 2D i <b>Kurierzy
+        DX</b> — grę 3D z bryłami, cieniowaniem i sortowaniem malarskim. Każda leci we własnej
+        piaskownicy, obie gadają tym samym mostem <code>gdpl-host</code> / <code>gdpl-player</code>,
+        tylko komunikaty są adresowane sceną.
       </p>
       <p style="margin-top: 7px">
-        Pauza sama otwiera wskazywanie — zatrzymanej gry nie trzeba przełączać w żaden tryb, żeby w
-        nią kliknąć. Wybrany element pokazuje metryczkę assetu: typ, plik i funkcję rysującą,
-        warstwę, kolider, animację, dźwięk, liczbę instancji i koszt klatki. Miniatura to wycinek
-        żywej sceny, nie ikonka — dlatego widać na niej także to, co akurat obok przelatuje.
+        Wskazywanie działa w obu tak samo. Encje sceny 3D oddają prostokąt policzony z rzutu ich
+        bryły, więc najazd, pinezki, klatka i klip nie wiedzą nawet, że patrzą na coś innego. Klik w
+        drona na scenie 3D otwiera ten sam model, który leży w drzewie projektu — bo to ten sam
+        asset.
       </p>
     </div>
 
@@ -2333,7 +2389,8 @@
    * ta sama warstwa komunikatów.
    * ===================================================================== */
 
-  function GAME_MAIN(root, post, listen) {
+  function GAME_MAIN(root, post, listen, sceneKind) {
+    var IS3D = sceneKind === '3d';
     var W = 480,
       H = 270;
     var doc = root.ownerDocument;
@@ -2456,6 +2513,9 @@
 
     /** Rodzina assetu — po niej idą części, funkcje i miniatury. */
     function family(id) {
+      // Niebo i HUD są płaskie także w grze 3D — rysuje je ten sam rodzaj kodu.
+      if (id === 'sky3d') return 'sky';
+      if (id === 'hud3d') return 'hud';
       if (id === 'player') return 'player';
       if (id.indexOf('drone') === 0) return 'drone';
       if (id.indexOf('coin') === 0) return 'coin';
@@ -2517,6 +2577,7 @@
     // Jedna lista, od tła do wierzchu. Trafienie liczymy od końca, więc
     // HUD wygrywa z graczem, gracz z terenem, teren z warstwami tła.
     function nodes() {
+      if (IS3D) return nodes3d();
       var out = [];
       out.push({ id: 'sky', label: 'Niebo', kind: 'warstwa', path: 'Scena / Tło', r: [0, 0, W, H], o: sky });
       out.push({ id: 'stars', label: 'Gwiazdy', kind: 'warstwa', path: 'Scena / Tło', r: [0, 0, W, 150], o: stars });
@@ -3007,6 +3068,270 @@
       }
     }
 
+    // --- gra 3D --------------------------------------------------------
+    // Druga gra w tym samym studiu: ten sam most, inny silnik rysowania.
+    // Świat jest bryłowy, więc encje mają pozycję w przestrzeni, a prostokąty
+    // do wskazywania powstają z rzutu ich brył — dzięki temu cała reszta
+    // (najazd, pinezki, klatki, prompt) działa bez zmian.
+    var W3 = {
+      t: 0,
+      score: 0,
+      lives: 3,
+      yaw: 0.5,
+      drone: { x: 0, y: 6, z: 0, vx: 0, vz: 0, tilt: 0 },
+      parcels: [],
+      towers: [],
+      pads: []
+    };
+
+    function build3dWorld() {
+      W3.parcels = [];
+      for (var i = 0; i < 5; i++) {
+        W3.parcels.push({
+          id: 'parcel3d-' + (i + 1),
+          x: Math.cos(i * 1.9) * 44,
+          z: Math.sin(i * 2.7) * 44,
+          y: 4 + (i % 3) * 5,
+          taken: false,
+          spin: i
+        });
+      }
+      W3.towers = [];
+      for (var t = 0; t < 6; t++) {
+        var ang = (t / 6) * 6.283;
+        W3.towers.push({
+          id: 'tower3d-' + (t + 1),
+          x: Math.cos(ang) * 62,
+          z: Math.sin(ang) * 62,
+          h: 22 + ((t * 13) % 26),
+          w: 12 + ((t * 7) % 8)
+        });
+      }
+      W3.pads = [{ id: 'pad3d', x: 0, z: 0 }];
+    }
+    build3dWorld();
+
+    var CAM = { dist: 210, height: 0.42, zoom: 3.1 };
+
+    /** Rzut świata 3D na logiczny ekran 480×270 — ten sam układ co gra 2D. */
+    function proj3(x, y, z) {
+      var sinA = Math.sin(W3.yaw),
+        cosA = Math.cos(W3.yaw);
+      var vx = x * cosA + z * sinA;
+      var vz = -x * sinA + z * cosA;
+      var vy = y * Math.cos(CAM.height) - vz * Math.sin(CAM.height);
+      var vz2 = y * Math.sin(CAM.height) + vz * Math.cos(CAM.height);
+      var f = CAM.dist / (CAM.dist + vz2 + 120);
+      return [W / 2 + vx * f * CAM.zoom, H * 0.56 - vy * f * CAM.zoom, vz2];
+    }
+
+    function boxScreenRect(x, y, z, w, h, d) {
+      var minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
+      for (var i = 0; i < 8; i++) {
+        var px = x + (i & 1 ? w / 2 : -w / 2),
+          py = y + (i & 2 ? h : 0),
+          pz = z + (i & 4 ? d / 2 : -d / 2);
+        var q = proj3(px, py, pz);
+        if (q[0] < minX) minX = q[0];
+        if (q[0] > maxX) maxX = q[0];
+        if (q[1] < minY) minY = q[1];
+        if (q[1] > maxY) maxY = q[1];
+      }
+      return [minX, minY, maxX - minX, maxY - minY];
+    }
+
+    function nodes3d() {
+      var out = [];
+      out.push({ id: 'sky3d', label: 'Niebo', kind: 'warstwa', path: 'Scena 3D / Tło', r: [0, 0, W, H] });
+      out.push({ id: 'ground3d', label: 'Płyta miasta', kind: 'teren', path: 'Scena 3D / Teren', r: boxScreenRect(0, -2, 0, 190, 2, 190) });
+      for (var t = 0; t < W3.towers.length; t++) {
+        var tw = W3.towers[t];
+        out.push({
+          id: tw.id,
+          label: 'Wieżowiec ' + (t + 1),
+          kind: 'teren',
+          path: 'Scena 3D / Miasto',
+          r: boxScreenRect(tw.x, 0, tw.z, tw.w, tw.h, tw.w)
+        });
+      }
+      for (var p = 0; p < W3.parcels.length; p++) {
+        var pc = W3.parcels[p];
+        if (pc.taken) continue;
+        out.push({
+          id: pc.id,
+          label: 'Paczka ' + (p + 1),
+          kind: 'przedmiot',
+          path: 'Scena 3D / Przedmioty',
+          r: boxScreenRect(pc.x, pc.y, pc.z, 7, 7, 7)
+        });
+      }
+      out.push({
+        id: 'model:drone3d',
+        label: 'Dron kurierski DX-4',
+        kind: 'model 3d',
+        path: 'Scena 3D / Aktorzy',
+        r: boxScreenRect(W3.drone.x, W3.drone.y, W3.drone.z, 46, 14, 46)
+      });
+      out.push({ id: 'hud3d', label: 'Licznik dostaw', kind: 'hud', path: 'Scena 3D / HUD', r: [10, 8, 108, 16] });
+      return out;
+    }
+
+    function update3d() {
+      W3.t++;
+      var d = W3.drone;
+      var manual = S.t < S.manualUntil;
+      var ax = 0,
+        az = 0;
+      if (manual) {
+        if (S.keys.ArrowLeft) ax -= 1;
+        if (S.keys.ArrowRight) ax += 1;
+        if (S.keys.ArrowUp) az -= 1;
+        if (S.keys.ArrowDown) az += 1;
+      } else {
+        // Autopilot leci do najbliższej paczki — podgląd ma żyć bez klawiatury.
+        var target = null,
+          best = 1e9;
+        for (var i = 0; i < W3.parcels.length; i++) {
+          var pc = W3.parcels[i];
+          if (pc.taken) continue;
+          var dd = (pc.x - d.x) * (pc.x - d.x) + (pc.z - d.z) * (pc.z - d.z);
+          if (dd < best) {
+            best = dd;
+            target = pc;
+          }
+        }
+        if (!target) {
+          build3dWorld();
+        } else {
+          ax = Math.max(-1, Math.min(1, (target.x - d.x) / 18));
+          az = Math.max(-1, Math.min(1, (target.z - d.z) / 18));
+        }
+      }
+      d.vx += (ax * 0.9 - d.vx) * 0.09;
+      d.vz += (az * 0.9 - d.vz) * 0.09;
+      d.x += d.vx;
+      d.z += d.vz;
+      d.y = 8 + Math.sin(W3.t * 0.045) * 1.8;
+      d.tilt += (d.vx * 0.05 - d.tilt) * 0.1;
+      W3.yaw += 0.0016;
+
+      for (var p = 0; p < W3.parcels.length; p++) {
+        var q = W3.parcels[p];
+        if (q.taken) continue;
+        q.spin += 0.05;
+        if (Math.abs(q.x - d.x) < 9 && Math.abs(q.z - d.z) < 9 && Math.abs(q.y - d.y) < 12) {
+          q.taken = true;
+          W3.score += 25;
+        }
+      }
+    }
+
+    function faceShade(hex, amount) {
+      var r = parseInt(hex.slice(1, 3), 16),
+        g2 = parseInt(hex.slice(3, 5), 16),
+        b2 = parseInt(hex.slice(5, 7), 16);
+      return 'rgb(' + Math.round(Math.min(255, r * amount)) + ',' + Math.round(Math.min(255, g2 * amount)) + ',' + Math.round(Math.min(255, b2 * amount)) + ')';
+    }
+
+    /** Zbiera bryły sceny, sortuje malarsko i rysuje — bez WebGL w piaskownicy. */
+    function draw3d() {
+      ctx.save();
+      ctx.translate(ox, oy);
+      ctx.scale(scale, scale);
+      ctx.clearRect(0, 0, W, H);
+
+      var g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#131c26');
+      g.addColorStop(1, '#080b10');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      // siatka płyty
+      ctx.strokeStyle = 'rgba(56,189,248,0.16)';
+      ctx.lineWidth = 0.4;
+      for (var i = -5; i <= 5; i++) {
+        var a1 = proj3(i * 19, 0, -95),
+          a2 = proj3(i * 19, 0, 95);
+        ctx.beginPath();
+        ctx.moveTo(a1[0], a1[1]);
+        ctx.lineTo(a2[0], a2[1]);
+        ctx.stroke();
+        var b1 = proj3(-95, 0, i * 19),
+          b2 = proj3(95, 0, i * 19);
+        ctx.beginPath();
+        ctx.moveTo(b1[0], b1[1]);
+        ctx.lineTo(b2[0], b2[1]);
+        ctx.stroke();
+      }
+
+      var polys = [];
+      function pushBox(x, y, z, w, h, d, color) {
+        var fs = boxFaces(x - w / 2, y, z - d / 2, w, h, d);
+        for (var f = 0; f < fs.length; f++) {
+          var pts = [],
+            depth = 0,
+            ok = true;
+          for (var v = 0; v < fs[f].length; v++) {
+            var q = proj3(fs[f][v][0], fs[f][v][1], fs[f][v][2]);
+            pts.push([q[0], q[1]]);
+            depth += q[2];
+          }
+          var axx = pts[1][0] - pts[0][0],
+            ayy = pts[1][1] - pts[0][1];
+          var bxx = pts[2][0] - pts[1][0],
+            byy = pts[2][1] - pts[1][1];
+          if (axx * byy - ayy * bxx <= 0) ok = false;
+          if (!ok) continue;
+          polys.push({ pts: pts, depth: depth / 4, fill: faceShade(color, 0.5 + 0.5 * ((f + 1) / 6)) });
+        }
+      }
+
+      for (var t = 0; t < W3.towers.length; t++) {
+        var tw = W3.towers[t];
+        pushBox(tw.x, 0, tw.z, tw.w, tw.h, tw.w, '#1b2733');
+      }
+      pushBox(0, -2, 0, 26, 2, 26, '#1c242c');
+      for (var p = 0; p < W3.parcels.length; p++) {
+        var pc = W3.parcels[p];
+        if (pc.taken) continue;
+        pushBox(pc.x, pc.y, pc.z, 7, 7, 7, '#ffb443');
+      }
+      var d0 = W3.drone;
+      pushBox(d0.x, d0.y, d0.z, 26, 7, 16, '#dbe4ee');
+      pushBox(d0.x - 19, d0.y + 3, d0.z, 16, 1.2, 4, '#38bdf8');
+      pushBox(d0.x + 19, d0.y + 3, d0.z, 16, 1.2, 4, '#38bdf8');
+      pushBox(d0.x, d0.y + 3, d0.z - 15, 4, 1.2, 16, '#38bdf8');
+      pushBox(d0.x, d0.y + 3, d0.z + 15, 4, 1.2, 16, '#38bdf8');
+      pushBox(d0.x, d0.y - 6, d0.z - 6, 8, 5, 6, '#0f1418');
+      pushBox(d0.x, d0.y - 14, d0.z, 12, 8, 10, '#ffb443');
+
+      polys.sort(function (m1, m2) {
+        return m2.depth - m1.depth;
+      });
+      for (var i2 = 0; i2 < polys.length; i2++) {
+        var poly = polys[i2];
+        ctx.beginPath();
+        ctx.moveTo(poly.pts[0][0], poly.pts[0][1]);
+        for (var v2 = 1; v2 < poly.pts.length; v2++) ctx.lineTo(poly.pts[v2][0], poly.pts[v2][1]);
+        ctx.closePath();
+        ctx.fillStyle = poly.fill;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(8,12,16,0.4)';
+        ctx.lineWidth = 0.25;
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = '#f0f4f8';
+      ctx.font = '600 11px ui-monospace, Menlo, monospace';
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+      ctx.fillText('DOSTAWY ' + String(W3.score).padStart(4, '0'), 10, 8);
+      ctx.restore();
+    }
+
     // --- modele 3D -----------------------------------------------------
     // Prawdziwa geometria, nie warstwy udające głębokość: ściany w przestrzeni,
     // sortowanie malarskie, płaskie cieniowanie z normalnej. Asset 3D obraca się
@@ -3038,6 +3363,80 @@
     }
 
     var MODELS_3D = {
+      'model:ground3d': {
+        label: 'Płyta miasta',
+        path: 'Projekt / Modele 3D',
+        file: 'src/models/ground3d.ts',
+        type: 'Model 3D · low-poly',
+        symbol: 'buildPlate(): Mesh',
+        layer: 'terrain · z 0',
+        instances: 1,
+        cost: '0.4 ms/klatkę',
+        sounds: [{ file: 'land3d.wav', when: 'lądowanie', hz: 120 }],
+        anims: [{ key: 'idle', label: 'Bez ruchu' }],
+        parts: [
+          { key: 'plate', label: 'Płyta', color: '#1c242c', faces: boxFaces(-30, -3, -30, 60, 3, 60) },
+          { key: 'rim', label: 'Krawędź', color: '#2f3d4a', faces: boxFaces(-31, -3.6, -31, 62, 1.2, 62) },
+          { key: 'pad', label: 'Lądowisko', color: '#00e4ac', faces: boxFaces(-9, 0.1, -9, 18, 0.4, 18) }
+        ]
+      },
+      'model:parcel3d': {
+        label: 'Paczka kurierska',
+        path: 'Projekt / Modele 3D',
+        file: 'src/models/parcel3d.ts',
+        type: 'Model 3D · low-poly',
+        symbol: 'buildParcel(): Mesh',
+        layer: 'pickups · z 20',
+        instances: 5,
+        cost: '0.3 ms/klatkę',
+        sounds: [{ file: 'pickup3d.wav', when: 'odbiór', hz: 760 }],
+        anims: [
+          { key: 'hover', label: 'Unoszenie' },
+          { key: 'spin', label: 'Obrót' },
+          { key: 'drop', label: 'Upadek' }
+        ],
+        parts: [
+          { key: 'box', label: 'Karton', color: '#ffb443', faces: boxFaces(-9, -9, -9, 18, 18, 18) },
+          {
+            key: 'tape',
+            label: 'Taśma',
+            color: '#e2e8f0',
+            spin: true,
+            faces: [].concat(boxFaces(-9.4, -2, -9.4, 18.8, 4, 18.8))
+          },
+          { key: 'label', label: 'Etykieta', color: '#0f1418', faces: boxFaces(-4, -1, -9.8, 8, 6, 0.6) }
+        ]
+      },
+      'model:tower3d': {
+        label: 'Wieżowiec',
+        path: 'Projekt / Modele 3D',
+        file: 'src/models/tower3d.ts',
+        type: 'Model 3D · low-poly',
+        symbol: 'buildTower(h): Mesh',
+        layer: 'city · z 5',
+        instances: 6,
+        cost: '0.2 ms/klatkę',
+        sounds: [],
+        anims: [
+          { key: 'idle', label: 'Bez ruchu' },
+          { key: 'hover', label: 'Kołysanie' }
+        ],
+        parts: [
+          { key: 'shaft', label: 'Bryła', color: '#1b2733', faces: boxFaces(-9, -22, -9, 18, 44, 18) },
+          {
+            key: 'windows',
+            label: 'Okna',
+            color: '#38bdf8',
+            faces: [].concat(
+              boxFaces(-6, -14, -9.4, 3, 4, 0.6),
+              boxFaces(2, -6, -9.4, 3, 4, 0.6),
+              boxFaces(-6, 4, -9.4, 3, 4, 0.6),
+              boxFaces(-9.4, -10, -4, 0.6, 4, 3),
+            )
+          },
+          { key: 'roof', label: 'Dach', color: '#64748b', faces: boxFaces(-10, 22, -10, 20, 3, 20) }
+        ]
+      },
       'model:drone3d': {
         label: 'Dron kurierski DX-4',
         path: 'Projekt / Modele 3D',
@@ -3112,6 +3511,15 @@
 
     function isModel3d(id) {
       return Object.prototype.hasOwnProperty.call(MODELS_3D, id);
+    }
+
+    /** Byt sceny 3D → jego model. Paczka 3 i paczka 5 to ten sam asset. */
+    function modelKeyFor(id) {
+      if (isModel3d(id)) return id;
+      if (id.indexOf('parcel3d') === 0) return 'model:parcel3d';
+      if (id.indexOf('tower3d') === 0) return 'model:tower3d';
+      if (id === 'ground3d') return 'model:ground3d';
+      return null;
     }
 
     /**
@@ -4702,13 +5110,25 @@
       post({ type: 'hover', id: n ? n.id : null, label: n ? n.label : null });
     }
     function sendPick(id, why) {
-      if (isModel3d(id)) {
-        // Model 3D leży w projekcie, nie na scenie 2D — nie ma prostokąta na
-        // planszy, więc opis składamy z samego assetu.
+      var mk = IS3D ? modelKeyFor(id) : isModel3d(id) ? id : null;
+      if (mk) {
+        // Byt sceny 3D: opis bierze z modelu, ale prostokąt z tego, co widać na
+        // scenie — dzięki temu pinezki i najazd działają tak samo jak w 2D.
+        var nn = findNode(id);
+        var mp = model3dPick(mk);
+        mp.id = id;
+        mp.label = nn ? nn.label : mp.label;
+        mp.path = nn ? nn.path : mp.path;
+        if (nn) {
+          mp.x = Math.round(nn.r[0]);
+          mp.y = Math.round(nn.r[1]);
+          mp.w = Math.round(nn.r[2]);
+          mp.h = Math.round(nn.r[3]);
+        }
+        mp.modelKey = mk;
+        mp.why = why || 'pick';
         S.picked = id;
-        var m3 = model3dPick(id);
-        m3.why = why || 'pick';
-        post(m3);
+        post(mp);
         return;
       }
       var n = findNode(id);
@@ -5123,8 +5543,8 @@
         S.fpsAt = ts;
         post({ type: 'stats', fps: S.fps, score: S.score, lives: S.lives, manual: S.t < S.manualUntil });
       }
-      if (!S.paused) update(dt);
-      draw();
+      if (!S.paused) IS3D ? update3d() : update(dt);
+      IS3D ? draw3d() : draw();
       paintOverlay();
 
       if (clip) {
@@ -5182,13 +5602,13 @@
           post({ type: 'tree', nodes: treePayload() });
           break;
         case 'segment': {
-          var seg = segmentAsset(m.id, m.max || 620);
+          var seg = segmentAsset(modelKeyFor(m.id) || m.id, m.max || 620);
           post({ type: 'segment', id: m.id, token: m.token || null, segments: seg.segments, size: seg.size, png: seg.png });
           break;
         }
         case 'orbit': {
-          if (isModel3d(m.id)) {
-            var m3res = model3dFrames(m.id, m.steps || 36, m.pitch == null ? 18 : m.pitch, m.anim || null, m.max || 620, null);
+          if (modelKeyFor(m.id)) {
+            var m3res = model3dFrames(modelKeyFor(m.id), m.steps || 36, m.pitch == null ? 18 : m.pitch, m.anim || null, m.max || 620, null);
             post({
               type: 'orbit',
               id: m.id,
@@ -5213,8 +5633,8 @@
           break;
         }
         case 'studio': {
-          if (isModel3d(m.id)) {
-            var sm = model3dFrames(m.id, m.count || 1, 18, m.anim || null, m.max || 620, 0.62);
+          if (modelKeyFor(m.id)) {
+            var sm = model3dFrames(modelKeyFor(m.id), m.count || 1, 18, m.anim || null, m.max || 620, 0.62);
             post({
               type: 'studio',
               id: m.id,
@@ -5224,7 +5644,7 @@
               boxes: sm.boxesPerFrame[0] || {},
               hidden: {},
               size: sm.size,
-              anims: MODELS_3D[m.id].anims
+              anims: MODELS_3D[modelKeyFor(m.id)].anims
             });
             break;
           }
@@ -5408,69 +5828,112 @@
       for (var i = 0; i < handlers.length; i++) handlers[i](m);
     }
 
-    // 1) tak jak w produkcji: piaskownica bez allow-same-origin.
-    var iframe = document.createElement('iframe');
-    iframe.setAttribute('sandbox', 'allow-scripts');
-    iframe.setAttribute('title', 'Neonowy Kurier — podgląd gry');
-    var gameDoc =
-      '<!doctype html><html lang="pl"><head><meta charset="utf-8">' +
-      '<style>html,body{margin:0;height:100%;background:#0b1018;overflow:hidden}#root{width:100vw;height:100vh}</style>' +
-      '</head><body><div id="root"></div><script>(' +
-      GAME_MAIN.toString() +
-      ')(document.getElementById("root"),function(m){m.source="' +
-      PLAYER +
-      '";parent.postMessage(m,"*")},function(cb){addEventListener("message",function(e){var d=e.data||{};if(d.source==="' +
-      HOST +
-      '")cb(d)})})<' +
-      '/script></body></html>';
-    iframe.srcdoc = gameDoc;
-    holder.appendChild(iframe);
+    // Dwa podglądy: gra 2D i gra 3D, każda we własnej piaskownicy — tak jak w
+    // produkcji, bez allow-same-origin. Ta sama funkcja gry, inny parametr sceny.
+    var SCENES = [
+      { key: '2d', title: 'Neonowy Kurier — gra 2D', holder: 'holder' },
+      { key: '3d', title: 'Kurierzy DX — gra 3D', holder: 'holder3d' }
+    ];
+    var frames = {};
+    var activeScene = '2d';
+
+    function mountScene(def) {
+      var box = document.getElementById(def.holder);
+      if (!box) return;
+      var iframe = document.createElement('iframe');
+      iframe.setAttribute('sandbox', 'allow-scripts');
+      iframe.setAttribute('title', def.title);
+      iframe.srcdoc =
+        '<!doctype html><html lang="pl"><head><meta charset="utf-8">' +
+        '<style>html,body{margin:0;height:100%;background:#0b1018;overflow:hidden}#root{width:100vw;height:100vh}</style>' +
+        '</head><body><div id="root"></div><script>(' +
+        GAME_MAIN.toString() +
+        ')(document.getElementById("root"),function(m){m.source="' +
+        PLAYER +
+        '";m.scene="' +
+        def.key +
+        '";parent.postMessage(m,"*")},function(cb){addEventListener("message",function(e){var d=e.data||{};if(d.source==="' +
+        HOST +
+        '"&&(!d.scene||d.scene==="' +
+        def.key +
+        '"))cb(d)})},"' +
+        def.key +
+        '")<' +
+        '/script></body></html>';
+      box.appendChild(iframe);
+      frames[def.key] = iframe;
+    }
+    SCENES.forEach(mountScene);
+    var iframe = frames['2d'];
 
     window.addEventListener('message', function (e) {
       var d = e.data || {};
       if (d.source !== PLAYER) return;
       onGame(d);
     });
-    send = function (m) {
+
+    /**
+     * Komunikat trafia do sceny, której dotyczy.
+     *
+     * Bez adresowania pauza w jednym podglądzie zatrzymywałaby oba, a prośba o
+     * ujęcie assetu 3D szłaby też do gry 2D, która nic o nim nie wie.
+     */
+    send = function (m, scene) {
       m.source = HOST;
-      if (iframe.contentWindow) iframe.contentWindow.postMessage(m, '*');
+      var key = scene || m.scene || activeScene;
+      m.scene = key;
+      var target = frames[key];
+      if (target && target.contentWindow) target.contentWindow.postMessage(m, '*');
     };
 
-    var ready = false;
+    function sendAll(m) {
+      Object.keys(frames).forEach(function (k) {
+        send(Object.assign({}, m), k);
+      });
+    }
+
+    var ready = {};
     handlers.push(function (m) {
-      if (m.type === 'ready') ready = true;
+      if (m.type === 'ready') ready[m.scene || '2d'] = true;
     });
 
-    // 2) awaryjnie (np. gdy CSP hosta nie wpuści skryptu do srcdoc):
-    //    ta sama funkcja gry, zamontowana w tym dokumencie.
+    // Awaryjne montowanie w tym dokumencie (gdy CSP nie wpuści skryptu do
+    // srcdoc) obsługuje tylko grę 2D: dwie sceny bez piaskownicy dzieliłyby
+    // jeden dokument i deptały sobie po nasłuchach klawiatury.
     setTimeout(function () {
-      if (ready) return;
-      iframe.remove();
+      if (ready['2d']) return;
+      var holder2d = document.getElementById('holder');
+      if (frames['2d']) frames['2d'].remove();
       var inline = document.createElement('div');
       inline.className = 'inline-game';
-      holder.appendChild(inline);
-      send = function (m) {
+      holder2d.appendChild(inline);
+      var inlineListen = function () {};
+      var prevSend = send;
+      send = function (m, scene) {
+        var key = scene || m.scene || activeScene;
+        if (key !== '2d') return prevSend(m, scene);
         m.source = HOST;
         setTimeout(function () {
           inlineListen(m);
         }, 0);
       };
-      var inlineListen = function () {};
       GAME_MAIN(
         inline,
         function (m) {
           m.source = PLAYER;
+          m.scene = '2d';
           onGame(m);
         },
         function (cb) {
           inlineListen = cb;
         },
+        '2d',
       );
-      send({ type: 'hello' });
-    }, 1400);
+      send({ type: 'hello' }, '2d');
+    }, 1600);
 
     setTimeout(function () {
-      send({ type: 'hello' });
+      sendAll({ type: 'hello' });
     }, 120);
 
     /* ---------------- stan hosta ---------------- */
@@ -5499,7 +5962,7 @@
     /* ---------------- pasek narzędzi ---------------- */
     function setPaused(next) {
       UI.paused = next;
-      send({ type: next ? 'pause' : 'resume' });
+      sendAll({ type: next ? 'pause' : 'resume' });
       $('play-icon').textContent = next ? '▶' : '⏸';
       $('play-label').textContent = next ? 'Graj' : 'Pauza';
       holder.classList.toggle('is-inspect', next || UI.inspect);
@@ -5511,7 +5974,7 @@
     }
     function setInspect(next) {
       UI.inspect = next;
-      send({ type: 'inspect', on: next });
+      sendAll({ type: 'inspect', on: next });
       $('btn-inspect').classList.toggle('btn--on', next);
       $('btn-inspect').setAttribute('aria-pressed', String(next));
       holder.classList.toggle('is-inspect', next || UI.paused);
@@ -5556,6 +6019,7 @@
         UI.hoverId = m.id;
         if (UI.tab === 'tree') renderInspector();
       } else if (m.type === 'pick') {
+        if (m.scene) activeScene = m.scene;
         var keepNote = UI.picked && UI.picked.id === m.id;
         UI.picked = m;
         if (!keepNote) UI.noteText = '';
