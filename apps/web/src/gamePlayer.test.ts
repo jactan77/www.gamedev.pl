@@ -16,6 +16,20 @@ describe('embedGameHtml', () => {
     expect(out).toContain('<canvas id="game">');
   });
 
+  it('gives the game the whole frame, since the chrome the shell pads for is hidden', () => {
+    const out = embedGameHtml('<html><head></head><body><canvas id="game"></canvas></body></html>');
+
+    // The shell caps `.wrap` at 1400px and pads it for a title/description/hint column
+    // that the rule above hides. Left alone, that cap pillarboxes the player and the
+    // canvas is upscaled from a smaller box than the frame it was given.
+    expect(out).toContain('max-width:none!important');
+    expect(out).toContain('padding:0!important');
+    // Height is deliberately NOT overridden: the shell's own `height: 100dvh` is what
+    // gives the flex column a definite height. A percentage would resolve against an
+    // auto-height ancestor and push the game off the bottom of the frame.
+    expect(out).not.toContain('height:100%!important');
+  });
+
   it('relays Escape to the host, since the focused game swallows its own keys', () => {
     const out = embedGameHtml('<html><body><canvas id="game"></canvas></body></html>');
 
