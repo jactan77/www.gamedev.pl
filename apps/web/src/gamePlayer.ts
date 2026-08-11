@@ -338,6 +338,13 @@ const BRIDGE = `(function(){
 // strip iOS long-press chrome inside the opaque-origin frame — parent CSS cannot
 // reach in here. Without this, a hold on iPhone SE pops the selection loupe and
 // the Copy / Translate / Look Up callout over the playfield.
+//
+// Then give the game the whole frame. The shell's `.wrap` is padded because the
+// standalone page is a column of prose with a canvas in it — but every one of those
+// prose elements is hidden by the rule above, so in here the padding is a margin
+// around nothing. It is not free: the canvas is upscaled from a fixed logical box, so
+// each pixel the box gives up is a pixel the picture is stretched from. The theater
+// already sized this frame to exactly the room the game should have.
 const HIDE_CHROME =
   `#game-title,#game-desc,.game-controls,.hint{display:none!important}` +
   `html,body,canvas,img,video{` +
@@ -347,7 +354,12 @@ const HIDE_CHROME =
   `-webkit-tap-highlight-color:transparent;` +
   `touch-action:none;` +
   `overscroll-behavior:none` +
-  `}`;
+  `}` +
+  // Width and padding only. The shell's own `height: 100dvh` is what gives this flex
+  // column a definite height for the canvas to size against; overriding it with a
+  // percentage would resolve against an auto-height ancestor, collapse to the
+  // canvas's own aspect-derived height, and push the game off the bottom of the frame.
+  `.wrap{width:100%!important;max-width:none!important;padding:0!important;gap:0!important}`;
 
 /**
  * Injects the player bridge + hide-chrome style into an assembled game document
